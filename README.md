@@ -80,3 +80,16 @@ Workflow: allocate exactly 32 slots → explicitly remove/add teams until each r
 Saves remain version 1, with an optional `teamIds` array; older saves without this field use the original 32 teams. Selected teams persist through local/cloud saves and JSON export/import. The database schema is unchanged.
 
 `test-settings.cjs` checks legacy saves, arbitrary custom rosters, full-season progression and the selection/review/confirmation flow.
+
+
+## Home and season history
+
+The home page shows **Bắt đầu giải đấu của bạn** until the first result is recorded, then **Tiếp tục giải đấu**. Team customization is available from the home page before a season starts; it is removed from the in-tournament tabs.
+
+For a season in progress, starting another season or changing its format offers three explicit choices: finish all remaining matches by simulation and archive the results; cancel the season and archive it as cancelled without a podium; or keep playing. Changing teams before the first match keeps the same season number. Each actual rollover increments the number.
+
+History cards show every season, including the current season's progress and resume action. Completed seasons open read-only with the playoff bracket, gold/silver/bronze teams, and league standings. Cancelled seasons show their partial progress without inventing winners. A season completes only when both the final and bronze match have results.
+
+Supabase stores archived snapshots in `volleyworld_seasons`, separately from the active save. Ownership RLS and insert-only grants protect history. `save_volleyworld_with_history` writes the active state and pending archives atomically under the existing revision check. Archived results cannot be overwritten. The browser loads historical metadata in pages and fetches older snapshots on demand, keeping at most five synced snapshots in its persisted local cache while retaining pending offline archives. Full history can be exported/imported with the active season; older single-season JSON saves remain accepted.
+
+Apply the season history migration before deploying the new client. `supabase/tests/season_history.sql` checks atomic rollover, archive immutability, revision conflicts, RLS and rollback. `test-seasons.cjs` covers home labels, lock/finish/cancel flows, read-only history, numbering, persistence and export/import.
