@@ -25,6 +25,9 @@ export function selectTeam(id: string) {
     return;
   store.achievementTeam = id;
   renderAchievements();
+  document
+    .querySelector<HTMLElement>(".achievement-detail")
+    ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 export function renderAchievements() {
   const token = ++request,

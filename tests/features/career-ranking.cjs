@@ -235,9 +235,17 @@ const click = (t, s) => {
     expected.entries.map((e) => e.id),
   );
   const leader = expected.entries[0];
+  let scrolledDetail = false;
+  t.w.HTMLElement.prototype.scrollIntoView = function () {
+    if (this.classList.contains("achievement-detail")) scrolledDetail = true;
+  };
   click(
     t,
     `.career-ranking [data-action="achievementTeam"][data-arg="${leader.id}"]`,
+  );
+  assert(
+    scrolledDetail,
+    "selected detail scrolls into view on stacked layouts",
   );
   assert.equal(
     t.w.document.querySelector(".career-summary strong").textContent,
