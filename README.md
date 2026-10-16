@@ -114,3 +114,5 @@ The standings include a league-only last-five form strip (oldest to newest) and 
 ## Playoff views
 
 Playoff defaults to four color-coded branch panels, each connecting two round-of-16 matches to its quarterfinal. The final stretch identifies A/B and C/D semifinal paths, the championship match and bronze. The full-tree switch shows the same fixed bracket with CSS connectors and a horizontal scroll region. Match tiles retain form, seeds and scores; opening one shows sets and available simulate/edit actions. Known winners can preview pending slots without creating later matches. Play-in results collapse once the draw exists. Both views support archived read-only seasons.
+
+League match cards now align form and set-score columns and anchor actions to the card bottom. The standings use explicit column widths with centered statistic/form headings and cells. Rank badges before flags in match tiles and the score editor use the current league table of the displayed season; archived seasons use their own table. The standings retain their existing position column.
