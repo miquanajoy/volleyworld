@@ -104,3 +104,7 @@ Match cards and the score editor show five form slots: green W for wins, red L f
 The score editor previews the set tally only after at least one pair of inputs is filled. Partial/invalid sets do not add wins to that tally. Custom validation is shown immediately below the affected set, marks its inputs, scrolls to the first error and focuses the field to correct. Validation covers incomplete pairs, gaps, non-integer/negative values, target points, win-by-two/deuce, a fifth set to 15, missing deciding sets and extra sets after the match has ended. Invalid drafts never change the recorded match.
 
 `test-match-ui.cjs` verifies form chronology, persistence, preview and per-set validation/focus. Manual save success, unresolved source and offline cases are covered by the cloud integration and local fallback tests.
+
+## Early qualification
+
+The league now announces mathematically certified top-12/top-20 berths and eliminations after completed rounds, adds status badges to the standings, and lists early direct/play-in entrants under Vé vớt & Playoff. Partial rounds do not change certification. Scores are the source of truth, so old saves work without a migration and edits recompute the proof chain. Unproved cases stay “Chưa chốt”; the bounded solver never converts a timeout into a qualification/elimination. See [QUALIFICATION.md](QUALIFICATION.md) for formulas, flow-cut proofs, tie handling and verification scope.
