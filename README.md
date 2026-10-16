@@ -59,3 +59,24 @@ Validate the sync queue and local fallback with `node test-sync.cjs`. Database a
 The production Supabase project URL and **publishable** key are committed in `supabase/public-config.json`. These are public browser configuration values, protected by ownership RLS; no secret/service-role credentials are in the repository. Vercel environment overrides remain optional.
 
 Production URL: https://volleyworld.vercel.app/ . Supabase Auth Site URL and Redirect URLs must include this exact origin.
+
+
+## Tournament customization
+
+The **Tùy chỉnh giải đấu** menu keeps the tournament at 32 teams and lets the player change regional quotas:
+
+| Region | Minimum | Maximum |
+| --- | ---: | ---: |
+| Europe / CEV | 2 | 20 |
+| NORCECA | 2 | 12 |
+| Asia–Oceania / AVC | 2 | 12 |
+| South America / CSV | 2 | 6 |
+| Africa / CAVB | 2 | 8 |
+
+The catalog includes 100 teams from the ranking snapshot dated 13 October 2026, with regional reserve lists ordered by world rank. These are a fixed game dataset, not a live feed or real-world qualification eligibility list.
+
+Workflow: allocate exactly 32 slots → explicitly remove/add teams until each region matches its quota → review changes → confirm a new tournament. Existing matches are unchanged while editing. Applying a configuration creates a new schedule and resets results, with a local recovery snapshot and an export action available first. The regular **Giải mới** action preserves the selected roster.
+
+Saves remain version 1, with an optional `teamIds` array; older saves without this field use the original 32 teams. Selected teams persist through local/cloud saves and JSON export/import. The database schema is unchanged.
+
+`test-settings.cjs` checks legacy saves, arbitrary custom rosters, full-season progression and the selection/review/confirmation flow.

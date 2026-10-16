@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "node scripts/build.cjs && node --check dist/app.js && node --check dist/cloud.js && node test.cjs && node test-sync.cjs && node test-cloud-integration.cjs",
+  "buildCommand": "npm run build && npm test",
   "outputDirectory": "dist",
   "cleanUrls": true
 }
