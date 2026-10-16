@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict"),
   fs = require("node:fs"),
-  { ui, equivalent } = require("../support/parity-harness.cjs");
+  { parityUi: ui, equivalent } = require("../support/parity-harness.cjs");
 (async () => {
   const a = ui("main"),
     b = ui("new"),

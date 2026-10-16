@@ -151,3 +151,7 @@ The selected league round now shows qualification announcements as of its comple
 ## Career points
 
 Open **Thành tích → BXH điểm qua các mùa** to rank qualifying teams within a region or worldwide. Only completed-season Play-in-or-better finishes earn points; click a team for its season-by-season contribution. The awards use a normalized decreasing curve and distribute the same 4,170 points per season in both playoff formats. See [Career points policy](docs/CAREER-POINTS.md) for the full table, tie-breaks and validation.
+
+## Simulation previews and controlled upsets
+
+The simulator uses bounded set-win probabilities and strength-aware point margins, retaining a chance of an upset while reducing lopsided scores between nearby world-ranked teams. In the score editor, use ▶ to simulate the next set or choose a winner and 3–0/3–1/3–2 to generate an editable preview. Only **Lưu kết quả** commits the result. See [Simulation v2](docs/SIMULATION-V2.md) for formulas, gameplay assumptions and verification.

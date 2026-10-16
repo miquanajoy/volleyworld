@@ -40,14 +40,16 @@ function domain(version, seed) {
   deterministic(ctx, seed);
   vm.runInContext(
     fs.readFileSync(
-      version === "main" ? fixture + "engine.js" : ".test-build/engine.js",
+      version === "main"
+        ? fixture + "engine.js"
+        : ".test-build/parity-engine.js",
       "utf8",
     ),
     ctx,
   );
   return { ctx, V: ctx.module.exports };
 }
-function ui(version, seed = 1742, storage) {
+function ui(version, seed = 1742, storage, frozenSimulation = false) {
   const html = fs
     .readFileSync(
       version === "main" ? fixture + "index.html" : "index.html",
@@ -77,8 +79,20 @@ function ui(version, seed = 1742, storage) {
     for (const f of ["engine", "qualification", "seasons", "app", "settings"])
       execute(fs.readFileSync(fixture + f + ".js", "utf8"));
   } else {
-    execute(fs.readFileSync(".test-build/engine-browser.js", "utf8"));
-    execute(fs.readFileSync(".test-build/app.js", "utf8"));
+    execute(
+      fs.readFileSync(
+        frozenSimulation
+          ? ".test-build/parity-engine-browser.js"
+          : ".test-build/engine-browser.js",
+        "utf8",
+      ),
+    );
+    execute(
+      fs.readFileSync(
+        frozenSimulation ? ".test-build/parity-app.js" : ".test-build/app.js",
+        "utf8",
+      ),
+    );
     w.__initializeActions();
   }
   const run = (code) => execute(code),
@@ -108,6 +122,13 @@ function canonical(app, id = "body") {
       content.replaceChildren(...[heading, podium].filter(Boolean));
     }
   }
+  remove(".score-generator, .score-draft-status, .set-play, .set-clear");
+  copy
+    .querySelectorAll(".set-label")
+    .forEach((el) => el.replaceWith(...el.childNodes));
+  copy
+    .querySelectorAll(".set-block")
+    .forEach((el) => el.removeAttribute("hidden"));
   remove(
     '#heroSettings, [data-action="navigate"][data-arg="achievements"], .playoff-champion, .live-podium, #toast',
   );
@@ -165,6 +186,7 @@ function equivalent(a, b, label) {
 module.exports = {
   domain,
   ui,
+  parityUi: (version, seed, storage) => ui(version, seed, storage, true),
   canonical,
   equivalent,
   fixture,

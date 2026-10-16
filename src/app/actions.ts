@@ -8,7 +8,13 @@ import {
 import type { PlayoffFormat, Region, StageKey } from "../domain/types";
 import * as league from "../features/league/controller";
 import { renderLeague, showTeamLeague } from "../features/league/views";
-import { editMatch, updateScoreEditor } from "../features/matches/editor";
+import {
+  editMatch,
+  updateScoreEditor,
+  simulateEditorSet,
+  clearEditorSets,
+  generateScore,
+} from "../features/matches/editor";
 import * as playoffController from "../features/playoff/controller";
 import { $ } from "../shared/dom";
 import { exportSave, navigate } from "./application";
@@ -39,6 +45,9 @@ const actions: Record<string, Action> = {
   },
   editMatch: (e) => editMatch(arg(e)),
   updateScoreEditor: () => updateScoreEditor(),
+  simulateEditorSet: (e) => simulateEditorSet(Number(arg(e))),
+  clearEditorSets: (e) => clearEditorSets(Number(arg(e))),
+  generateScore: () => generateScore(),
   showTeamLeague: (e) => showTeamLeague(arg(e)),
   simOne: (e) => league.simOne(arg(e)),
   simRound: () => league.simRound(),

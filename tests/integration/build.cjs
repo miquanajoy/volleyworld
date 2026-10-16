@@ -108,9 +108,34 @@ const fs = require("node:fs"),
   click('[data-action="Settings.next"]');
   click('[data-action="Settings.review"]');
   click('[data-action="Settings.apply"]');
+  const beforeDraft = w.localStorage.getItem("volleyworld-v1");
+  click('[data-action="editMatch"]');
+  assert.equal(
+    w.document.querySelectorAll(".set-block:not([hidden])").length,
+    1,
+  );
+  click('[data-action="simulateEditorSet"]:not([hidden])');
+  assert.equal(
+    w.document.querySelectorAll(".set-block:not([hidden])").length,
+    2,
+  );
+  w.document.getElementById("generatedWinner").value = "1";
+  w.document.getElementById("generatedLosses").value = "2";
+  click('[data-action="generateScore"]');
+  assert.equal(w.document.getElementById("liveScore1").textContent, "3");
+  assert.equal(w.localStorage.getItem("volleyworld-v1"), beforeDraft);
+  w.document
+    .getElementById("scoreForm")
+    .dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
+  assert(!w.document.getElementById("editor").open);
+  assert.equal(
+    JSON.parse(w.localStorage.getItem("volleyworld-v1")).rounds[0][0].sets
+      .length,
+    5,
+  );
   click('[data-action="simOne"]');
   const snapshot = JSON.parse(w.localStorage.getItem("volleyworld-v1"));
-  assert.equal(snapshot.rounds.flat().filter((m) => m.sets).length, 1);
+  assert.equal(snapshot.rounds.flat().filter((m) => m.sets).length, 2);
   click('[data-action="navigate"][data-arg="table"]');
   assert.equal(w.document.querySelectorAll("#rows tr").length, 32);
   click("#accountButton");
