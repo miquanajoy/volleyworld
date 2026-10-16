@@ -5,6 +5,7 @@ for (const file of [
   "ui",
   "career-ranking",
   "season-summary",
+  "simulation-v2",
 ]) {
   const r = spawnSync(process.execPath, ["tests/features/" + file + ".cjs"], {
     encoding: "utf8",

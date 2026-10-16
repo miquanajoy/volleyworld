@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict"),
   fs = require("node:fs"),
   {
-    ui,
+    parityUi: ui,
     equivalent,
     normalizeLegacyData,
   } = require("../support/parity-harness.cjs");

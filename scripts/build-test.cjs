@@ -53,3 +53,47 @@ esbuild.buildSync({
   target: "es2022",
   outfile: ".test-build/engine-browser.js",
 });
+
+// Differential rules/UI tests hold score generation at the frozen baseline.
+// The real new engine is exercised separately by simulation-v2 and build tests.
+const legacySimulation = fs
+  .readFileSync("tests/fixtures/main/engine.js", "utf8")
+  .match(/^function simulate\(m\).*$/m)?.[0];
+if (!legacySimulation) throw Error("Missing frozen simulation reference");
+const paritySimulation = {
+  name: "frozen-parity-simulation",
+  setup(build) {
+    build.onLoad({ filter: /domain\/match\/simulation\.ts$/ }, (args) => {
+      const source = fs.readFileSync(args.path, "utf8"),
+        pattern = /export function simulate\(m: Match\) \{[\s\S]*?^\}/m;
+      if (!pattern.test(source)) throw Error("Simulation wrapper changed");
+      return {
+        contents: source.replace(pattern, "export " + legacySimulation),
+        loader: "ts",
+      };
+    });
+  },
+};
+(async () => {
+  for (const [name, entry, format, globalName] of [
+    ["parity-engine", "src/domain/index.ts", "cjs", undefined],
+    ["parity-engine-browser", "src/domain/index.ts", "iife", "V"],
+    ["parity-app", "tests/support/compat-app.ts", "iife", undefined],
+  ])
+    await esbuild.build({
+      entryPoints: [entry],
+      bundle: true,
+      platform: "browser",
+      format,
+      globalName,
+      target: "es2022",
+      plugins: [paritySimulation],
+      define: { __VOLLEY_CONFIG__: "globalThis.__TEST_CONFIG" },
+      banner: { js: "globalThis.__TEST_CONFIG=globalThis.VOLLEY_CONFIG||{};" },
+      outfile: ".test-build/" + name + ".js",
+      external: ["@supabase/supabase-js"],
+    });
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
