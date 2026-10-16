@@ -108,3 +108,5 @@ The score editor previews the set tally only after at least one pair of inputs i
 ## Early qualification
 
 The league now announces mathematically certified top-12/top-20 berths and eliminations after completed rounds, adds status badges to the standings, and lists early direct/play-in entrants under Vé vớt & Playoff. Partial rounds do not change certification. Scores are the source of truth, so old saves work without a migration and edits recompute the proof chain. Unproved cases stay “Chưa chốt”; the bounded solver never converts a timeout into a qualification/elimination. See [QUALIFICATION.md](QUALIFICATION.md) for formulas, flow-cut proofs, tie handling and verification scope.
+
+The standings include a league-only last-five form strip (oldest to newest) and a Chi tiết button per team. It opens all 31 league fixtures in round order, showing team-relative set scores and W/L for completed matches; future scores remain blank. This view also works on archived seasons without changing active progress.
