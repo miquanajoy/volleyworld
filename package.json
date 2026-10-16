@@ -3,13 +3,34 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "node scripts/build.cjs",
-    "test": "node --check dist/qualification.js && node --check dist/app.js && node --check dist/cloud.js && node --check dist/settings.js && node --check dist/seasons.js && node test.cjs && node test-double.cjs && node test-double-ui.cjs && node test-settings.cjs && node test-seasons.cjs && node test-match-ui.cjs && node test-playoff-ui.cjs && node test-qualification.cjs && node test-sync.cjs && node test-cloud-integration.cjs"
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview",
+    "test:legacy": "node scripts/build-test.cjs && node scripts/test-legacy.cjs",
+    "test:parity": "node scripts/build-test.cjs && node tests/parity/domain.cjs && node tests/parity/ui.cjs && node tests/parity/actions.cjs",
+    "test:architecture": "node tests/architecture/check.cjs",
+    "test": "npm run test:legacy && npm run test:parity && npm run test:features && npm run test:architecture",
+    "check": "npm run build && npm test && npm run test:build",
+    "format": "prettier --write src vite.config.ts tests/support tests/parity tests/integration tests/architecture tests/features scripts *.json .github/workflows docs README.md",
+    "format:check": "prettier --check src vite.config.ts tests/support tests/parity tests/integration tests/architecture tests/features scripts *.json .github/workflows docs README.md",
+    "test:build": "node --experimental-vm-modules tests/integration/build.cjs && node tests/integration/config.cjs",
+    "test:features": "node scripts/build-test.cjs && node scripts/test-features.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "@types/jsdom": "30.0.0",
+    "@types/node": "26.6.5",
+    "esbuild": "0.28.2",
+    "jsdom": "30.1.3",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "vite": "8.3.4"
+  },
+  "type": "module",
+  "engines": {
+    "node": "24.x"
   }
 }

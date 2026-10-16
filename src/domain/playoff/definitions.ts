@@ -1,0 +1,26 @@
+import type { StageDefinition, Tournament } from "../types";
+import { doubleStages } from "./double/rules";
+import { pairRound } from "./shared-rules";
+import { singleStages } from "./single/rules";
+export { source } from "./shared-rules";
+export const isDouble = (s: Pick<Tournament, "playoffFormat">): boolean =>
+  s.playoffFormat === "double";
+export const formatName = (s: Pick<Tournament, "playoffFormat">): string =>
+  isDouble(s) ? "Nhánh thắng – nhánh thua" : "Loại trực tiếp";
+export function playoffStages(
+  s: Pick<Tournament, "playoffFormat">,
+): StageDefinition[] {
+  const upper: StageDefinition[] = [
+    { key: "r16", label: "Vòng 16 đội", count: 8, prefix: "R", kind: "upper" },
+    pairRound("qf", "Tứ kết", "r16", 4, "Q"),
+    pairRound("sf", "Bán kết", "qf", 2, "S"),
+    pairRound(
+      "final",
+      isDouble(s) ? "Chung kết nhánh thắng" : "Chung kết",
+      "sf",
+      1,
+      "F",
+    ),
+  ];
+  return isDouble(s) ? doubleStages(upper) : singleStages(upper);
+}

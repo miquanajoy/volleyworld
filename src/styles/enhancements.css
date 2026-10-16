@@ -1,0 +1,292 @@
+/* Match identity, recent form, seed and score occupy stable columns. */
+.editor-team-row > .match-team-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+.editor-team-row > .match-team-info > .form-strip {
+  justify-self: end;
+}
+.editor-team-row > .live-set-score {
+  flex: 0 0 24px;
+  text-align: right;
+}
+.editor-team-row > .live-set-score[hidden] {
+  display: block;
+  visibility: hidden;
+}
+.side > .match-team-info {
+  grid-template-columns: minmax(0, 1fr) 96px;
+}
+.side .form-strip {
+  justify-self: end;
+}
+.bracket-team-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 78px 20px 20px;
+}
+.bracket-team-line > .form-strip {
+  grid-column: 2;
+  justify-self: end;
+}
+.bracket-team-line > .bracket-seed {
+  grid-column: 3;
+}
+.bracket-team-line > .bracket-set-score {
+  grid-column: 4;
+}
+.live-podium {
+  margin: 18px 0 24px;
+}
+.live-podium .medal-card {
+  min-width: 0;
+}
+.live-podium .team {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.achievement-regions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.achievement-regions [aria-pressed="true"] {
+  background: var(--green);
+  color: white;
+}
+.achievement-layout {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.75fr) minmax(0, 1.65fr);
+  gap: 22px;
+  align-items: start;
+}
+.achievement-countries {
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+  max-height: 680px;
+  overflow: auto;
+}
+.achievement-country {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-color: transparent;
+  padding: 12px;
+}
+.achievement-country[aria-pressed="true"] {
+  background: #edf2e8;
+  border-color: var(--green);
+}
+.achievement-country .team {
+  min-width: 0;
+}
+.achievement-country .team-name {
+  white-space: normal;
+}
+.achievement-medal-totals {
+  font-size: 11px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.achievement-detail {
+  min-width: 0;
+  padding: 24px;
+}
+.achievement-detail h3 {
+  margin-top: 0;
+}
+.achievement-season-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+}
+.achievement-season {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 16px;
+  padding: 17px 0;
+  border-top: 1px solid var(--line);
+  align-items: center;
+}
+.achievement-season > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.achievement-placement {
+  font-size: 17px;
+  font-weight: 750;
+}
+.achievement-placement.medal {
+  font-size: 24px;
+}
+.achievement-hint {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  .achievement-layout {
+    grid-template-columns: 1fr;
+  }
+  .achievement-countries {
+    max-height: 300px;
+  }
+  .achievement-season {
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 10px;
+  }
+  .achievement-detail {
+    padding: 18px;
+  }
+  .editor-team-row > .match-team-info,
+  .side > .match-team-info {
+    grid-template-columns: minmax(0, 1fr) 86px;
+    gap: 8px;
+  }
+  .live-podium {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 400px) {
+  .editor-team-row > .match-team-info {
+    grid-template-columns: minmax(0, 1fr) 78px;
+    gap: 5px;
+  }
+  .editor-team-row .team {
+    gap: 5px;
+  }
+}
+
+@media (max-width: 400px) {
+  .editor-team-row .form-dot {
+    width: 13px;
+    height: 15px;
+  }
+}
+.achievement-mode-switch {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+.achievement-mode-switch [aria-pressed="true"] {
+  background: var(--green);
+  color: white;
+}
+.points-rules {
+  margin: 16px 0;
+  padding: 0 18px;
+}
+.points-rules > summary {
+  cursor: pointer;
+  padding: 16px 0;
+  font-weight: 700;
+}
+.points-rules > div {
+  padding-bottom: 18px;
+}
+.points-rules p {
+  color: var(--muted);
+  font-size: 12px;
+}
+.points-tables {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.points-tables section {
+  min-width: 0;
+}
+.points-tables td:first-child,
+.points-tables th:first-child {
+  text-align: left;
+}
+.career-ranking {
+  min-width: 0;
+}
+.career-ranking-heading {
+  padding: 20px;
+}
+.career-ranking-heading h3 {
+  margin: 0;
+}
+.career-team-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.career-team-button > span:last-child {
+  color: var(--muted);
+}
+.career-team-button .team-name {
+  white-space: nowrap;
+}
+.career-points {
+  color: var(--green);
+  font-size: 16px;
+  font-weight: 800;
+}
+.selected-career-team {
+  background: #edf2e8;
+}
+.ranking-unavailable {
+  padding: 28px;
+}
+.career-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.career-summary small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.career-summary strong {
+  display: block;
+  font-size: 30px;
+  color: var(--green);
+}
+.career-summary p {
+  max-width: 250px;
+}
+.season-points {
+  font-size: 12px;
+  color: var(--muted);
+}
+.earned-points {
+  color: var(--green);
+  font-weight: 750;
+}
+.ranking-layout {
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+}
+@media (max-width: 1000px) {
+  .ranking-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 760px) {
+  .points-tables {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
