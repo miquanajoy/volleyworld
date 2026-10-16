@@ -94,6 +94,18 @@ function canonical(app, id = "body") {
   const src =
       id === "body" ? app.w.document.body : app.w.document.getElementById(id),
     copy = src.cloneNode(true);
+  // Approved product changes have their own feature suite. Compare the remaining
+  // main contract without pretending the new honours/podium/round UI is identical.
+  const remove = (selectors) =>
+    copy.querySelectorAll(selectors).forEach((el) => el.remove());
+  remove(
+    '#heroSettings, [data-action="navigate"][data-arg="achievements"], .playoff-champion, .live-podium, #toast',
+  );
+  if (app.run("tab") === "league")
+    remove(".qualification-news, .round-race-pending");
+  remove(
+    '[onclick="simRound()"], [data-action="simRound"], [data-action="nextLeagueRound"]',
+  );
   for (const el of [copy, ...copy.querySelectorAll("*")]) {
     for (const a of [...el.attributes])
       if (/^on/i.test(a.name) || /^data-(action|trigger|arg\d*)$/.test(a.name))
@@ -101,13 +113,32 @@ function canonical(app, id = "body") {
   }
   return copy.outerHTML.replace(/\s+<\/body>$/, "</body>");
 }
+function normalizeLegacyData(value) {
+  return JSON.parse(
+    JSON.stringify(value, (key, value) =>
+      key === "setupConfirmed" ? undefined : value,
+    ),
+  );
+}
+function normalizeStorage(data) {
+  return Object.fromEntries(
+    Object.entries(data).map(([key, value]) => [
+      key,
+      JSON.stringify(normalizeLegacyData(JSON.parse(value))),
+    ]),
+  );
+}
 function equivalent(a, b, label) {
   assert.equal(
-    b.run("JSON.stringify(state)"),
-    a.run("JSON.stringify(state)"),
+    JSON.stringify(normalizeLegacyData(b.run("state"))),
+    JSON.stringify(normalizeLegacyData(a.run("state"))),
     label + " state",
   );
-  assert.deepEqual(b.data(), a.data(), label + " storage");
+  assert.deepEqual(
+    normalizeStorage(b.data()),
+    normalizeStorage(a.data()),
+    label + " storage",
+  );
   for (const id of [
     "body",
     "content",
@@ -121,4 +152,12 @@ function equivalent(a, b, label) {
   ])
     assert.equal(canonical(b, id), canonical(a, id), label + " #" + id);
 }
-module.exports = { domain, ui, canonical, equivalent, fixture, deterministic };
+module.exports = {
+  domain,
+  ui,
+  canonical,
+  equivalent,
+  fixture,
+  deterministic,
+  normalizeLegacyData,
+};

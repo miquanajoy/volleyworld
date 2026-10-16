@@ -66,7 +66,8 @@ export function createNext(
   store.seasonView = null;
   getPorts().settings.discard();
   store.round = 0;
-  store.tab = customizing ? "settings" : "league";
+  store.tab =
+    customizing || !store.state.setupConfirmed ? "settings" : "league";
   getPorts().commands.save();
   getPorts().commands.render();
   toast(`Mùa ${n} đã sẵn sàng!`);
@@ -84,6 +85,10 @@ export function start() {
   store.seasonView = null;
   if (V.complete(store.state)) {
     createNext("completed", false);
+    return;
+  }
+  if (!V.started(store.state) && !store.state.setupConfirmed) {
+    customize();
     return;
   }
   store.round = Math.max(
@@ -105,13 +110,17 @@ export function replaceRoster(
     seasonNumber: store.state.seasonNumber,
     seasonCreatedAt: store.state.seasonCreatedAt,
   };
-  store.state = { ...V.fresh(selected, playoffFormat), ...meta };
+  store.state = {
+    ...V.fresh(selected, playoffFormat),
+    ...meta,
+    setupConfirmed: true,
+  };
   getPorts().settings.discard();
   store.round = 0;
-  store.tab = "home";
+  store.tab = "league";
   getPorts().commands.save();
   getPorts().commands.render();
-  toast("Đã cập nhật thể thức và đội cho mùa chưa bắt đầu.");
+  toast("Đã xác nhận thể thức. Mùa giải đã sẵn sàng!");
   return true;
 }
 export async function view(id: string) {
@@ -156,3 +165,28 @@ export {
   restoreRecords,
 } from "./model";
 export { history, home, results } from "./views";
+
+/** Scoped read for both archive viewing and honours; stale account responses are discarded. */
+export async function loadSnapshot(id: string) {
+  scope();
+  const expected = key(),
+    row = all().find((r) => r.season_id === id);
+  if (!row) return;
+  if (row.snapshot) return row.snapshot;
+  const snapshot = await getPorts().cloud.fetchSeason(id);
+  if (
+    expected !== key() ||
+    !snapshot ||
+    !V.validState(snapshot) ||
+    snapshot.seasonId !== id ||
+    snapshot.seasonNumber !== row.season_number
+  )
+    return;
+  const found = seasonsState.records.find((r) => r.season_id === id);
+  if (found) {
+    found.snapshot = copy(snapshot);
+    persist();
+  }
+  return snapshot;
+}
+export { all as listSeasons } from "./model";

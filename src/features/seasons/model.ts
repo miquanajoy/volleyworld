@@ -151,7 +151,8 @@ export function mergeRemote(list: SeasonRecord[], expectedScope: string) {
       };
   }
   persist();
-  if (["home", "history"].includes(store.tab)) getPorts().commands.render();
+  if (["home", "history", "achievements"].includes(store.tab))
+    getPorts().commands.render();
 }
 export function adopt(list: SeasonRecord[] | null) {
   scope();
@@ -169,7 +170,8 @@ export function historyFailed(expectedScope: string) {
   scope();
   seasonsState.historyError =
     "Chưa tải được lịch sử online. Các mùa trên thiết bị và mùa đang chơi vẫn được giữ.";
-  if (["home", "history"].includes(store.tab)) getPorts().commands.render();
+  if (["home", "history", "achievements"].includes(store.tab))
+    getPorts().commands.render();
 }
 export function restoreRecords(list: SeasonRecord[]) {
   scope();

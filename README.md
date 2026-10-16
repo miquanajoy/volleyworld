@@ -141,3 +141,9 @@ The engine's playoffStages graph owns routing, display-slot previews, edit locks
 Double playoff has separate upper/lower/grand-final views, with the existing branch/tree layouts for the upper bracket. Archived seasons retain their own mode and remain read-only. The cloud history played constraint is expanded from 516 to 531 without changing ownership policies or archive immutability.
 
 Validation includes 40 double seasons forced through both grand-final outcomes, 16 auto-finished seasons across both modes, exact two-loss elimination checks, crossed lower entries, reset/no-reset UI, format draft/apply/lock, history/export/import and cloud archive roundtrips. The live SQL tests in supabase/tests/double_elimination.sql exercise 530/531 storage, rejection at 532, atomic rollback and owner isolation, rolling back all fixtures.
+
+## League timeline and team honours
+
+The selected league round now shows qualification announcements as of its completion. Finished rounds offer a next-round action; the final round opens Play-in without resetting existing results. The score editor aligns recent-form strips, and finished playoffs show separate gold/silver/bronze cards.
+
+**Thành tích** lets players choose a region and country, then inspect every season's medal, exact/grouped finish or non-participation. Unknown offline history stays explicitly unavailable. Every new season starts with mandatory format/roster setup; confirming opens the league. See [Feature update](docs/FEATURE-UPDATE.md) for details and verification.

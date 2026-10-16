@@ -68,6 +68,7 @@ export interface Bracket {
   reset?: Match[];
 }
 export interface Tournament {
+  setupConfirmed?: boolean;
   version: 1;
   playoffFormat?: PlayoffFormat;
   teamIds?: TeamId[];

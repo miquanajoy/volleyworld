@@ -1,6 +1,10 @@
 const assert = require("node:assert/strict"),
   fs = require("node:fs"),
-  { ui, equivalent, canonical } = require("../support/parity-harness.cjs");
+  {
+    ui,
+    equivalent,
+    normalizeLegacyData,
+  } = require("../support/parity-harness.cjs");
 assert.equal(
   fs.readFileSync("src/styles/app.css", "utf8"),
   fs.readFileSync("tests/fixtures/main/style.css", "utf8"),
@@ -35,6 +39,7 @@ assert.equal(
     );
     same("review");
     both("Settings.apply()");
+    a.run("navigate('league')");
     same("apply");
     a.w.document.getElementById("heroAction").click();
     b.w.document.getElementById("heroAction").click();
@@ -114,6 +119,7 @@ assert.equal(
     both("V.finishAll(state);save();render()");
     same("finished");
     both("navigate('home');Seasons.start()");
+    a.run("Seasons.customize()");
     same("new season + archive");
     both("navigate('history')");
     same("history");
@@ -124,8 +130,8 @@ assert.equal(
     const bundleA = await a.w.Seasons.exportAll(),
       bundleB = await b.w.Seasons.exportAll();
     assert.equal(
-      JSON.stringify(bundleA),
-      JSON.stringify(bundleB),
+      JSON.stringify(normalizeLegacyData(bundleA)),
+      JSON.stringify(normalizeLegacyData(bundleB)),
       "exports equal",
     );
     const reloadA = ui("main", 5, a.data()),
@@ -137,7 +143,7 @@ assert.equal(
     b.close();
   }
   console.log(
-    `PASS differential UI/data: ${count} identical rendered views and storage checkpoints; real DOM button/input/submit events; score errors/focus; both playoff formats; archive, export and reload; byte-identical CSS`,
+    `PASS differential UI/data: ${count} compatible legacy view/data checkpoints (approved UI additions tested separately); real DOM button/input/submit events; score errors/focus; both playoff formats; archive, export and reload; unchanged baseline CSS plus scoped feature styles`,
   );
 })().catch((e) => {
   console.error(e);

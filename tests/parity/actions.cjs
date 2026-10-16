@@ -29,7 +29,7 @@ const assert = require("node:assert/strict"),
   };
   const command = (old, newAction, args = "") =>
     click(`[onclick="${old}"]`, `[data-action="${newAction}"]${args}`);
-  click("#heroSettings", "#heroSettings");
+  click("#heroSettings", "#heroAction");
   same("settings entry");
   command(
     "Settings.adjust('CEV',-1)",
@@ -68,6 +68,7 @@ const assert = require("node:assert/strict"),
   same("back");
   command("Settings.review()", "Settings.review");
   command("Settings.apply()", "Settings.apply");
+  a.run("navigate('league')");
   same("apply");
   click("#heroAction", "#heroAction");
   same("start");
@@ -97,13 +98,14 @@ const assert = require("node:assert/strict"),
   same("close dialog");
   a.run("navigate('home')");
   b.run("navigate('home')");
-  click("#heroSettings", "#heroSettings");
+  command("Seasons.requestNew()", "Seasons.requestNew");
   same("active season decision");
   command(
-    "Seasons.resolve('cancel',true)",
+    "Seasons.resolve('cancel',false)",
     "Seasons.resolve",
-    '[data-arg="cancel"][data-arg1="true"]',
+    '[data-arg="cancel"][data-arg1="false"]',
   );
+  a.run("Seasons.customize()");
   same("cancel season + new setup");
 
   click("#accountButton", "#accountButton");

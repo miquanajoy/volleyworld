@@ -61,8 +61,7 @@ export function checkpoint(s: Tournament, completed: number[]): Checkpoint {
   return answer;
 }
 
-export function report(s: Tournament): QualificationReport {
-  // Result order also supports players completing rounds out of schedule order.
+function completedRounds(s: Tournament): number[] {
   const completed = s.rounds
     .map((r, i) => ({
       i,
@@ -72,6 +71,30 @@ export function report(s: Tournament): QualificationReport {
     .filter((r) => r.done)
     .sort((a, b) => a.order - b.order || a.i - b.i)
     .map((r) => r.i);
+  return completed;
+}
+
+/** Rebuild the report at the moment this scheduled round was completed.
+ * Completion order matters when players finish rounds out of schedule order.
+ * Results remain the source of truth, so corrections invalidate cached proofs.
+ */
+export function reportAtRound(
+  s: Tournament,
+  round: number,
+): QualificationReport | null {
+  const completed = completedRounds(s),
+    index = completed.indexOf(round);
+  return index < 0 ? null : reportCompleted(s, completed.slice(0, index + 1));
+}
+
+export function report(s: Tournament): QualificationReport {
+  return reportCompleted(s, completedRounds(s));
+}
+
+function reportCompleted(
+  s: Tournament,
+  completed: number[],
+): QualificationReport {
   const current = checkpoint(s, completed),
     previous = completed.length ? checkpoint(s, completed.slice(0, -1)) : null;
   const events: QualificationEvents = {

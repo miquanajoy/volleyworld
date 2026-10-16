@@ -1,16 +1,24 @@
 import { displayState } from "../app/selectors";
 import * as V from "../domain/index";
-import type { TeamId } from "../domain/types";
+import type { TeamId, Tournament } from "../domain/types";
 
-export function leagueRank(id: TeamId, s = displayState()) {
+export function leagueRank(id: TeamId, s: Tournament = displayState()) {
   return V.standings(s).findIndex((t) => t.id === id) + 1;
 }
-export function team(id: TeamId, ranked = false, s = displayState()) {
+export function team(
+  id: TeamId,
+  ranked = false,
+  s: Tournament = displayState(),
+) {
   let t = V.get(id),
     rank = ranked === true ? leagueRank(id, s) : 0;
   return `<span class="team">${rank ? `<span class="team-rank" title="Hạng ${rank} trên BXH league mùa ${s.seasonNumber || 1}">#${rank}</span>` : ""}<span class="flag">${t.flag}</span><span class="team-name">${t.name}</span></span>`;
 }
-export function formHtml(id: TeamId, s = displayState(), leagueOnly = false) {
+export function formHtml(
+  id: TeamId,
+  s: Tournament = displayState(),
+  leagueOnly = false,
+) {
   const list = V.recentForm(
       leagueOnly ? { ...s, playin: null, bracket: null } : s,
       id,

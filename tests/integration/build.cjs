@@ -99,14 +99,15 @@ const fs = require("node:fs"),
     assert(el, "missing " + selector);
     el.click();
   };
-  click("#heroSettings");
+  click("#heroAction");
   assert(
     w.document
       .getElementById("content")
       .textContent.includes("Tùy chỉnh giải đấu"),
   );
-  click('[data-action="navigate"][data-arg="home"]');
-  click("#heroAction");
+  click('[data-action="Settings.next"]');
+  click('[data-action="Settings.review"]');
+  click('[data-action="Settings.apply"]');
   click('[data-action="simOne"]');
   const snapshot = JSON.parse(w.localStorage.getItem("volleyworld-v1"));
   assert.equal(snapshot.rounds.flat().filter((m) => m.sets).length, 1);

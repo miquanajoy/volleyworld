@@ -7,8 +7,10 @@ import type {
   QualificationState,
 } from "../../domain/league/qualification/types";
 
-export function qualificationData(s = displayState()) {
-  return Qualification?.report(s) || null;
+export function qualificationData(s = displayState(), round?: number) {
+  return round === undefined
+    ? Qualification.report(s)
+    : Qualification.reportAtRound(s, round);
 }
 export function qualificationBadge(t: Partial<QualificationState> | undefined) {
   if (!t) return "";

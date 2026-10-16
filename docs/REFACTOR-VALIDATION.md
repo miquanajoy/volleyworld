@@ -35,3 +35,7 @@ The qualification regression also enumerates 41,472 BO5 endpoint completions, an
 DOM verification does not provide pixel rendering, mobile layout measurements or real-browser screenshots. The connected browser was unavailable in this session because the originating browser context could not be acquired. Therefore screenshot comparison on desktop/mobile and an authenticated two-real-device smoke test remain **unverified**. Cloud tests use an isolated mock contract and do not write to the user's production database.
 
 The branch is prepared for review; this report does not claim zero possible defects or approve a merge. Before merging, check the preview in a real browser, compare representative desktop/mobile views with main, and exercise signed-in save/reload with a disposable season. Production and `main` must remain unchanged until that gate is complete.
+
+## Subsequent product update
+
+The user authorized new UI and flow behavior after the architecture-only validation above. See [Feature update](FEATURE-UPDATE.md) for the explicit differences, classification rules, additional tests and narrowed legacy UI comparison contract. The frozen main fixtures remain unchanged; the domain differential still compares all tournament results against main.

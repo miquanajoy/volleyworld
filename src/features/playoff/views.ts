@@ -1,3 +1,4 @@
+import { podiumHtml } from "../../components/podium";
 import { displayState, isReadOnly } from "../../app/selectors";
 import { store } from "../../app/store";
 import { formHtml, leagueRank, team } from "../../components/team";
@@ -107,7 +108,6 @@ export function doublePlayoffHtml(s: Tournament) {
       stages
         .filter((d) => d.kind === kind)
         .reduce((n, d) => n + b[d.key]!.filter((m) => m.sets).length, 0),
-    medals = V.podium(s),
     lowerBronze = b.lower6![0]?.sets ? V.loser(b.lower6![0]) : null,
     gf = b.gf![0],
     resetRequired = !!(gf?.sets && V.winner(gf) === gf.b);
@@ -121,7 +121,7 @@ export function doublePlayoffHtml(s: Tournament) {
       .join("")}</div>`;
   if (store.doubleView === "grand")
     body = `<div class="double-help"><b>Chung kết tổng có reset</b><p>Đại diện nhánh thắng chưa thua trận nào. Nếu họ thắng trận 1 thì vô địch; nếu đại diện nhánh thua thắng trận 1 thì hai đội thi đấu thêm một trận BO5 quyết định.</p></div><div class="double-grand-grid">${doubleStagePanel(s, "gf")}${gf?.sets && !resetRequired ? '<section class="double-stage-panel reset-not-needed"><span>✓</span><h3>Không cần trận reset</h3><p>Đại diện nhánh thắng đã thắng trận chung kết tổng đầu tiên.</p></section>' : doubleStagePanel(s, "reset")}</div><div class="double-bronze"><span>🥉</span><div><small>HẠNG BA · THUA CHUNG KẾT NHÁNH THUA</small>${lowerBronze ? team(lowerBronze, true) : "<p>Chờ kết quả chung kết nhánh thua</p>"}</div></div>`;
-  return `<section class="playoff-dashboard"><div><span class="eyebrow">DOUBLE ELIMINATION · BO5</span><h2>Nhánh thắng – nhánh thua</h2><p>16 đội · thua hai lần mới bị loại · chung kết tổng có reset</p></div><div class="playoff-dashboard-action"><span class="badge">${V.complete(s) ? "MÙA GIẢI HOÀN TẤT" : "30–31 TRẬN PLAYOFF"}</span>${playoffStageAction(b)}</div></section>${medals.length ? `<div class="playoff-champion"><span>🏆</span><div><small>NHÀ VÔ ĐỊCH</small><h3>${team(medals[0])}</h3><p>Á quân: ${V.get(medals[1]).name} · Hạng ba: ${V.get(medals[2]).name}</p></div></div>` : ""}<div class="double-tabs" role="group" aria-label="Chọn nhánh playoff">${[
+  return `<section class="playoff-dashboard"><div><span class="eyebrow">DOUBLE ELIMINATION · BO5</span><h2>Nhánh thắng – nhánh thua</h2><p>16 đội · thua hai lần mới bị loại · chung kết tổng có reset</p></div><div class="playoff-dashboard-action"><span class="badge">${V.complete(s) ? "MÙA GIẢI HOÀN TẤT" : "30–31 TRẬN PLAYOFF"}</span>${playoffStageAction(b)}</div></section>${podiumHtml(s)}<div class="double-tabs" role="group" aria-label="Chọn nhánh playoff">${[
     ["upper", "Nhánh thắng", played("upper") + "/15"],
     ["lower", "Nhánh thua", played("lower") + "/14"],
     [
@@ -170,8 +170,7 @@ export function renderPlayoff() {
       ).find(([key]) => !b[key]!.length || b[key]!.some((m) => !m.sets)),
       champion = b.final[0] && V.winner(b.final[0]);
     html += `<section class="playoff-dashboard"><div><span class="eyebrow">THE ROAD TO WORLD CHAMPION</span><h2>Đường đến ngôi vô địch</h2><p>Bốn nhánh cố định. Một hành trình đến chiếc cúp.</p></div><div class="playoff-dashboard-action"><span class="badge">${champion ? "ĐÃ CÓ NHÀ VÔ ĐỊCH" : next?.[1] || "Tranh hạng ba"}</span>${playoffStageAction(b)}</div></section><div class="playoff-toolbar"><div class="playoff-view-switch" role="group" aria-label="Cách xem playoff"><button data-action="setPlayoffLayout" data-arg="branches" aria-pressed="${store.playoffLayout === "branches"}">Theo nhánh</button><button data-action="setPlayoffLayout" data-arg="tree" aria-pressed="${store.playoffLayout === "tree"}">Sơ đồ đầy đủ</button></div><p class="sub">Bấm vào trận để xem điểm từng set hoặc thi đấu · S1–S4 là seed</p></div>`;
-    if (champion)
-      html += `<div class="playoff-champion"><span>🏆</span><div><small>NHÀ VÔ ĐỊCH</small><h3>${team(champion)}</h3><p>Á quân: ${V.get(V.loser(b.final[0])).name}${b.bronze[0]?.sets ? " · Hạng ba: " + V.get(V.winner(b.bronze[0])).name : " · Chờ trận tranh hạng ba"}</p></div></div>`;
+    if (champion) html += podiumHtml(s);
     html +=
       store.playoffLayout === "branches"
         ? `<div class="playoff-quarters">${[0, 1, 2, 3].map((i) => playoffQuarter(b, i)).join("")}</div>${playoffFinals(b)}`

@@ -9,6 +9,11 @@ export function validState(input: unknown): input is Tournament {
   const s = input as Tournament;
   try {
     if (
+      s?.setupConfirmed !== undefined &&
+      typeof s.setupConfirmed !== "boolean"
+    )
+      return false;
+    if (
       s?.seasonId !== undefined &&
       (typeof s.seasonId !== "string" ||
         !s.seasonId.match(/^[a-zA-Z0-9-]{1,100}$/))

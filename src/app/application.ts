@@ -1,3 +1,4 @@
+import { renderAchievements } from "../features/achievements/controller";
 import { KEY, writeTournament } from "../data/local/tournament-storage";
 import * as V from "../domain/index";
 import { renderLeague, renderTable } from "../features/league/views";
@@ -36,7 +37,7 @@ export function navigate(t: AppTab) {
     getPorts().seasons.customize();
     return;
   }
-  if (["home", "history"].includes(t)) store.seasonView = null;
+  if (["home", "history", "achievements"].includes(t)) store.seasonView = null;
   if (store.seasonView && t === "league") t = "table";
   store.tab = t;
   render();
@@ -44,7 +45,7 @@ export function navigate(t: AppTab) {
 export function render() {
   const s = displayState(),
     home = store.tab === "home",
-    outer = ["home", "history", "settings"].includes(store.tab),
+    outer = ["home", "history", "settings", "achievements"].includes(store.tab),
     done = s.rounds.flat().filter((m) => m.sets).length,
     rd = s.rounds.filter((r) => r.every((m) => m.sets)).length,
     stage = V.complete(s)
@@ -83,6 +84,7 @@ export function render() {
         ["playoff", "Play-in & Playoff"],
         ["teams", "32 đội tuyển"],
         ["rules", "Thể thức"],
+        ["achievements", "Thành tích"],
       ];
   $("nav").innerHTML = items
     .map(
@@ -103,6 +105,7 @@ export function render() {
   if (store.tab === "playoff") renderPlayoff();
   if (store.tab === "teams") renderTeams();
   if (store.tab === "rules") renderRules();
+  if (store.tab === "achievements") renderAchievements();
   if (store.tab === "settings") getPorts().settings.render();
 }
 export async function exportSave() {

@@ -7,6 +7,7 @@ fs.writeFileSync(
 );
 for (const [name, entry, format] of [
   ["engine", "src/domain/index.ts", "cjs"],
+  ["achievement-model", "src/features/achievements/model.ts", "cjs"],
   ["qualification", "src/domain/league/qualification/index.ts", "cjs"],
   ["sync-core", "src/data/cloud/write-queue.ts", "cjs"],
   ["app", "tests/support/compat-app.ts", "iife"],

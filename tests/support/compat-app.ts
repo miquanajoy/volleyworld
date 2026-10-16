@@ -65,3 +65,5 @@ import { getPorts, registerPorts } from "../../src/app/ports";
 
 import { initializeActions } from "../../src/app/actions";
 target.__initializeActions = initializeActions;
+
+target.__ports = getPorts;

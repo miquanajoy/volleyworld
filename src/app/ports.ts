@@ -3,6 +3,7 @@ import type {
   PlayoffFormat,
   SaveBundle,
   SeasonRecord,
+  SeasonTile,
   SeasonTournament,
   Tournament,
 } from "../domain/types";
@@ -49,6 +50,8 @@ export interface HistoryController {
   view(id: string): Promise<void>;
   results(): void;
   localRecords(): SeasonRecord[];
+  listSeasons(): SeasonTile[];
+  loadSnapshot(id: string): Promise<SeasonTournament | undefined>;
   exportAll(): Promise<SaveBundle>;
   importAll(bundle: SaveBundle): SeasonTournament;
   progress(s: Tournament): string;

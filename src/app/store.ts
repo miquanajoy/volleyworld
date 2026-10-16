@@ -1,4 +1,4 @@
-import type { SeasonTournament, SeasonView } from "../domain/types";
+import type { Region, SeasonTournament, SeasonView } from "../domain/types";
 
 export type AppTab =
   | "home"
@@ -9,7 +9,8 @@ export type AppTab =
   | "league"
   | "playoff"
   | "teams"
-  | "rules";
+  | "rules"
+  | "achievements";
 export interface AppState {
   state: SeasonTournament;
   tab: AppTab;
@@ -20,6 +21,8 @@ export interface AppState {
   editorSubmitted: boolean;
   playoffLayout: "branches" | "tree";
   doubleView: "upper" | "lower" | "grand";
+  achievementRegion: Region;
+  achievementTeam: string | null;
 }
 /** Initialized once by bootstrap before feature controllers are invoked. */
 let current: AppState | undefined;
@@ -37,6 +40,8 @@ export function initializeStore(state: SeasonTournament): AppState {
     editorSubmitted: false,
     playoffLayout: "branches",
     doubleView: "upper",
+    achievementRegion: "CEV",
+    achievementTeam: null,
   };
   return current;
 }

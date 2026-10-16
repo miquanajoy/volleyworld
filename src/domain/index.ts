@@ -15,3 +15,5 @@ export * from "./tournament/metadata";
 export * from "./tournament/roster";
 export * from "./tournament/schedule";
 export * from "./tournament/validation";
+
+export * from "./tournament/placement";

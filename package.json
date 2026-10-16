@@ -10,11 +10,12 @@
     "test:legacy": "node scripts/build-test.cjs && node scripts/test-legacy.cjs",
     "test:parity": "node scripts/build-test.cjs && node tests/parity/domain.cjs && node tests/parity/ui.cjs && node tests/parity/actions.cjs",
     "test:architecture": "node tests/architecture/check.cjs",
-    "test": "npm run test:legacy && npm run test:parity && npm run test:architecture",
+    "test": "npm run test:legacy && npm run test:parity && npm run test:features && npm run test:architecture",
     "check": "npm run build && npm test && npm run test:build",
-    "format": "prettier --write src vite.config.ts tests/support tests/parity tests/integration tests/architecture scripts *.json .github/workflows docs README.md",
-    "format:check": "prettier --check src vite.config.ts tests/support tests/parity tests/integration tests/architecture scripts *.json .github/workflows docs README.md",
-    "test:build": "node --experimental-vm-modules tests/integration/build.cjs && node tests/integration/config.cjs"
+    "format": "prettier --write src vite.config.ts tests/support tests/parity tests/integration tests/architecture tests/features scripts *.json .github/workflows docs README.md",
+    "format:check": "prettier --check src vite.config.ts tests/support tests/parity tests/integration tests/architecture tests/features scripts *.json .github/workflows docs README.md",
+    "test:build": "node --experimental-vm-modules tests/integration/build.cjs && node tests/integration/config.cjs",
+    "test:features": "node scripts/build-test.cjs && node scripts/test-features.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0"
