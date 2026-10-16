@@ -22,7 +22,7 @@ The initial team list uses the ranking snapshot dated 13 October 2026 recorded i
 
 ## Validate
 
-Requires Node.js; no packages need installing.
+Requires Node.js and npm. Run `npm ci`, then `npm run build` and `npm test`.
 
 ```sh
 node --check dist/engine.js
@@ -32,7 +32,7 @@ node test.cjs
 
 ## Deploy with Vercel
 
-Import this repository into Vercel. Use the repository root as the root directory. The committed configuration sets the output directory to `dist` and runs the checks above. No environment variables, database or build dependencies are required.
+Import this repository into Vercel. Use the repository root as the root directory. The committed configuration sets the output directory to `dist` and runs the checks above. The local game requires no database. The cloud-enabled build installs the exact dependencies from package-lock.json.
 
 ## Saving across devices
 
@@ -52,6 +52,10 @@ Cloud saves use Supabase Auth (email magic link) and PostgreSQL. Each account ha
 6. Redeploy Vercel. `scripts/build.cjs` generates browser configuration from these two public values. **Never supply a secret/service-role key**; the build rejects it.
 7. Sign in, then explicitly choose whether to continue from the online save or upload the current device's tournament. Further changes save automatically.
 
-No Supabase configuration means the website continues to work with local saves. Local progress is scoped to the signed-in account, while guest progress is retained separately. Up to five local recovery snapshots are kept before resolving save choices. Offline progress is retained locally; reconnect and choose the intended version if devices diverge. Browser cloud sync requires access to the Supabase JavaScript client CDN.
+No Supabase configuration means the website continues to work with local saves. Local progress is scoped to the signed-in account, while guest progress is retained separately. Up to five local recovery snapshots are kept before resolving save choices. Offline progress is retained locally; reconnect and choose the intended version if devices diverge. The Supabase browser client is bundled at build time from exact, locked package versions; no third-party CDN is required at runtime.
 
 Validate the sync queue and local fallback with `node test-sync.cjs`. Database access tests are in `supabase/tests/rls.sql` and require the configured Supabase database with pgTAP. These SQL tests must pass on the target project before claiming the cloud setup is verified.
+
+The production Supabase project URL and **publishable** key are committed in `supabase/public-config.json`. These are public browser configuration values, protected by ownership RLS; no secret/service-role credentials are in the repository. Vercel environment overrides remain optional.
+
+Production URL: https://volleyworld.vercel.app/ . Supabase Auth Site URL and Redirect URLs must include this exact origin.
