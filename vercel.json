@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "node --check dist/engine.js && node --check dist/app.js && node test.cjs",
+  "outputDirectory": "dist",
+  "cleanUrls": true
+}
