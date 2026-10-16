@@ -12,7 +12,7 @@ const quotas=list=>Object.fromEntries(Object.keys(limits).map(r=>[r,list.filter(
 function validRoster(list){if(!Array.isArray(list)||list.length!==32||new Set(list).size!==32||!list.every(id=>get(id)))return false;let q=quotas(list);return Object.keys(limits).every(r=>q[r]>=limits[r].min&&q[r]<=limits[r].max);}
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a};
 const match=(a,b,id)=>({id,a,b,sets:null});
-function fresh(selected=defaultIds){if(!validRoster(selected))throw Error('Danh sách cần đủ 32 đội, không trùng, đúng giới hạn khu vực.');let ring=shuffle(selected),rounds=[];for(let r=0;r<31;r++){let ms=[];for(let i=0;i<16;i++)ms.push(match(ring[i],ring[31-i],`L${r}-${i}`));rounds.push(ms);ring.splice(1,0,ring.pop());}return ensureSeason({version:1,teamIds:[...selected],rounds,tie:shuffle(selected),playin:null,bracket:null},true);}
+function fresh(selected=defaultIds,playoffFormat='single'){if(!['single','double'].includes(playoffFormat))throw Error('Thể thức playoff không hợp lệ.');if(!validRoster(selected))throw Error('Danh sách cần đủ 32 đội, không trùng, đúng giới hạn khu vực.');let ring=shuffle(selected),rounds=[];for(let r=0;r<31;r++){let ms=[];for(let i=0;i<16;i++)ms.push(match(ring[i],ring[31-i],`L${r}-${i}`));rounds.push(ms);ring.splice(1,0,ring.pop());}return ensureSeason({version:1,playoffFormat,teamIds:[...selected],rounds,tie:shuffle(selected),playin:null,bracket:null},true);}
 const get=id=>catalog.find(t=>t.id===id);
 function score(m){let a=0,b=0;for(const [x,y]of m.sets||[])x>y?a++:b++;return[a,b];}
 const winner=m=>m.sets?(score(m)[0]===3?m.a:m.b):null;
@@ -22,8 +22,37 @@ function validate(sets){if(!Array.isArray(sets)||sets.length<3||sets.length>5)re
 function standings(s){let rows=participants(s).map(t=>({...t,w:0,l:0,sf:0,sa:0,pf:0,pa:0})),map=Object.fromEntries(rows.map(t=>[t.id,t]));for(const m of s.rounds.flat()){if(!m.sets)continue;let[a,b]=score(m),x=map[m.a],y=map[m.b];x.sf+=a;x.sa+=b;y.sf+=b;y.sa+=a;a>b?(x.w++,y.l++):(y.w++,x.l++);for(const[p,q]of m.sets){x.pf+=p;x.pa+=q;y.pf+=q;y.pa+=p;}}const primary=(a,b)=>b.w-a.w||a.l-b.l||(b.sf-b.sa)-(a.sf-a.sa)||(b.pf-b.pa)-(a.pf-a.pa);rows.sort(primary);for(let i=0;i<rows.length;){let j=i+1;while(j<rows.length&&!primary(rows[i],rows[j]))j++;const group=rows.slice(i,j),ids=new Set(group.map(x=>x.id)),hw=Object.fromEntries(group.map(x=>[x.id,0]));for(const m of s.rounds.flat())if(m.sets&&ids.has(m.a)&&ids.has(m.b))hw[winner(m)]++;group.sort((a,b)=>hw[b.id]-hw[a.id]||s.tie.indexOf(a.id)-s.tie.indexOf(b.id));rows.splice(i,j-i,...group);i=j;}return rows;}
 const leagueDone=s=>s.rounds.flat().every(m=>m.sets);
 function startPlayin(s){if(!leagueDone(s))throw Error('League chưa kết thúc');const r=standings(s);s.playin=Array.from({length:4},(_,i)=>match(r[12+i].id,r[19-i].id,`P${i}`));}
-function draw(s){if(!s.playin?.every(m=>m.sets))throw Error('Vé vớt chưa kết thúc');let r=standings(s),seeds=[r.slice(0,4).map(x=>x.id),r.slice(4,8).map(x=>x.id),r.slice(8,12).map(x=>x.id),s.playin.map(winner)].map(shuffle);s.bracket={seeds:Object.fromEntries(seeds.flatMap((ids,i)=>ids.map(id=>[id,i+1]))),r16:[],qf:[],sf:[],final:[],bronze:[]};for(let i=0;i<4;i++)s.bracket.r16.push(match(seeds[0][i],seeds[3][i],`R${i*2}`),match(seeds[1][i],seeds[2][i],`R${i*2+1}`));}
-function advance(s){const b=s.bracket;if(!b)return;for(const[src,dest,prefix]of [['r16','qf','Q'],['qf','sf','S'],['sf','final','F']])if(b[src].length&&b[src].every(m=>m.sets)&&!b[dest].length){b[dest]=Array.from({length:b[src].length/2},(_,i)=>match(winner(b[src][i*2]),winner(b[src][i*2+1]),prefix+i));if(src==='sf')b.bronze=[match(loser(b.sf[0]),loser(b.sf[1]),'B0')];}}
+function draw(s){if(!s.playin?.every(m=>m.sets))throw Error('Vé vớt chưa kết thúc');let r=standings(s),seeds=[r.slice(0,4).map(x=>x.id),r.slice(4,8).map(x=>x.id),r.slice(8,12).map(x=>x.id),s.playin.map(winner)].map(shuffle);s.bracket={seeds:Object.fromEntries(seeds.flatMap((ids,i)=>ids.map(id=>[id,i+1]))),r16:[],qf:[],sf:[],final:[],bronze:[]};if(isDouble(s))for(const key of ['lower1','lower2','lower3','lower4','lower5','lower6','gf','reset'])s.bracket[key]=[];for(let i=0;i<4;i++)s.bracket.r16.push(match(seeds[0][i],seeds[3][i],`R${i*2}`),match(seeds[1][i],seeds[2][i],`R${i*2+1}`));}
+const isDouble=s=>s.playoffFormat==='double';
+const formatName=s=>isDouble(s)?'Nhánh thắng – nhánh thua':'Loại trực tiếp';
+const source=(outcome,key,i)=>[outcome,key,i];
+function playoffStages(s){
+ const pairRound=(key,label,from,count,prefix,outcome='w',kind='upper')=>({key,label,count,prefix,kind,pairs:Array.from({length:count},(_,i)=>[source(outcome,from,i*2),source(outcome,from,i*2+1)])});
+ const upper=[{key:'r16',label:'Vòng 16 đội',count:8,prefix:'R',kind:'upper'},pairRound('qf','Tứ kết','r16',4,'Q'),pairRound('sf','Bán kết','qf',2,'S'),pairRound('final',isDouble(s)?'Chung kết nhánh thắng':'Chung kết','sf',1,'F')];
+ if(!isDouble(s))return [...upper,pairRound('bronze','Tranh hạng ba','sf',1,'B','l','medal')];
+ const lower1=pairRound('lower1','Nhánh thua · Vòng 1','r16',4,'D1-','l','lower');
+ const lower2={key:'lower2',label:'Nhánh thua · Vòng 2',count:4,prefix:'D2-',kind:'lower',pairs:Array.from({length:4},(_,i)=>[source('w','lower1',i),source('l','qf',i^1)])};
+ const lower3=pairRound('lower3','Nhánh thua · Vòng 3','lower2',2,'D3-','w','lower');
+ const lower4={key:'lower4',label:'Nhánh thua · Vòng 4',count:2,prefix:'D4-',kind:'lower',pairs:Array.from({length:2},(_,i)=>[source('w','lower3',i),source('l','sf',i^1)])};
+ const lower5=pairRound('lower5','Nhánh thua · Vòng 5','lower4',1,'D5-','w','lower');
+ const lower6={key:'lower6',label:'Chung kết nhánh thua',count:1,prefix:'D6-',kind:'lower',pairs:[[source('w','lower5',0),source('l','final',0)]]};
+ const gf={key:'gf',label:'Chung kết tổng · Trận 1',count:1,prefix:'G',kind:'grand',pairs:[[source('w','final',0),source('w','lower6',0)]]};
+ const reset={key:'reset',label:'Chung kết tổng · Trận quyết định',count:1,prefix:'G',offset:1,kind:'grand',pairs:[[source('a','gf',0),source('b','gf',0)]],reset:true};
+ return [upper[0],lower1,upper[1],lower2,lower3,upper[2],lower4,lower5,upper[3],lower6,gf,reset];
+}
+function expectedStage(s,def){const b=s.bracket;if(!b||!def.pairs)return null;if(def.reset&&(!b.gf[0]?.sets||winner(b.gf[0])!==b.gf[0].b))return null;
+ const keys=[...new Set(def.pairs.flat().map(src=>src[1]))];if(!keys.every(key=>b[key]?.length===playoffStages(s).find(d=>d.key===key)?.count&&b[key].every(m=>m.sets)))return null;
+ return def.pairs.map(pair=>pair.map(([out,key,i])=>{const m=b[key][i];return out==='w'?winner(m):out==='l'?loser(m):m[out]}));
+}
+function advance(s){const b=s.bracket;if(!b)return;for(const def of playoffStages(s).slice(1)){if(b[def.key].length)continue;const pairs=expectedStage(s,def);if(pairs)b[def.key]=pairs.map(([a,c],i)=>match(a,c,def.prefix+(i+(def.offset||0))))}}
+function playoffLocked(s,m){if(!s.bracket)return false;const stages=playoffStages(s),key=stages.find(d=>s.bracket[d.key].some(x=>x.id===m.id))?.key;return !!key&&stages.some(d=>s.bracket[d.key].length&&d.pairs?.flat().some(src=>src[1]===key));}
+function decidingFinal(s){const b=s.bracket;if(!b)return null;if(!isDouble(s))return b.final[0]||null;return b.gf[0]?.sets&&winner(b.gf[0])===b.gf[0].b?b.reset[0]||null:b.gf[0]||null}
+function podium(s){if(!complete(s))return [];const f=decidingFinal(s);return [winner(f),loser(f),isDouble(s)?loser(s.bracket.lower6[0]):winner(s.bracket.bronze[0])]}
+function totalMatches(s){if(!isDouble(s))return 516;const gf=s.bracket?.gf?.[0];return gf?.sets&&winner(gf)===gf.a?530:531}
+function matchLabel(s,m){if(m.id.startsWith('P'))return 'Vòng vé vớt';return playoffStages(s).find(d=>s.bracket?.[d.key]?.some(x=>x.id===m.id))?.label||'Playoff'}
+function stageSlots(s,key){const def=playoffStages(s).find(d=>d.key===key);if(!def)return [];const b=s.bracket,short={r16:'R',qf:'Q',sf:'S',final:'F',lower1:'LB1-',lower2:'LB2-',lower3:'LB3-',lower4:'LB4-',lower5:'LB5-',lower6:'LB6-',gf:'GF'};
+ return Array.from({length:def.count},(_,i)=>({m:b?.[key]?.[i]||null,waiting:def.pairs?.[i].map(([out,src,j])=>{const m=b?.[src]?.[j];if(m?.sets)return out==='w'?winner(m):out==='l'?loser(m):m[out];return out==='a'?'Đại diện nhánh thắng':out==='b'?'Đại diện nhánh thua':`${out==='w'?'Thắng':'Thua'} ${short[src]}${j+1}`})||['Chờ đội tuyển','Chờ đội tuyển']}));
+}
 function matches(s){return [...s.rounds.flat(),...(s.playin||[]),...Object.values(s.bracket||{}).filter(Array.isArray).flat()]}
 function stampResults(s){const all=matches(s);let n=Math.max(0,...all.filter(m=>m.sets&&Number.isSafeInteger(m.resultOrder)).map(m=>m.resultOrder));for(const m of all)if(m.sets&&!Number.isSafeInteger(m.resultOrder))m.resultOrder=++n;return s;}
 function recentForm(s,id){return matches(s).map((m,index)=>({m,index})).filter(({m})=>m.sets&&(m.a===id||m.b===id)).sort((a,b)=>{const x=Number.isSafeInteger(a.m.resultOrder),y=Number.isSafeInteger(b.m.resultOrder);return Number(x)-Number(y)||(x?a.m.resultOrder-b.m.resultOrder:a.index-b.index)||a.index-b.index}).slice(-5).map(({m})=>{const a=m.a===id,[x,y]=score(m);return{win:winner(m)===id,opponent:a?m.b:m.a,score:a?[x,y]:[y,x],matchId:m.id}})}
@@ -47,23 +76,25 @@ sets.push([x,y]);if(prefix){x>y?aw++:bw++;}
 return{errors,focusSides,sets,score:[aw,bw],hasPair,valid:!errors.some(Boolean)&&validate(sets)};}
 function ensureSeason(s,newId=false){if(!s.seasonId)s.seasonId=newId?(typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'season-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)):'legacy-season-1';if(!s.seasonNumber)s.seasonNumber=1;if(!s.seasonCreatedAt)s.seasonCreatedAt=new Date().toISOString();return s;}
 const started=s=>s.rounds.some(r=>r.some(m=>m.sets));
-const complete=s=>!!(s.bracket?.final[0]?.sets&&s.bracket?.bronze[0]?.sets);
-function finishAll(s){stampResults(s);s.rounds.flat().filter(m=>!m.sets).forEach(simulate);if(!s.playin)startPlayin(s);s.playin.filter(m=>!m.sets).forEach(simulate);if(!s.bracket)draw(s);for(const key of ['r16','qf','sf','final','bronze']){s.bracket[key].filter(m=>!m.sets).forEach(simulate);advance(s);}return stampResults(s);}
+const complete=s=>isDouble(s)?!!(s.bracket?.gf?.[0]?.sets&&(winner(s.bracket.gf[0])===s.bracket.gf[0].a||s.bracket.reset?.[0]?.sets)):!!(s.bracket?.final[0]?.sets&&s.bracket?.bronze[0]?.sets);
+function finishAll(s){stampResults(s);s.rounds.flat().filter(m=>!m.sets).forEach(simulate);if(!s.playin)startPlayin(s);s.playin.filter(m=>!m.sets).forEach(simulate);if(!s.bracket)draw(s);advance(s);for(const {key} of playoffStages(s)){s.bracket[key].filter(m=>!m.sets).forEach(simulate);advance(s);}return stampResults(s);}
 function validState(s){try{
 if(s?.seasonId!==undefined&&(typeof s.seasonId!=="string"||!s.seasonId.match(/^[a-zA-Z0-9-]{1,100}$/)))return false;if(s?.seasonNumber!==undefined&&(!Number.isSafeInteger(s.seasonNumber)||s.seasonNumber<1))return false;
+if(s?.playoffFormat!==undefined&&!['single','double'].includes(s.playoffFormat))return false;
 if(s?.version!==1||!validRoster(ids(s))||!Array.isArray(s.rounds)||s.rounds.length!==31||!Array.isArray(s.tie)||s.tie.length!==32||new Set(s.tie).size!==32||!s.tie.every(id=>ids(s).includes(id)))return false;
 const roster=new Set(ids(s)),pairs=new Set(),matchIds=new Set(),resultOrders=new Set();
-const check=m=>{if(m?.resultOrder!==undefined){if(!m.sets||!Number.isSafeInteger(m.resultOrder)||m.resultOrder<1||resultOrders.has(m.resultOrder))return false;resultOrders.add(m.resultOrder)}if(!m||typeof m.id!=='string'||!m.id.match(/^[LPRQSFB0-9-]+$/)||matchIds.has(m.id)||!roster.has(m.a)||!roster.has(m.b)||m.a===m.b||(m.sets!==null&&!validate(m.sets)))return false;matchIds.add(m.id);return true};
+const check=m=>{if(m?.resultOrder!==undefined){if(!m.sets||!Number.isSafeInteger(m.resultOrder)||m.resultOrder<1||resultOrders.has(m.resultOrder))return false;resultOrders.add(m.resultOrder)}if(!m||typeof m.id!=='string'||!m.id.match(/^[LPRQSFBDG0-9-]+$/)||matchIds.has(m.id)||!roster.has(m.a)||!roster.has(m.b)||m.a===m.b||(m.sets!==null&&!validate(m.sets)))return false;matchIds.add(m.id);return true};
 for(const r of s.rounds){if(!Array.isArray(r)||r.length!==16||new Set(r.flatMap(m=>[m.a,m.b])).size!==32)return false;for(const m of r){if(!check(m))return false;pairs.add([m.a,m.b].sort().join('-'));}}if(pairs.size!==496)return false;
 if(s.playin!==null){if(!leagueDone(s)||!Array.isArray(s.playin)||s.playin.length!==4||!s.playin.every(check))return false;const ranked=standings(s);if(!s.playin.every((m,i)=>m.a===ranked[12+i].id&&m.b===ranked[19-i].id))return false;}
-if(s.bracket!==null){const b=s.bracket;if(!s.playin?.every(m=>m.sets)||!b.seeds)return false;for(const [key,n]of [['r16',8],['qf',4],['sf',2],['final',1],['bronze',1]])if(!Array.isArray(b[key])||(b[key].length!==0&&b[key].length!==n)||!b[key].every(check))return false;
-if(b.r16.length!==8)return false;const ranked=standings(s).map(t=>t.id),seedGroups=[ranked.slice(0,4),ranked.slice(4,8),ranked.slice(8,12),s.playin.map(winner)],eligible=seedGroups.flat();
+if(s.bracket!==null){const b=s.bracket,stages=playoffStages(s),allowed=new Set(['seeds','bronze',...stages.map(d=>d.key)]);if(!s.playin?.every(m=>m.sets)||!b.seeds||Object.keys(b).some(k=>!allowed.has(k)))return false;
+for(const def of stages)if(!Array.isArray(b[def.key])||(b[def.key].length!==0&&b[def.key].length!==def.count)||!b[def.key].every(check))return false;
+if(isDouble(s)&&(!Array.isArray(b.bronze)||b.bronze.length))return false;
+if(b.r16.length!==8||!b.r16.every((m,i)=>m.id==='R'+i))return false;const ranked=standings(s).map(t=>t.id),seedGroups=[ranked.slice(0,4),ranked.slice(4,8),ranked.slice(8,12),s.playin.map(winner)],eligible=seedGroups.flat();
 if(Object.keys(b.seeds).length!==16||!seedGroups.every((list,i)=>list.every(id=>b.seeds[id]===i+1)))return false;
 if(new Set(b.r16.flatMap(m=>[m.a,m.b])).size!==16||!b.r16.every((m,i)=>eligible.includes(m.a)&&eligible.includes(m.b)&&b.seeds[m.a]===(i%2===0?1:2)&&b.seeds[m.b]===(i%2===0?4:3)))return false;
 for(let i=0;i<8;i+=2)if(b.r16.slice(i,i+2).flatMap(m=>[m.a,m.b]).map(id=>b.seeds[id]).sort().join('')!=='1234')return false;
-for(const [src,dest]of [['r16','qf'],['qf','sf'],['sf','final']])if(b[dest].length&&(!b[src].length||!b[src].every(m=>m.sets)||!b[dest].every((m,i)=>m.a===winner(b[src][i*2])&&m.b===winner(b[src][i*2+1]))))return false;
-if(b.bronze.length&&(b.sf.length!==2||!b.sf.every(m=>m.sets)||b.bronze[0].a!==loser(b.sf[0])||b.bronze[0].b!==loser(b.sf[1])))return false;
+for(const def of stages.slice(1)){const expected=expectedStage(s,def);if(isDouble(s)&&!!expected!==!!b[def.key].length)return false;if(b[def.key].length&&(!expected||!b[def.key].every((m,i)=>m.id===def.prefix+(i+(def.offset||0))&&m.a===expected[i][0]&&m.b===expected[i][1])))return false;}
 }return true;
 }catch{return false}}
-const api={matches,stampResults,recentForm,inspectScoreInputs,ensureSeason,started,complete,finishAll,catalog,limits,defaultIds,ids,participants,regionTeams,quotas,validRoster,validState,teams,fresh,get,score,winner,loser,simulate,validate,standings,leagueDone,startPlayin,draw,advance};if(typeof module!=='undefined')module.exports=api;root.V=api;
+const api={isDouble,formatName,playoffStages,playoffLocked,decidingFinal,podium,totalMatches,matchLabel,stageSlots,matches,stampResults,recentForm,inspectScoreInputs,ensureSeason,started,complete,finishAll,catalog,limits,defaultIds,ids,participants,regionTeams,quotas,validRoster,validState,teams,fresh,get,score,winner,loser,simulate,validate,standings,leagueDone,startPlayin,draw,advance};if(typeof module!=='undefined')module.exports=api;root.V=api;
 })(typeof window==='undefined'?globalThis:window);

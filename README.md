@@ -116,3 +116,15 @@ The standings include a league-only last-five form strip (oldest to newest) and 
 Playoff defaults to four color-coded branch panels, each connecting two round-of-16 matches to its quarterfinal. The final stretch identifies A/B and C/D semifinal paths, the championship match and bronze. The full-tree switch shows the same fixed bracket with CSS connectors and a horizontal scroll region. Match tiles retain form, seeds and scores; opening one shows sets and available simulate/edit actions. Known winners can preview pending slots without creating later matches. Play-in results collapse once the draw exists. Both views support archived read-only seasons.
 
 League match cards now align form and set-score columns and anchor actions to the card bottom. The standings use explicit column widths with centered statistic/form headings and cells. Rank badges before flags in match tiles and the score editor use the current league table of the displayed season; archived seasons use their own table. The standings retain their existing position column.
+
+## Playoff format per season
+
+Before any match starts, Tùy chỉnh thể thức offers single or double elimination. Legacy saves without playoffFormat retain single elimination. A new season inherits the last selection and can be changed before it starts. League qualification, the four single-elimination play-in games, seed pools and the initial draw are unchanged.
+
+Double elimination uses 15 upper-bracket games, 14 lower-bracket games, and one or two grand-final games. Upper rounds retain r16/qf/sf/final; lower1–lower6 receive losers through fixed crossed routes to reduce early rematches. The upper finalist is gf.a. If gf.b wins, reset G1 is created with the same sides; otherwise the tournament completes after G0. Bronze is the loser of lower6. The season totals 530 or 531 games.
+
+The engine's playoffStages graph owns routing, display-slot previews, edit locks, auto-finish order and imported-save validation. No stage may start before its source results exist. Results become locked whenever a dependent stage is created. Double saves must include all ready stages, including a required reset. V.podium, V.complete and V.totalMatches drive season completion, history and progress; the upper final is never treated as the world final.
+
+Double playoff has separate upper/lower/grand-final views, with the existing branch/tree layouts for the upper bracket. Archived seasons retain their own mode and remain read-only. The cloud history played constraint is expanded from 516 to 531 without changing ownership policies or archive immutability.
+
+Validation includes 40 double seasons forced through both grand-final outcomes, 16 auto-finished seasons across both modes, exact two-loss elimination checks, crossed lower entries, reset/no-reset UI, format draft/apply/lock, history/export/import and cloud archive roundtrips. The live SQL tests in supabase/tests/double_elimination.sql exercise 530/531 storage, rejection at 532, atomic rollback and owner isolation, rolling back all fixtures.
