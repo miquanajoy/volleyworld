@@ -290,3 +290,33 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.team-league-table th:nth-child(3),
+.team-league-table td:nth-child(3) {
+  min-width: 124px;
+  text-align: center;
+  white-space: nowrap;
+}
+.team-league-result {
+  display: inline-grid;
+  grid-template-columns: 32px 40px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  line-height: 20px;
+  vertical-align: middle;
+}
+.team-league-result > b {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.team-league-result > span {
+  text-align: left;
+}
+.team-league-result.won {
+  background: #edf7ef;
+}
+.team-league-result.lost {
+  background: #fff1f0;
+}
