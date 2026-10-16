@@ -211,37 +211,124 @@
 }
 .career-ranking {
   min-width: 0;
+  overflow: hidden;
 }
 .career-ranking-heading {
-  padding: 20px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--line);
 }
 .career-ranking-heading h3 {
   margin: 0;
+  font-size: 17px;
+}
+.career-ranking-heading .sub {
+  margin: 7px 0 0;
+  line-height: 1.6;
+}
+.career-ranking-table {
+  table-layout: fixed;
+  width: 100%;
+  min-width: 560px;
+  font-variant-numeric: tabular-nums;
+}
+.career-col-rank {
+  width: 52px;
+}
+.career-col-points {
+  width: 100px;
+}
+.career-col-seasons {
+  width: 60px;
+}
+.career-col-medal {
+  width: 44px;
+}
+.career-ranking-table th,
+.career-ranking-table td {
+  padding: 12px 8px;
+  text-align: center;
+  vertical-align: middle;
+}
+.career-ranking-table th:nth-child(2),
+.career-ranking-table td:nth-child(2) {
+  text-align: left;
+}
+.career-ranking-table th {
+  height: 44px;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+}
+.career-ranking-table tbody tr {
+  transition: background-color 150ms ease;
+}
+.career-ranking-table tbody tr:hover {
+  background: #f5f8f2;
+}
+.career-rank {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.career-rank-1 {
+  color: #8c6519;
+  background: #fff3ce;
+}
+.career-rank-2 {
+  color: #5f6c7b;
+  background: #edf1f5;
+}
+.career-rank-3 {
+  color: #925832;
+  background: #faeadd;
 }
 .career-team-button {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 0;
+  padding: 4px 0;
+  min-height: 32px;
   border: 0;
   background: none;
   width: 100%;
   text-align: left;
+  border-radius: 4px;
+}
+.career-team-button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+.career-team-button .team {
+  min-width: 0;
 }
 .career-team-button > span:last-child {
   color: var(--muted);
 }
 .career-team-button .team-name {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .career-points {
   color: var(--green);
   font-size: 16px;
   font-weight: 800;
 }
+.career-points > span {
+  display: inline-block;
+  min-width: 66px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: #eef4e9;
+}
 .selected-career-team {
   background: #edf2e8;
+  box-shadow: inset 3px 0 var(--green);
 }
 .ranking-unavailable {
   padding: 28px;
