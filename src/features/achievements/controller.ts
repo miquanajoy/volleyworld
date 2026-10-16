@@ -9,11 +9,19 @@ let request = 0;
 export function selectRegion(region: Region) {
   if (!Object.hasOwn(names, region)) return;
   store.achievementRegion = region;
+  store.achievementWorldwide = false;
   store.achievementTeam = null;
   renderAchievements();
 }
 export function selectTeam(id: string) {
-  if (!catalog.some((t) => t.id === id && t.region === store.achievementRegion))
+  if (
+    !catalog.some(
+      (t) =>
+        t.id === id &&
+        (t.region === store.achievementRegion ||
+          (store.achievementView === "ranking" && store.achievementWorldwide)),
+    )
+  )
     return;
   store.achievementTeam = id;
   renderAchievements();
@@ -22,16 +30,25 @@ export function renderAchievements() {
   const token = ++request,
     scope = getPorts().cloud.storageKey(),
     rows = getPorts().seasons.listSeasons();
-  const missing = store.achievementTeam
-    ? rows.filter(
-        (r) =>
-          !r.snapshot &&
-          !(
-            r.status === "completed" &&
-            seasonMedals(r).includes(store.achievementTeam!)
-          ),
-      )
-    : [];
+  const missing =
+    store.achievementView === "ranking"
+      ? rows.filter(
+          (r) =>
+            !r.snapshot &&
+            (r.status === "completed" ||
+              (store.achievementTeam &&
+                !seasonMedals(r).includes(store.achievementTeam))),
+        )
+      : store.achievementTeam
+        ? rows.filter(
+            (r) =>
+              !r.snapshot &&
+              !(
+                r.status === "completed" &&
+                seasonMedals(r).includes(store.achievementTeam!)
+              ),
+          )
+        : [];
   const valid = () =>
     token === request &&
     store.tab === "achievements" &&
@@ -57,4 +74,22 @@ export function renderAchievements() {
   ).then(() => {
     if (valid()) $("content").innerHTML = achievementsHtml(rows, false);
   });
+}
+
+export function selectView(view: string) {
+  if (view !== "countries" && view !== "ranking") return;
+  store.achievementView = view;
+  if (view === "countries") {
+    store.achievementWorldwide = false;
+    if (store.achievementTeam)
+      store.achievementRegion = catalog.find(
+        (t) => t.id === store.achievementTeam,
+      )!.region;
+  }
+  renderAchievements();
+}
+export function selectWorldwide() {
+  store.achievementWorldwide = true;
+  store.achievementTeam = null;
+  renderAchievements();
 }

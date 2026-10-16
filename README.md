@@ -147,3 +147,7 @@ Validation includes 40 double seasons forced through both grand-final outcomes, 
 The selected league round now shows qualification announcements as of its completion. Finished rounds offer a next-round action; the final round opens Play-in without resetting existing results. The score editor aligns recent-form strips, and finished playoffs show separate gold/silver/bronze cards.
 
 **Thành tích** lets players choose a region and country, then inspect every season's medal, exact/grouped finish or non-participation. Unknown offline history stays explicitly unavailable. Every new season starts with mandatory format/roster setup; confirming opens the league. See [Feature update](docs/FEATURE-UPDATE.md) for details and verification.
+
+## Career points
+
+Open **Thành tích → BXH điểm qua các mùa** to rank qualifying teams within a region or worldwide. Only completed-season Play-in-or-better finishes earn points; click a team for its season-by-season contribution. The awards use a normalized decreasing curve and distribute the same 4,170 points per season in both playoff formats. See [Career points policy](docs/CAREER-POINTS.md) for the full table, tie-breaks and validation.

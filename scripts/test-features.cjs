@@ -1,5 +1,5 @@
 const { spawnSync } = require("node:child_process");
-for (const file of ["placements", "league-history", "ui"]) {
+for (const file of ["placements", "league-history", "ui", "career-ranking"]) {
   const r = spawnSync(process.execPath, ["tests/features/" + file + ".cjs"], {
     encoding: "utf8",
   });

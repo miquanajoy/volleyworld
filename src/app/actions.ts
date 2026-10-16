@@ -1,5 +1,10 @@
 import { nextLeagueRound } from "../features/league/navigation";
-import { selectRegion, selectTeam } from "../features/achievements/controller";
+import {
+  selectRegion,
+  selectTeam,
+  selectView,
+  selectWorldwide,
+} from "../features/achievements/controller";
 import type { PlayoffFormat, Region, StageKey } from "../domain/types";
 import * as league from "../features/league/controller";
 import { renderLeague, showTeamLeague } from "../features/league/views";
@@ -15,6 +20,8 @@ type Action = (element: HTMLElement) => unknown;
 const arg = (e: HTMLElement) => e.dataset.arg || "";
 /** Explicit command table: markup carries data, never executable JavaScript. */
 const actions: Record<string, Action> = {
+  achievementView: (e) => selectView(arg(e)),
+  achievementWorld: () => selectWorldwide(),
   achievementRegion: (e) => selectRegion(arg(e) as Region),
   achievementTeam: (e) => selectTeam(arg(e)),
   nextLeagueRound: () => nextLeagueRound(),

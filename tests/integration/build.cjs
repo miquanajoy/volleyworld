@@ -128,6 +128,18 @@ const fs = require("node:fs"),
       .getElementById("toast")
       .textContent.includes("Đã lưu trên thiết bị"),
   );
+  click('[data-action="closeDialog"][data-arg="cloudDialog"]');
+  click('#nav [data-action="navigate"][data-arg="achievements"]');
+  click('[data-action="achievementView"][data-arg="ranking"]');
+  click('[data-action="achievementWorld"]');
+  assert(
+    w.document
+      .querySelector(".ranking-unavailable")
+      .textContent.includes("Chưa có đội đủ điều kiện"),
+  );
+  assert(
+    w.document.querySelector(".points-rules").textContent.includes("4.170"),
+  );
   assert.equal(errors.length, 0, errors.map(String).join("\n"));
   dom.window.close();
   console.log(

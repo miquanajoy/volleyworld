@@ -23,6 +23,8 @@ export interface AppState {
   doubleView: "upper" | "lower" | "grand";
   achievementRegion: Region;
   achievementTeam: string | null;
+  achievementView: "countries" | "ranking";
+  achievementWorldwide: boolean;
 }
 /** Initialized once by bootstrap before feature controllers are invoked. */
 let current: AppState | undefined;
@@ -42,6 +44,8 @@ export function initializeStore(state: SeasonTournament): AppState {
     doubleView: "upper",
     achievementRegion: "CEV",
     achievementTeam: null,
+    achievementView: "countries",
+    achievementWorldwide: false,
   };
   return current;
 }

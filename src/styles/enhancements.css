@@ -171,3 +171,122 @@
     height: 15px;
   }
 }
+.achievement-mode-switch {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+.achievement-mode-switch [aria-pressed="true"] {
+  background: var(--green);
+  color: white;
+}
+.points-rules {
+  margin: 16px 0;
+  padding: 0 18px;
+}
+.points-rules > summary {
+  cursor: pointer;
+  padding: 16px 0;
+  font-weight: 700;
+}
+.points-rules > div {
+  padding-bottom: 18px;
+}
+.points-rules p {
+  color: var(--muted);
+  font-size: 12px;
+}
+.points-tables {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.points-tables section {
+  min-width: 0;
+}
+.points-tables td:first-child,
+.points-tables th:first-child {
+  text-align: left;
+}
+.career-ranking {
+  min-width: 0;
+}
+.career-ranking-heading {
+  padding: 20px;
+}
+.career-ranking-heading h3 {
+  margin: 0;
+}
+.career-team-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.career-team-button > span:last-child {
+  color: var(--muted);
+}
+.career-team-button .team-name {
+  white-space: nowrap;
+}
+.career-points {
+  color: var(--green);
+  font-size: 16px;
+  font-weight: 800;
+}
+.selected-career-team {
+  background: #edf2e8;
+}
+.ranking-unavailable {
+  padding: 28px;
+}
+.career-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.career-summary small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.career-summary strong {
+  display: block;
+  font-size: 30px;
+  color: var(--green);
+}
+.career-summary p {
+  max-width: 250px;
+}
+.season-points {
+  font-size: 12px;
+  color: var(--muted);
+}
+.earned-points {
+  color: var(--green);
+  font-weight: 750;
+}
+.ranking-layout {
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+}
+@media (max-width: 1000px) {
+  .ranking-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 760px) {
+  .points-tables {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
