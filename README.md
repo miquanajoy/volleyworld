@@ -93,3 +93,14 @@ History cards show every season, including the current season's progress and res
 Supabase stores archived snapshots in `volleyworld_seasons`, separately from the active save. Ownership RLS and insert-only grants protect history. `save_volleyworld_with_history` writes the active state and pending archives atomically under the existing revision check. Archived results cannot be overwritten. The browser loads historical metadata in pages and fetches older snapshots on demand, keeping at most five synced snapshots in its persisted local cache while retaining pending offline archives. Full history can be exported/imported with the active season; older single-season JSON saves remain accepted.
 
 Apply the season history migration before deploying the new client. `supabase/tests/season_history.sql` checks atomic rollover, archive immutability, revision conflicts, RLS and rollback. `test-seasons.cjs` covers home labels, lock/finish/cancel flows, read-only history, numbering, persistence and export/import.
+
+
+## Manual save, recent form and score entry
+
+The header **Lưu tiến trình** button saves locally and requests an immediate cloud flush when signed in and the save source has been resolved. Its success message is based on a confirmed server response. Signed-out/offline/conflict states explicitly distinguish local retention from cloud confirmation. Automatic saves remain enabled.
+
+Match cards and the score editor show five form slots: green W for wins, red L for losses, gray placeholders for missing results. Completed matches are shown oldest to newest, with the latest at the right, across league, play-in and playoff within the same season. New results get a persistent `resultOrder` when first saved; editing a score preserves its order. Legacy results without this metadata use canonical fixture order without modifying immutable archived snapshots.
+
+The score editor previews the set tally only after at least one pair of inputs is filled. Partial/invalid sets do not add wins to that tally. Custom validation is shown immediately below the affected set, marks its inputs, scrolls to the first error and focuses the field to correct. Validation covers incomplete pairs, gaps, non-integer/negative values, target points, win-by-two/deuce, a fifth set to 15, missing deciding sets and extra sets after the match has ended. Invalid drafts never change the recorded match.
+
+`test-match-ui.cjs` verifies form chronology, persistence, preview and per-set validation/focus. Manual save success, unresolved source and offline cases are covered by the cloud integration and local fallback tests.

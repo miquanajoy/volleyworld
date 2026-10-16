@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build.cjs",
-    "test": "node --check dist/app.js && node --check dist/cloud.js && node --check dist/settings.js && node --check dist/seasons.js && node test.cjs && node test-settings.cjs && node test-seasons.cjs && node test-sync.cjs && node test-cloud-integration.cjs"
+    "test": "node --check dist/app.js && node --check dist/cloud.js && node --check dist/settings.js && node --check dist/seasons.js && node test.cjs && node test-settings.cjs && node test-seasons.cjs && node test-match-ui.cjs && node test-sync.cjs && node test-cloud-integration.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0"
