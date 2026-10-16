@@ -98,6 +98,16 @@ function canonical(app, id = "body") {
   // main contract without pretending the new honours/podium/round UI is identical.
   const remove = (selectors) =>
     copy.querySelectorAll(selectors).forEach((el) => el.remove());
+  // Completed-season presentation is covered by season-summary.cjs. Keep the
+  // legacy heading/podium comparison and all persisted-state comparisons.
+  if (app.run("tab") === "season-results") {
+    const content = id === "content" ? copy : copy.querySelector("#content");
+    if (content) {
+      const heading = content.querySelector(".season-result-heading"),
+        podium = content.querySelector(".podium-grid");
+      content.replaceChildren(...[heading, podium].filter(Boolean));
+    }
+  }
   remove(
     '#heroSettings, [data-action="navigate"][data-arg="achievements"], .playoff-champion, .live-podium, #toast',
   );

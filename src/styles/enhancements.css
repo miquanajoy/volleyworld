@@ -407,3 +407,88 @@
 .team-league-result.lost {
   background: #fff1f0;
 }
+.season-summary {
+  margin: 24px 0;
+  overflow: hidden;
+}
+.season-summary-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 0;
+}
+.season-summary-heading h3 {
+  margin: 6px 0 0;
+}
+.season-summary > .sub {
+  margin: 10px 24px 18px;
+}
+.season-summary-table {
+  min-width: 520px;
+  width: 100%;
+}
+.season-summary-table th,
+.season-summary-table td {
+  padding: 11px 20px;
+  text-align: left;
+}
+.season-summary-table th:first-child,
+.season-summary-table td:first-child {
+  width: 120px;
+  text-align: center;
+}
+.season-summary-table td:last-child {
+  color: var(--muted);
+  font-size: 12px;
+}
+.season-finish {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: #f0f3ed;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.season-finish-medal {
+  background: none;
+  font-size: 22px;
+  padding: 0;
+}
+.season-result-disclosure {
+  margin: 14px 0;
+  overflow: hidden;
+}
+.season-result-disclosure > summary {
+  padding: 20px 24px;
+  cursor: pointer;
+  font-weight: 700;
+}
+.season-result-disclosure > summary small {
+  display: block;
+  margin: 6px 0 0 18px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+.season-result-disclosure > summary:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: -4px;
+}
+.season-result-body {
+  padding: 16px;
+  border-top: 1px solid var(--line);
+}
+.season-result-body .playoff-dashboard {
+  display: none;
+}
+@media (max-width: 600px) {
+  .season-result-body {
+    padding: 10px;
+  }
+  .season-summary-heading,
+  .season-result-disclosure > summary {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

@@ -5,6 +5,7 @@ import { team } from "../../components/team";
 import * as V from "../../domain/index";
 import { $ } from "../../shared/dom";
 import { all, medals, progress, scope, seasonsState } from "./model";
+import { seasonSummary } from "./summary";
 export function showDecision(customizing: boolean) {
   const box = $("seasonDecision");
   $("seasonDecisionContent").innerHTML =
@@ -57,6 +58,22 @@ export function resultHeader() {
   }`;
 }
 export function results() {
+  const s = displayState();
+  if (V.complete(s)) {
+    const content = $("content"),
+      playoffOpen = content
+        .querySelector?.('[data-season-section="playoff"]')
+        ?.hasAttribute("open"),
+      leagueOpen = content
+        .querySelector?.('[data-season-section="league"]')
+        ?.hasAttribute("open");
+    getPorts().commands.renderPlayoff();
+    const playoff = content.innerHTML;
+    getPorts().commands.renderTable();
+    const league = content.innerHTML;
+    content.innerHTML = `${resultHeader()}${seasonSummary(s)}<details class="panel season-result-disclosure" data-season-section="playoff" ${playoffOpen ? "open" : ""}><summary><span>Nhánh playoff</span><small>Kết quả từng trận · điểm từng set</small></summary><div class="season-result-body">${playoff}</div></details><details class="panel season-result-disclosure" data-season-section="league" ${leagueOpen ? "open" : ""}><summary><span>BXH sau league phase</span><small>Đầy đủ 32 đội · phong độ · chi tiết trận đấu</small></summary><div class="season-result-body">${league}</div></details>`;
+    return;
+  }
   const header = resultHeader();
   getPorts().commands.renderPlayoff();
   $("content").innerHTML =
