@@ -1,6 +1,6 @@
 const KEY='volleyworld-v1';let state;try{state=JSON.parse(localStorage.getItem(KEY));if(!state||state.version!==1)state=V.fresh()}catch{state=V.fresh()}let tab='table',round=Math.max(0,state.rounds.findIndex(r=>r.some(m=>!m.sets))),search='',editId=null;
 const $=id=>document.getElementById(id), names={CEV:'Châu Âu',NORCECA:'Bắc, Trung Mỹ & Caribe',AVC:'Châu Á & Đại Dương',CSV:'Nam Mỹ',CAVB:'Châu Phi'};
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));$('saved').textContent='● Đã lưu trên trình duyệt'}catch{$('saved').textContent='Không thể lưu · hãy xuất tiến độ'}}
+function save(){try{localStorage.setItem(window.Cloud?.storageKey()||KEY,JSON.stringify(state));$('saved').textContent='● Đã lưu trên trình duyệt'}catch{$('saved').textContent='Không thể lưu · hãy xuất tiến độ'}window.Cloud?.changed(state)}
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),2600)}
 function team(id){let t=V.get(id);return `<span class="team"><span class="flag">${t.flag}</span>${t.name}</span>`}
 function allMatches(){return [...state.rounds.flat(),...(state.playin||[]),...Object.values(state.bracket||{}).filter(Array.isArray).flat()]}
