@@ -1,6 +1,7 @@
-.vercel/
 node_modules/
+dist/
+.test-build/
+.vercel/
 .env
 .env.*
 !.env.example
-dist/vendor/

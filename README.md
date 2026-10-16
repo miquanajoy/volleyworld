@@ -16,19 +16,35 @@ The initial team list uses the ranking snapshot dated 13 October 2026 recorded i
 
 ## Repository layout
 
-- `dist/`: deployable static website, no dependencies.
-- `test.cjs`: tournament engine checks, including 30 complete seasons.
-- `vercel.json`: static hosting configuration; checks run before deployment.
+The application uses strict TypeScript, Vite and feature modules. Production bundles are generated; do not edit `dist/`.
 
-## Validate
+| Directory            | Responsibility                                                                   |
+| -------------------- | -------------------------------------------------------------------------------- |
+| `src/app`            | Bootstrap, typed state, application ports, navigation and delegated actions      |
+| `src/domain`         | Pure tournament rules, scoring, standings, qualification and playoff engines     |
+| `src/features`       | Setup, league, matches, playoff, seasons and account controllers/views           |
+| `src/components`     | Reusable team, form and match markup                                             |
+| `src/data`           | Team catalog, version-one migration, storage repositories and serial cloud queue |
+| `src/shared`         | DOM helpers and feedback                                                         |
+| `src/styles`         | CSS preserved from the main baseline                                             |
+| `tests/legacy`       | Original regression assertions, run through a test-only compatibility facade     |
+| `tests/parity`       | Deterministic domain/UI/storage comparisons against frozen main                  |
+| `tests/integration`  | Execution of the actual production ESM bundle and Supabase SDK in DOM            |
+| `tests/architecture` | Dependency boundaries, baseline integrity and global/inline-code guards          |
 
-Requires Node.js and npm. Run `npm ci`, then `npm run build` and `npm test`.
+See [Architecture](docs/ARCHITECTURE.md) and [Refactor validation](docs/REFACTOR-VALIDATION.md).
+
+## Develop and validate
+
+Use **Node.js 24** and npm. Dependencies are pinned in `package-lock.json`.
 
 ```sh
-node --check dist/engine.js
-node --check dist/app.js
-node test.cjs
+npm ci
+npm run dev
+npm run check
 ```
+
+`npm run check` performs strict type checking, builds production assets, runs the regression/differential/architecture suites and exercises the built modules. `npm run format:check` checks source formatting. The frozen main fixtures and original CSS are intentionally excluded from formatting.
 
 ## Deploy with Vercel
 
@@ -36,7 +52,7 @@ Import this repository into Vercel. Use the repository root as the root director
 
 ## Saving across devices
 
-The website is accessible from any device once deployed. Progress is stored separately in each browser, not in a shared account. Choose **Xuất tiến độ** on the old device and **Nhập tiến độ** on the new device to continue the same tournament.
+The website is accessible from any device once deployed. Guest progress is stored separately in each browser. Sign in to sync the active season and archived history through Supabase. JSON export/import remains available for offline transfers and backups.
 
 ## Cloud saves (optional)
 
@@ -60,18 +76,17 @@ The production Supabase project URL and **publishable** key are committed in `su
 
 Production URL: https://volleyworld.vercel.app/ . Supabase Auth Site URL and Redirect URLs must include this exact origin.
 
-
 ## Tournament customization
 
 The **Tùy chỉnh giải đấu** menu keeps the tournament at 32 teams and lets the player change regional quotas:
 
-| Region | Minimum | Maximum |
-| --- | ---: | ---: |
-| Europe / CEV | 2 | 20 |
-| NORCECA | 2 | 12 |
-| Asia–Oceania / AVC | 2 | 12 |
-| South America / CSV | 2 | 6 |
-| Africa / CAVB | 2 | 8 |
+| Region              | Minimum | Maximum |
+| ------------------- | ------: | ------: |
+| Europe / CEV        |       2 |      20 |
+| NORCECA             |       2 |      12 |
+| Asia–Oceania / AVC  |       2 |      12 |
+| South America / CSV |       2 |       6 |
+| Africa / CAVB       |       2 |       8 |
 
 The catalog includes 100 teams from the ranking snapshot dated 13 October 2026, with regional reserve lists ordered by world rank. These are a fixed game dataset, not a live feed or real-world qualification eligibility list.
 
@@ -80,7 +95,6 @@ Workflow: allocate exactly 32 slots → explicitly remove/add teams until each r
 Saves remain version 1, with an optional `teamIds` array; older saves without this field use the original 32 teams. Selected teams persist through local/cloud saves and JSON export/import. The database schema is unchanged.
 
 `test-settings.cjs` checks legacy saves, arbitrary custom rosters, full-season progression and the selection/review/confirmation flow.
-
 
 ## Home and season history
 
@@ -93,7 +107,6 @@ History cards show every season, including the current season's progress and res
 Supabase stores archived snapshots in `volleyworld_seasons`, separately from the active save. Ownership RLS and insert-only grants protect history. `save_volleyworld_with_history` writes the active state and pending archives atomically under the existing revision check. Archived results cannot be overwritten. The browser loads historical metadata in pages and fetches older snapshots on demand, keeping at most five synced snapshots in its persisted local cache while retaining pending offline archives. Full history can be exported/imported with the active season; older single-season JSON saves remain accepted.
 
 Apply the season history migration before deploying the new client. `supabase/tests/season_history.sql` checks atomic rollover, archive immutability, revision conflicts, RLS and rollback. `test-seasons.cjs` covers home labels, lock/finish/cancel flows, read-only history, numbering, persistence and export/import.
-
 
 ## Manual save, recent form and score entry
 

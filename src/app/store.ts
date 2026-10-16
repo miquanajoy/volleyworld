@@ -1,0 +1,53 @@
+import type { SeasonTournament, SeasonView } from "../domain/types";
+
+export type AppTab =
+  | "home"
+  | "history"
+  | "settings"
+  | "season-results"
+  | "table"
+  | "league"
+  | "playoff"
+  | "teams"
+  | "rules";
+export interface AppState {
+  state: SeasonTournament;
+  tab: AppTab;
+  round: number;
+  search: string;
+  editId: string | null;
+  seasonView: SeasonView | null;
+  editorSubmitted: boolean;
+  playoffLayout: "branches" | "tree";
+  doubleView: "upper" | "lower" | "grand";
+}
+/** Initialized once by bootstrap before feature controllers are invoked. */
+let current: AppState | undefined;
+export function initializeStore(state: SeasonTournament): AppState {
+  current = {
+    state,
+    tab: "home",
+    round: Math.max(
+      0,
+      state.rounds.findIndex((r) => r.some((m) => !m.sets)),
+    ),
+    search: "",
+    editId: null,
+    seasonView: null,
+    editorSubmitted: false,
+    playoffLayout: "branches",
+    doubleView: "upper",
+  };
+  return current;
+}
+export const store = new Proxy({} as AppState, {
+  get(_target, key: keyof AppState) {
+    if (!current) throw Error("Application store has not been initialized");
+    return current[key];
+  },
+  set(_target, key: keyof AppState, value) {
+    if (!current) throw Error("Application store has not been initialized");
+    Reflect.set(current, key, value);
+    return true;
+  },
+});
