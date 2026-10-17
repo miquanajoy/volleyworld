@@ -190,7 +190,7 @@ export function renderPlayoff() {
   }
   if (!s.playin) {
     $("content").innerHTML =
-      `${qualificationNews(qualificationData(s))}${qualificationEntries(qualificationData(s))}<div class="notice"><h2>Đã xác định top ${slots.advance}</h2><p>${slots.direct} đội đầu vào thẳng playoff.${V.expandedSingle(s) ? " Top 12 được miễn vòng 20 đội." : ""} Tạo các cặp Play-in theo thứ hạng league.</p><button class="primary" data-action="startPlayin">Tạo vòng Play-in →</button></div>`;
+      `<div class="notice"><h2>Đã xác định top ${slots.advance}</h2><p>${slots.direct} đội đầu vào thẳng playoff.${V.expandedSingle(s) ? " Top 12 được miễn vòng 20 đội." : ""} Tạo các cặp Play-in theo thứ hạng league.</p><button class="primary" data-action="startPlayin">Tạo vòng Play-in →</button></div>`;
     return;
   }
   const b = s.bracket;

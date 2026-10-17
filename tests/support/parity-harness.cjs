@@ -144,6 +144,11 @@ function canonical(app, id = "body") {
   remove(
     '#heroSettings, [data-action="navigate"][data-arg="achievements"], .playoff-champion, .live-podium, #toast',
   );
+  if (
+    app.run("tab") === "table" &&
+    app.run("V.leagueDone(seasonView?.snapshot || state)")
+  )
+    remove(".qualification-news"); // Completed race visibility is covered by league-history.cjs.
   if (app.run("tab") === "league")
     remove(".qualification-news, .round-race-pending");
   remove(

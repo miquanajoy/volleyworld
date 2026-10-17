@@ -69,6 +69,52 @@ assert.equal(
   t.w.document.querySelector(".qualification-news").outerHTML,
   before,
 );
+for (const format of ["single", "expanded", "double"]) {
+  t.run(
+    `state=V.fresh(undefined,'${format === "double" ? "double" : "single"}');${format === "expanded" ? "state.playoffEntry='top16';" : ""}state.rounds[0].forEach(V.simulate);save();navigate('table')`,
+  );
+  assert(
+    t.w.document.querySelector(".qualification-news"),
+    "ongoing league keeps race on standings",
+  );
+  t.run("navigate('playoff')");
+  assert(t.w.document.querySelector(".qualification-news"));
+  assert(t.w.document.querySelector(".qualification-entry-grid"));
+  t.run(
+    "state.rounds.flat().filter(m=>!m.sets).forEach(V.simulate);save();navigate('table')",
+  );
+  const completed = t.run("JSON.stringify(state)");
+  assert(!t.w.document.querySelector(".qualification-news"));
+  t.w.selectStandingsRound("0");
+  assert(
+    !t.w.document.querySelector(".qualification-news"),
+    "completed league hides race even when revisiting old standings",
+  );
+  t.run("navigate('league');round=30;renderLeague()");
+  assert(
+    t.w.document
+      .querySelector(".qualification-news")
+      .textContent.includes("SAU VÒNG 31"),
+  );
+  t.run("round=0;renderLeague()");
+  assert(
+    t.w.document
+      .querySelector(".qualification-news")
+      .textContent.includes("SAU VÒNG 1"),
+  );
+  t.run("navigate('playoff')");
+  assert(!t.w.document.querySelector(".qualification-news"));
+  assert(!t.w.document.querySelector(".qualification-entry-grid"));
+  assert(t.w.document.querySelector('[data-action="startPlayin"]'));
+  assert.equal(
+    t.run("JSON.stringify(state)"),
+    completed,
+    "visibility changes do not change scores or progression",
+  );
+  t.w.startPlayin();
+  assert(!t.w.document.querySelector(".qualification-news"));
+  assert(t.w.document.querySelector(".playin-matches"));
+}
 t.close();
 console.log(
   "PASS round history: 31 immutable-as-of comparisons, reload, corrected scores, out-of-order completion, unfinished round and real UI backward navigation",
