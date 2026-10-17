@@ -1,3 +1,4 @@
+import { leagueRoundSnapshot } from "../../domain/league/round-standings";
 import { getPorts } from "../../app/ports";
 import { store } from "../../app/store";
 import * as F from "../../domain/full-season/index";
@@ -116,11 +117,12 @@ export function sectionFull(section: string) {
     return;
   fullModel.section = section;
   const league = source(s);
+  const unfinished =
+    league?.rounds.findIndex((r) => r.some((m) => !m.sets)) ?? -1;
   fullModel.round = league
-    ? Math.max(
-        0,
-        league.rounds.findIndex((r) => r.some((m) => !m.sets)),
-      )
+    ? unfinished < 0
+      ? league.rounds.length - 1
+      : unfinished
     : 0;
   getPorts().commands.render();
 }
@@ -161,6 +163,7 @@ export function simulateFullRound(all = false) {
       if (matches.some((m) => F.fullMatchLocked(s, m)))
         throw Error("Kết quả đã khóa vì giai đoạn tiếp theo đã được tạo.");
       matches.filter((m) => !m.sets).forEach(simulate);
+      if (all) fullModel.round = g.rounds.length - 1;
     });
   });
 }
@@ -226,16 +229,24 @@ export function showFullMatch(id: string) {
     `<h3>${team(m.a)} – ${team(m.b)}</h3><p>${m.sets ? `Kết quả ${score(m).join("–")}` : "Chưa thi đấu"}</p>${m.sets ? m.sets.map(([a, b], i) => `<p>Set ${i + 1}: <b>${a}–${b}</b></p>`).join("") : ""}`;
   $("playoffMatchDialog").showModal();
 }
-export function showFullTeam(id: string) {
+export function showFullTeam(id: string, round?: number) {
   const s = selectedFull()?.snapshot;
   if (!s) return;
   const g = source(s),
-    matches = (g ? F.leagueMatches(g) : F.fullMatches(s)).filter(
-      (m) => m.a === id || m.b === id,
-    );
+    historical =
+      g &&
+      round !== undefined &&
+      Number.isInteger(round) &&
+      round >= 0 &&
+      round < g.rounds.length,
+    matches = (
+      g
+        ? F.leagueMatches(historical ? leagueRoundSnapshot(g, round!) : g)
+        : F.fullMatches(s)
+    ).filter((m) => m.a === id || m.b === id);
   $("teamLeagueTitle").innerHTML = team(id);
   $("teamLeagueSummary").textContent =
-    `Full Season ${s.seasonNumber} · ${matches.filter((m) => m.sets).length}/${matches.length} trận`;
+    `Full Season ${s.seasonNumber}${historical ? ` · Tới vòng ${round! + 1}` : ""} · ${matches.filter((m) => m.sets).length}/${matches.length} trận`;
   $("teamLeagueRows").innerHTML = matches
     .map((m) => {
       const own = m.a === id,

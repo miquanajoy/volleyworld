@@ -139,6 +139,21 @@ const fs = require("node:fs"),
   assert.equal(snapshot.rounds.flat().filter((m) => m.sets).length, 2);
   click('[data-action="navigate"][data-arg="table"]');
   assert.equal(w.document.querySelectorAll("#rows tr").length, 32);
+  assert.equal(w.document.querySelectorAll("#rows .rank-movement").length, 32);
+  const progressBeforeHistory = w.localStorage.getItem("volleyworld-v1"),
+    roundSelector = w.document.getElementById("standingsRound");
+  roundSelector.value = "1";
+  roundSelector.dispatchEvent(new w.Event("change", { bubbles: true }));
+  assert.equal(w.document.querySelectorAll("#rows .rank-same").length, 32);
+  assert(
+    w.document
+      .querySelector(".standings-round-note")
+      .textContent.includes("vòng 2"),
+  );
+  assert.equal(w.localStorage.getItem("volleyworld-v1"), progressBeforeHistory);
+  const latestSelector = w.document.getElementById("standingsRound");
+  latestSelector.value = "latest";
+  latestSelector.dispatchEvent(new w.Event("change", { bubbles: true }));
   click("#accountButton");
   assert(
     w.document

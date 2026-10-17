@@ -127,6 +127,9 @@ function canonical(app, id = "body") {
     // Bracket overview/podium/order are covered by playoff-overview.cjs.
     if (content) content.replaceChildren();
   }
+  remove(
+    ".standings-history-controls, .standings-round-note, .standings-detail-cutoff, .rank-legend, .rank-movement",
+  ); // Round standings have separate UI/data coverage.
   remove(".playoff-format-setup"); // Updated entry-slot descriptions are feature-tested.
   if (app.run("tab") === "settings")
     copy.querySelectorAll(".notice > .badge + p").forEach((el) => el.remove());

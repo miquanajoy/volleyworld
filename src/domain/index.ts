@@ -19,3 +19,5 @@ export * from "./tournament/validation";
 export * from "./tournament/placement";
 
 export * from "./playoff/entry";
+
+export * from "./league/round-standings";

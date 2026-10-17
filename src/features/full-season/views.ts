@@ -1,3 +1,13 @@
+import {
+  leagueRoundSnapshot,
+  latestLeagueRound,
+  leagueRoundStatus,
+  rankChanges,
+} from "../../domain/league/round-standings";
+import {
+  rankMovementHtml,
+  rankMovementLegend,
+} from "../../components/rank-movement";
 import { get, regionTeams } from "../../data/teams";
 import * as F from "../../domain/full-season/index";
 import { medalPodiumHtml } from "../../components/podium";
@@ -24,14 +34,24 @@ export function fullCard(s: FullSeason, m: Match, readonly = false) {
     locked = readonly || F.fullMatchLocked(s, m);
   return `<article class="match full-match"><div class="match-top"><span>${esc(m.id)}</span><span>${m.sets ? "HOÀN TẤT" : "CHƯA ĐẤU"}</span></div>${[m.a, m.b].map((id, i) => `<div class="side ${win === id ? "win" : ""}">${fullTeam(id, s)}<span class="result">${m.sets ? (i ? b : a) : "–"}</span></div>`).join("")}${m.sets ? `<div class="sets">${m.sets.map(([x, y], i) => `S${i + 1} ${x}–${y}`).join(" · ")}</div>` : ""}<div class="match-actions"><button data-action="Full.match" data-arg="${m.id}">Chi tiết</button>${locked ? "" : `${!m.sets ? `<button class="primary" data-action="Full.simMatch" data-arg="${m.id}">Mô phỏng</button>` : ""}<button data-action="Full.edit" data-arg="${m.id}">${m.sets ? "Sửa điểm" : "Nhập điểm"}</button>`}</div></article>`;
 }
-export function fullStandingsTable(g: FullLeague, slots = 0) {
-  const done = F.fullLeagueDone(g);
-  return `<div class="table-wrap"><table class="full-standings"><thead><tr><th>#</th><th>ĐỘI TUYỂN</th><th>TRẬN</th><th>W</th><th>L</th><th>SET</th><th>HS SET</th><th>ĐIỂM</th><th>HS ĐIỂM</th></tr></thead><tbody>${F.fullStandings(
-    g,
-  )
+export function fullStandingsTable(
+  g: FullLeague,
+  slots = 0,
+  round = latestLeagueRound(g),
+) {
+  const snapshot = leagueRoundSnapshot(g, round),
+    done = F.fullLeagueDone(snapshot),
+    rows = F.fullStandings(snapshot),
+    previous = F.fullStandings(leagueRoundSnapshot(g, round - 1)),
+    changes = rankChanges(
+      previous,
+      rows,
+      round > 0 || snapshot.rounds.some((r) => r.some((m) => m.sets)),
+    );
+  return `<p class="sub standings-round-note">BXH tới vòng ${round + 1} · ${leagueRoundStatus(g, round)} · chỉ tính kết quả tới vòng đang xem.</p>${rankMovementLegend}<div class="table-wrap"><table class="full-standings"><thead><tr><th>#</th><th>ĐỘI TUYỂN</th><th>TRẬN</th><th>W</th><th>L</th><th>SET</th><th>HS SET</th><th>ĐIỂM</th><th>HS ĐIỂM</th></tr></thead><tbody>${rows
     .map(
       (t, i) =>
-        `<tr class="${i < slots ? "direct" : ""}"><td>${i + 1}</td><td><button class="full-team-button" data-action="Full.team" data-arg="${t.id}">${team(t.id)}</button>${i < slots ? `<span class="full-qualification">${done ? "Giành vé" : "Top dự kiến"}</span>` : ""}</td><td>${t.w + t.l}</td><td><b>${t.w}</b></td><td>${t.l}</td><td>${t.sf}:${t.sa}</td><td>${t.sf - t.sa}</td><td>${t.pf}:${t.pa}</td><td>${t.pf - t.pa}</td></tr>`,
+        `<tr class="${i < slots ? "direct" : ""}"><td>${i + 1}${rankMovementHtml(changes[t.id], round)}</td><td><button class="full-team-button" data-action="Full.team" data-arg="${t.id}" data-arg1="${round}">${team(t.id)}</button>${i < slots ? `<span class="full-qualification">${done ? "Giành vé" : "Top dự kiến"}</span>` : ""}</td><td>${t.w + t.l}</td><td><b>${t.w}</b></td><td>${t.l}</td><td>${t.sf}:${t.sa}</td><td>${t.sf - t.sa}</td><td>${t.pf}:${t.pa}</td><td>${t.pf - t.pa}</td></tr>`,
     )
     .join("")}</tbody></table></div>`;
 }
@@ -100,7 +120,7 @@ export function leagueHtml(
     bye = g.teamIds.filter(
       (id) => !matches.some((m) => m.a === id || m.b === id),
     );
-  return `<div class="section-head"><div><h3>${label}</h3><p class="sub">${g.teamIds.length} đội · ${g.rounds.length} vòng · ${slots ? `Top ${slots} giành vé khi hoàn tất` : "Hai đội đầu bảng và xét đội hạng ba"}</p></div><div class="controls"><select data-action="Full.round" data-trigger="change" aria-label="Chọn vòng Full Season">${g.rounds.map((r, i) => `<option value="${i}" ${i === round ? "selected" : ""}>Vòng ${i + 1}${r.every((m) => m.sets) ? " ✓" : ""}</option>`).join("")}</select>${locked ? '<span class="badge">CHỈ XEM · KẾT QUẢ ĐÃ KHÓA</span>' : `${done ? `<button class="primary" data-action="Full.next">${round === g.rounds.length - 1 ? "Về tổng quan" : "Qua vòng tiếp theo →"}</button>` : `<button class="primary" data-action="Full.simRound">Chạy vòng ${round + 1}</button>`}<button data-action="Full.simLeague" ${F.fullLeagueDone(g) ? "disabled" : ""}>Chạy hết league này</button>`}</div></div>${bye.length ? `<div class="notice">Nghỉ vòng ${round + 1}: ${bye.map((id) => team(id)).join("")}. Không tính trận thắng/thua.</div>` : ""}<div class="grid">${matches.map((m) => fullCard(s, m, locked)).join("")}</div><details class="panel full-league-table" open><summary>BXH ${label}</summary>${fullStandingsTable(g, slots)}</details>`;
+  return `<div class="section-head"><div><h3>${label}</h3><p class="sub">${g.teamIds.length} đội · ${g.rounds.length} vòng · ${slots ? `Top ${slots} giành vé khi hoàn tất` : "Hai đội đầu bảng và xét đội hạng ba"}</p></div><div class="controls"><select data-action="Full.round" data-trigger="change" aria-label="Chọn vòng Full Season">${g.rounds.map((r, i) => `<option value="${i}" ${i === round ? "selected" : ""}>Vòng ${i + 1}${r.every((m) => m.sets) ? " ✓" : ""}</option>`).join("")}</select>${locked ? '<span class="badge">CHỈ XEM · KẾT QUẢ ĐÃ KHÓA</span>' : `${done ? `<button class="primary" data-action="Full.next">${round === g.rounds.length - 1 ? "Về tổng quan" : "Qua vòng tiếp theo →"}</button>` : `<button class="primary" data-action="Full.simRound">Chạy vòng ${round + 1}</button>`}<button data-action="Full.simLeague" ${F.fullLeagueDone(g) ? "disabled" : ""}>Chạy hết league này</button>`}</div></div>${bye.length ? `<div class="notice">Nghỉ vòng ${round + 1}: ${bye.map((id) => team(id)).join("")}. Không tính trận thắng/thua.</div>` : ""}<div class="grid">${matches.map((m) => fullCard(s, m, locked)).join("")}</div><details class="panel full-league-table" open><summary>BXH ${label}</summary>${fullStandingsTable(g, slots, round)}</details>`;
 }
 export const stageNames: Record<WorldStage, string> = {
   r16: "Vòng 16 đội",

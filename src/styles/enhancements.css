@@ -975,3 +975,87 @@
 .round20-section .playin-body > .sub {
   margin-bottom: 18px;
 }
+
+/* Rank movement occupies a fixed slot so arrows never disturb team columns. */
+.standings-table .col-position {
+  width: 76px;
+}
+.standings-table td:first-child,
+.full-standings td:first-child {
+  min-width: 70px;
+  white-space: nowrap;
+}
+.rank-movement {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 21px;
+  height: 23px;
+  margin-left: 6px;
+  border-radius: 5px;
+  font-size: 17px;
+  line-height: 1;
+  font-weight: 800;
+  vertical-align: middle;
+}
+.rank-up {
+  color: #167443;
+}
+.rank-down {
+  color: #c24c2a;
+}
+.rank-same {
+  color: #986b00;
+}
+.rank-movement.rank-up {
+  background: #e6f4eb;
+}
+.rank-movement.rank-down {
+  background: #fff0e8;
+}
+.rank-movement.rank-same {
+  background: #fff5d6;
+}
+.standings-history-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.standings-history-controls label {
+  color: var(--muted);
+  font-size: 12px;
+}
+.standings-history-controls select {
+  max-width: 100%;
+}
+.rank-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  font-size: 11px;
+  margin: 10px 0 18px;
+}
+.rank-legend > span:last-child {
+  color: var(--muted);
+}
+.standings-round-note {
+  margin-top: 14px;
+}
+.full-league-table > .standings-round-note,
+.full-league-table > .rank-legend {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+@media (max-width: 650px) {
+  .standings-history-controls {
+    flex: 1 1 100%;
+  }
+  .standings-history-controls select {
+    min-width: 0;
+    flex: 1;
+  }
+  .rank-legend {
+    gap: 10px;
+  }
+}

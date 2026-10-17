@@ -2,6 +2,7 @@ const { spawnSync } = require("node:child_process");
 for (const file of [
   "placements",
   "league-history",
+  "standings-movement",
   "ui",
   "career-ranking",
   "season-summary",

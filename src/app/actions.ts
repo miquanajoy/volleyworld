@@ -8,7 +8,11 @@ import {
 } from "../features/achievements/controller";
 import type { PlayoffFormat, Region, StageKey } from "../domain/types";
 import * as league from "../features/league/controller";
-import { renderLeague, showTeamLeague } from "../features/league/views";
+import {
+  renderLeague,
+  showTeamLeague,
+  selectStandingsRound,
+} from "../features/league/views";
 import {
   editMatch,
   updateScoreEditor,
@@ -43,7 +47,11 @@ const actions: Record<string, Action> = {
   "Full.finish": () => Full.finishFull(),
   "Full.edit": (e) => Full.editFullMatch(arg(e)),
   "Full.match": (e) => Full.showFullMatch(arg(e)),
-  "Full.team": (e) => Full.showFullTeam(arg(e)),
+  "Full.team": (e) =>
+    Full.showFullTeam(
+      arg(e),
+      e.dataset.arg1 === undefined ? undefined : Number(e.dataset.arg1),
+    ),
   "Full.export": () => Full.exportFull(),
   "Full.exportOne": () => Full.exportFull(true),
   "Full.import": () => $("fullImport").click(),
@@ -78,7 +86,13 @@ const actions: Record<string, Action> = {
   simulateEditorSet: (e) => simulateEditorSet(Number(arg(e))),
   clearEditorSets: (e) => clearEditorSets(Number(arg(e))),
   generateScore: () => generateScore(),
-  showTeamLeague: (e) => showTeamLeague(arg(e)),
+  selectStandingsRound: (e) =>
+    selectStandingsRound((e as HTMLSelectElement).value),
+  showTeamLeague: (e) =>
+    showTeamLeague(
+      arg(e),
+      e.dataset.arg1 === undefined ? undefined : Number(e.dataset.arg1),
+    ),
   simOne: (e) => league.simOne(arg(e)),
   simRound: () => league.simRound(),
   simLeague: () => league.simLeague(),

@@ -1,4 +1,9 @@
-import type { Region, SeasonTournament, SeasonView } from "../domain/types";
+import type {
+  Tournament,
+  Region,
+  SeasonTournament,
+  SeasonView,
+} from "../domain/types";
 
 export type AppTab =
   | "full-season"
@@ -17,6 +22,8 @@ export interface AppState {
   tab: AppTab;
   round: number;
   search: string;
+  tableRound: number | null;
+  tableSource: Tournament | null;
   editId: string | null;
   seasonView: SeasonView | null;
   editorSubmitted: boolean;
@@ -38,6 +45,8 @@ export function initializeStore(state: SeasonTournament): AppState {
       state.rounds.findIndex((r) => r.some((m) => !m.sets)),
     ),
     search: "",
+    tableRound: null,
+    tableSource: null,
     editId: null,
     seasonView: null,
     editorSubmitted: false,
