@@ -984,18 +984,20 @@
 .full-standings td:first-child {
   min-width: 70px;
   white-space: nowrap;
+  text-align: right;
+  padding-right: 16px;
+  font-variant-numeric: tabular-nums;
 }
 .rank-movement {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 21px;
-  height: 23px;
+  width: 16px;
+  height: 20px;
   margin-left: 6px;
-  border-radius: 5px;
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1;
-  font-weight: 800;
+  font-weight: 700;
   vertical-align: middle;
 }
 .rank-up {
@@ -1006,15 +1008,6 @@
 }
 .rank-same {
   color: #986b00;
-}
-.rank-movement.rank-up {
-  background: #e6f4eb;
-}
-.rank-movement.rank-down {
-  background: #fff0e8;
-}
-.rank-movement.rank-same {
-  background: #fff5d6;
 }
 .standings-history-controls {
   display: flex;
