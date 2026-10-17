@@ -618,6 +618,7 @@
 .full-nav {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
   margin: 20px 0 28px;
   padding: 8px;
@@ -626,12 +627,28 @@
   background: white;
 }
 .full-nav button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 10px 16px;
   border: 0;
+  border-radius: 9px;
   background: none;
+  color: var(--muted);
+  line-height: 1.5;
+  white-space: nowrap;
 }
-.full-nav .active {
+.full-nav button:hover:not(:disabled):not(.active) {
+  background: #edf2e8;
+  color: var(--green);
+}
+.full-nav button.active {
+  border: 0;
   background: var(--green);
   color: white;
+}
+.full-nav button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 .full-groups {
   display: grid;
@@ -816,6 +833,7 @@
   .full-nav {
     flex-wrap: nowrap;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
   }
   .full-nav button {
     white-space: nowrap;
