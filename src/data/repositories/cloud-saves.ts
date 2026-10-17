@@ -25,7 +25,9 @@ export const readHistoryPage = (
 ) =>
   client
     .from("volleyworld_seasons")
-    .select("season_id,season_number,status,created_at,ended_at,podium,played")
+    .select(
+      "season_id,season_number,status,created_at,ended_at,podium,played,playoff_format:snapshot->>playoffFormat",
+    )
     .eq("user_id", userId)
     .order("season_number", { ascending: true })
     .range(page * 100, page * 100 + 99);

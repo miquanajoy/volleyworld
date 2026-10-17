@@ -6,6 +6,7 @@ for (const file of [
   "ui",
   "career-ranking",
   "season-summary",
+  "season-format-metadata",
   "playoff-overview",
   "bracket-scroll",
   "expanded-single",

@@ -145,6 +145,7 @@ export function mergeRemote(list: SeasonRecord[], expectedScope: string) {
     if (i < 0) seasonsState.records.push({ ...row, synced: true });
     else if (seasonsState.records[i].synced)
       seasonsState.records[i] = {
+        ...seasonsState.records[i],
         ...row,
         snapshot: seasonsState.records[i].snapshot,
         synced: true,

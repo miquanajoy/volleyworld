@@ -120,6 +120,8 @@ export interface SeasonRecord {
   ended_at: string;
   podium: TeamId[];
   played: number;
+  /** Lightweight cloud projection; null denotes legacy single elimination. */
+  playoff_format?: string | null;
   snapshot?: SeasonTournament;
   synced?: boolean;
 }

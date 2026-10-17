@@ -4,6 +4,7 @@ import { displayState } from "../../app/selectors";
 import { store } from "../../app/store";
 import { team } from "../../components/team";
 import * as V from "../../domain/index";
+import type { SeasonTile } from "../../domain/types";
 import { $ } from "../../shared/dom";
 import { all, medals, progress, scope, seasonsState } from "./model";
 import { seasonSummary } from "./summary";
@@ -12,6 +13,15 @@ export function showDecision(customizing: boolean) {
   $("seasonDecisionContent").innerHTML =
     `<p>Mùa ${store.state.seasonNumber} đang diễn ra: ${progress(store.state)}.</p><p class="sub">Chỉ có thể chỉnh đội và thể thức khi mùa mới chưa có trận đấu. Chọn cách xử lý mùa hiện tại:</p><div class="season-choices"><button class="primary" data-action="Seasons.resolve" data-arg="finish" data-arg1="${customizing}">Mô phỏng hết mùa hiện tại & tạo mùa mới</button><button data-action="Seasons.resolve" data-arg="cancel" data-arg1="${customizing}">Hủy tiến trình hiện tại & tạo mùa mới</button><button data-action="closeDialog" data-arg="seasonDecision">Giữ lại và tiếp tục chơi</button></div><p class="sub">Mùa được mô phỏng sẽ lưu đầy đủ kết quả. Mùa bị hủy được ghi rõ trong lịch sử, không có nhà vô địch.</p>`;
   if (!box.open) box.showModal();
+}
+function formatLabel(r: SeasonTile) {
+  if (r.snapshot) return V.formatName(r.snapshot);
+  if (r.playoff_format === "double") return "Nhánh thắng – nhánh thua";
+  // A projected null means this save predates the double-elimination option.
+  // An absent property means metadata has not been loaded on this device yet.
+  if (r.playoff_format === "single" || r.playoff_format === null)
+    return "Loại trực tiếp";
+  return "Chưa tải thể thức";
 }
 export function tiles() {
   const list = all();
@@ -26,7 +36,7 @@ export function tiles() {
             : r.status === "active"
               ? "Đang diễn ra"
               : "Chưa bắt đầu";
-      return `<article class="panel season-card ${r.current ? "current-season" : ""}"><div class="season-card-top"><span class="eyebrow">SEASON ${String(r.season_number).padStart(2, "0")}</span><span class="badge ${done ? "gold" : ""}">${label}</span></div><h3>Mùa ${r.season_number}</h3>${r.snapshot ? `<p class="season-format-label">${V.formatName(r.snapshot)}</p>` : ""}${done ? `<div class="season-medals">${(r.podium || []).map((id, i) => `<div><span>${["🥇", "🥈", "🥉"][i]}</span>${team(id)}</div>`).join("")}</div>` : `<p class="sub">${r.snapshot ? progress(r.snapshot) : `${r.played || 0} trận đã đấu`}</p><div class="progress"><i style="width:${((r.played || 0) / (r.snapshot ? V.totalMatches(r.snapshot) : 531)) * 100}%"></i></div>`}<div class="actions">${ongoing ? `<button class="primary" data-action="Seasons.start">${V.started(store.state) ? "Tiếp tục giải đấu" : "Bắt đầu giải đấu"}</button>` : `<button data-action="Seasons.view" data-arg="${r.season_id}">${done ? "Xem kết quả mùa giải" : "Xem tiến trình đã hủy"} →</button>`}</div></article>`;
+      return `<article class="panel season-card ${r.current ? "current-season" : ""}"><div class="season-card-top"><span class="eyebrow">SEASON ${String(r.season_number).padStart(2, "0")}</span><span class="badge ${done ? "gold" : ""}">${label}</span></div><h3>Mùa ${r.season_number}</h3><p class="season-format-label">${formatLabel(r)}</p>${done ? `<div class="season-medals">${(r.podium || []).map((id, i) => `<div><span>${["🥇", "🥈", "🥉"][i]}</span>${team(id)}</div>`).join("")}</div>` : `<p class="sub">${r.snapshot ? progress(r.snapshot) : `${r.played || 0} trận đã đấu`}</p><div class="progress"><i style="width:${((r.played || 0) / (r.snapshot ? V.totalMatches(r.snapshot) : 531)) * 100}%"></i></div>`}<div class="actions">${ongoing ? `<button class="primary" data-action="Seasons.start">${V.started(store.state) ? "Tiếp tục giải đấu" : "Bắt đầu giải đấu"}</button>` : `<button data-action="Seasons.view" data-arg="${r.season_id}">${done ? "Xem kết quả mùa giải" : "Xem tiến trình đã hủy"} →</button>`}</div></article>`;
     })
     .join("")}</div>`;
 }
