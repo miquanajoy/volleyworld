@@ -1065,11 +1065,23 @@
 .season-card .season-medals > div {
   min-height: 26px;
 }
-.season-card .season-medals > div > span {
+.season-card .season-medals > div > span:first-child {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 20px;
+}
+.season-card .season-medals .team {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.season-card .season-medals .flag {
+  flex-shrink: 0;
+}
+.season-card .season-medals .team-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .season-card .actions {
   padding-top: 20px;
