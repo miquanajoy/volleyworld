@@ -122,6 +122,11 @@ function canonical(app, id = "body") {
       content.replaceChildren(...[heading, podium].filter(Boolean));
     }
   }
+  if (app.run("tab") === "playoff") {
+    const content = id === "content" ? copy : copy.querySelector("#content");
+    // Bracket overview/podium/order are covered by playoff-overview.cjs.
+    if (content) content.replaceChildren();
+  }
   remove('[data-action="Full.enter"]');
   remove(".score-generator, .score-draft-status, .set-play, .set-clear");
   copy

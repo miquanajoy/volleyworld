@@ -35,8 +35,8 @@ export function playoffEditMatch(id: string) {
   $("playoffMatchDialog").close();
   editMatch(id);
 }
-export function setDoubleView(view: "upper" | "lower" | "grand") {
-  if (!["upper", "lower", "grand"].includes(view)) return;
+export function setDoubleView(view: "overview" | "upper" | "lower" | "grand") {
+  if (!["overview", "upper", "lower", "grand"].includes(view)) return;
   store.doubleView = view;
   if (store.tab === "season-results") getPorts().seasons.results();
   else renderPlayoff();

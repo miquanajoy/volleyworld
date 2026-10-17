@@ -55,7 +55,7 @@ export function simStage(key: StageKey) {
   if (!Array.isArray(store.state.bracket?.[key])) return;
   store.state.bracket[key].filter((m) => !m.sets).forEach(V.simulate);
   V.advance(store.state);
-  if (V.isDouble(store.state))
+  if (V.isDouble(store.state) && store.doubleView !== "overview")
     store.doubleView = key.startsWith("lower")
       ? "lower"
       : ["gf", "reset"].includes(key)

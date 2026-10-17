@@ -139,13 +139,13 @@ const buildPlayoff = (t, format) =>
   assert(
     t.w.document
       .querySelector('.live-podium [data-place="3"]')
-      .textContent.includes("Chờ trận"),
+      .textContent.includes("Chờ kết quả"),
   );
   t.run("V.simulate(state.bracket.bronze[0]);save();renderPlayoff()");
   assert(
     !t.w.document
       .querySelector('.live-podium [data-place="3"]')
-      .textContent.includes("Chờ trận"),
+      .textContent.includes("Chờ kết quả"),
   );
   for (const reset of [false, true]) {
     buildPlayoff(t, "double");
@@ -153,7 +153,12 @@ const buildPlayoff = (t, format) =>
       `state.bracket.gf[0].sets=${reset ? "[[20,25],[20,25],[20,25]]" : "[[25,20],[25,20],[25,20]]"};V.advance(state);save();renderPlayoff()`,
     );
     if (reset) {
-      assert(!t.w.document.querySelector(".live-podium"));
+      assert(t.w.document.querySelector(".live-podium"));
+      assert(
+        t.w.document
+          .querySelector('.live-podium [data-place="1"]')
+          .textContent.includes("Chờ chung kết tổng"),
+      );
       t.run(
         "V.simulate(state.bracket.reset[0]);V.advance(state);save();renderPlayoff()",
       );

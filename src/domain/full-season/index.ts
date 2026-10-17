@@ -3,7 +3,12 @@ import { simulate } from "../match/simulation";
 import type { Match, SetScore } from "../types";
 import { validate } from "../match/scoring";
 import { fullLeague, leagueMatches, simulateLeague } from "./league";
-import { regionOrder, worldStages, type FullSeason } from "./types";
+import {
+  regionOrder,
+  worldStages,
+  worldPlayOrder,
+  type FullSeason,
+} from "./types";
 import {
   advanceWorld,
   drawWorld,
@@ -70,9 +75,10 @@ export function finishFullSeason(s: FullSeason) {
   if (!s.world) drawWorld(s);
   s.world!.groups.forEach((g) => simulateLeague(g));
   if (!s.world!.bracket) drawWorldPlayoff(s);
-  for (const k of worldStages) {
+  for (const k of worldPlayOrder) {
     s.world!.bracket![k].filter((m) => !m.sets).forEach(simulate);
     advanceWorld(s);
+    stampFull(s);
   }
   stampFull(s);
 }

@@ -1,5 +1,5 @@
 import { simulate } from "../match/simulation";
-import { playoffStages } from "../playoff/definitions";
+import { playoffOrder } from "../playoff/definitions";
 import { advance } from "../playoff/progression";
 import { draw, startPlayin } from "../playoff/seeding";
 import type { Tournament } from "../types";
@@ -15,9 +15,10 @@ export function finishAll(s: Tournament) {
   s.playin!.filter((m) => !m.sets).forEach(simulate);
   if (!s.bracket) draw(s);
   advance(s);
-  for (const { key } of playoffStages(s)) {
+  for (const { key } of playoffOrder(s)) {
     s.bracket![key]!.filter((m) => !m.sets).forEach(simulate);
     advance(s);
+    stampResults(s);
   }
   return stampResults(s);
 }

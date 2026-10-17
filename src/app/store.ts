@@ -21,7 +21,7 @@ export interface AppState {
   seasonView: SeasonView | null;
   editorSubmitted: boolean;
   playoffLayout: "branches" | "tree";
-  doubleView: "upper" | "lower" | "grand";
+  doubleView: "overview" | "upper" | "lower" | "grand";
   achievementRegion: Region;
   achievementTeam: string | null;
   achievementView: "countries" | "ranking";
@@ -42,7 +42,7 @@ export function initializeStore(state: SeasonTournament): AppState {
     seasonView: null,
     editorSubmitted: false,
     playoffLayout: "branches",
-    doubleView: "upper",
+    doubleView: "overview",
     achievementRegion: "CEV",
     achievementTeam: null,
     achievementView: "countries",

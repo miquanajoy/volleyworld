@@ -1,6 +1,7 @@
 import { get, regionTeams } from "../../data/teams";
 import * as F from "../../domain/full-season/index";
-import { score, winner } from "../../domain/match/scoring";
+import { medalPodiumHtml } from "../../components/podium";
+import { score, winner, loser } from "../../domain/match/scoring";
 import type {
   FullSeason,
   FullLeague,
@@ -108,10 +109,25 @@ export const stageNames: Record<WorldStage, string> = {
   final: "Chung kết",
   bronze: "Tranh hạng ba",
 };
+export function fullPodiumHtml(s: FullSeason) {
+  const b = s.world?.bracket;
+  if (!b?.final.length || !b.bronze.length) return "";
+  return medalPodiumHtml(
+    [
+      b.final[0].sets ? winner(b.final[0]) : null,
+      b.final[0].sets ? loser(b.final[0]) : null,
+      b.bronze[0].sets ? winner(b.bronze[0]) : null,
+    ],
+    (id) => team(id),
+  );
+}
 export function playoffHtml(s: FullSeason, readonly: boolean) {
   const b = s.world?.bracket;
   if (!b) return worldHtml(s);
-  return `${F.worldComplete(s) ? summaryHtml(s) : ""}<div class="section-head"><div><h3>Playoff thế giới</h3><p class="sub">Nhánh cố định sau bốc thăm · cặp 1–2 gặp nhau ở vòng sau, tiếp tục tương tự · có tranh hạng ba.</p></div></div><div class="full-bracket">${F.worldStages.map((k) => `<section class="full-bracket-stage"><div class="section-head"><h3>${stageNames[k]}</h3>${!readonly && b[k].some((m) => !m.sets) ? `<button data-action="Full.stage" data-arg="${k}">Chạy vòng</button>` : ""}</div>${b[k].length ? b[k].map((m, i) => `<div class="full-bracket-slot"><span class="eyebrow">${k === "r16" ? `Nhánh ${"ABCD"[Math.floor(i / 2)]}` : `Trận ${i + 1}`}</span>${fullCard(s, m, readonly)}</div>`).join("") : '<div class="panel full-empty">Chờ kết quả vòng trước.</div>'}</section>`).join("")}</div>`;
+  const stage = (k: WorldStage) =>
+    `<section class="full-bracket-stage" data-world-stage="${k}"><div class="section-head"><h3>${stageNames[k]}</h3>${!readonly && b[k].some((m) => !m.sets) ? `<button data-action="Full.stage" data-arg="${k}">Chạy vòng</button>` : ""}</div>${b[k].length ? b[k].map((m, i) => `<div class="full-bracket-slot"><span class="eyebrow">${k === "r16" ? `Nhánh ${"ABCD"[Math.floor(i / 2)]}` : `Trận ${i + 1}`}</span>${fullCard(s, m, readonly)}</div>`).join("") : '<div class="panel full-empty">Chờ kết quả vòng trước.</div>'}</section>`;
+  const next = F.worldPlayOrder.find((k) => b[k].some((m) => !m.sets));
+  return `${F.worldComplete(s) ? summaryHtml(s) : fullPodiumHtml(s)}<div class="section-head"><div><h3>Playoff thế giới</h3><p class="sub">Nhánh cố định sau bốc thăm · tranh hạng ba trước chung kết.</p></div>${!readonly && next ? `<button class="primary" data-action="Full.stage" data-arg="${next}">Mô phỏng ${stageNames[next].toLowerCase()} →</button>` : ""}</div><div class="full-bracket">${(["r16", "qf", "sf"] as WorldStage[]).map(stage).join("")}<div class="full-bracket-medals">${stage("final")}${stage("bronze")}</div></div>`;
 }
 export function summaryHtml(s: FullSeason) {
   const placements = F.worldPlacements(s);

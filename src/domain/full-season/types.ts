@@ -13,6 +13,7 @@ export interface FullLeague {
   tie: TeamId[];
 }
 export const worldStages = ["r16", "qf", "sf", "final", "bronze"] as const;
+export const worldPlayOrder = ["r16", "qf", "sf", "bronze", "final"] as const;
 export type WorldStage = (typeof worldStages)[number];
 export interface WorldCup {
   pots: TeamId[][];

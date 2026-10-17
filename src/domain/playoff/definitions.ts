@@ -24,3 +24,17 @@ export function playoffStages(
   ];
   return isDouble(s) ? doubleStages(upper) : singleStages(upper);
 }
+
+/** Competition order differs from the stable bracket/schema order. */
+export function playoffOrder(
+  s: Pick<Tournament, "playoffFormat">,
+): StageDefinition[] {
+  const stages = playoffStages(s);
+  return isDouble(s)
+    ? stages
+    : [
+        ...stages.filter((d) => !["final", "bronze"].includes(d.key)),
+        stages.find((d) => d.key === "bronze")!,
+        stages.find((d) => d.key === "final")!,
+      ];
+}

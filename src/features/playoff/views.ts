@@ -34,7 +34,7 @@ export function playoffWinner(m: Match | null | undefined, fallback: string) {
 }
 export function playoffStageAction(b: Bracket) {
   if (isReadOnly()) return "";
-  for (const { key, label } of V.playoffStages(displayState()))
+  for (const { key, label } of V.playoffOrder(displayState()))
     if (b[key]!.some((m) => !m.sets))
       return `<button class="primary" data-action="simStage" data-arg="${key}">Mô phỏng ${label.toLowerCase()} →</button>`;
   return '<span class="badge gold">MÙA GIẢI ĐÃ HOÀN TẤT</span>';
@@ -83,12 +83,12 @@ export function playoffTree(b: Bracket, upperOnly = false) {
               playoffWinner(b.sf[0], "Thắng bán kết 1"),
               playoffWinner(b.sf[1], "Thắng bán kết 2"),
             ];
+          if (key === "final" && !upperOnly)
+            return `<div class="tree-node tree-medal-stack" style="grid-row:1 / span 16"><div class="tree-final-slot has-prev">${playoffSlot(b.final[0], "F · Chung kết", waiting)}</div><div class="tree-bronze"><h3>🥉 Tranh hạng ba</h3>${playoffSlot(b.bronze[0], "B · Tranh hạng ba", [b.sf[0]?.sets ? V.loser(b.sf[0]) : "Thua bán kết 1", b.sf[1]?.sets ? V.loser(b.sf[1]) : "Thua bán kết 2"])}</div></div>`;
           return `<div class="tree-node ${stage < 3 ? "has-next" : ""} ${stage ? "has-prev" : ""} ${i % 2 === 0 && stage < 3 ? "join-upper" : ""} ${stage === 0 ? "tree-branch-" + Math.floor(i / 2) : ""}" style="grid-row:${i * (16 / n) + 1} / span ${16 / n}">${playoffSlot(b[key]![i], key === "r16" ? `R${i + 1} · Nhánh ${"ABCD"[Math.floor(i / 2)]}` : key === "qf" ? `Q${i + 1} · Nhánh ${"ABCD"[i]}` : title, waiting)}</div>`;
         }).join("")}</div>`,
     )
-    .join(
-      "",
-    )}</div></div>${upperOnly ? "" : `<div class="tree-bronze"><h3>🥉 Tranh hạng ba</h3>${playoffSlot(b.bronze[0], "B · Tranh hạng ba", [b.sf[0]?.sets ? V.loser(b.sf[0]) : "Thua bán kết 1", b.sf[1]?.sets ? V.loser(b.sf[1]) : "Thua bán kết 2"])}</div>`}`;
+    .join("")}</div></div>`;
 }
 export function playinSectionHtml(s: Tournament) {
   const b = s.bracket,
@@ -101,6 +101,26 @@ export function doubleStagePanel(s: Tournament, key: StageKey) {
     done = s.bracket![key]!.filter((m) => m.sets).length;
   return `<section class="double-stage-panel ${def.kind === "lower" ? "lower-stage" : ""}"><div class="double-stage-title"><h3>${def.label}</h3><span class="badge">${done}/${def.count}</span></div><div class="double-stage-matches">${slots.map(({ m, waiting }, i) => `<div>${playoffSlot(m, `${def.kind === "lower" ? "LB" + key.slice(5) + "-" : def.kind === "grand" ? "GF" : def.prefix}${i + 1 + (def.offset || 0)} · BO5`, waiting)}${def.pairs ? `<p class="double-route">${def.pairs[i].map(([out, src, j]) => `${out === "l" ? "Thua" : out === "w" ? "Thắng" : "Đại diện"} ${src === "final" ? "CK nhánh thắng" : src === "sf" ? "bán kết nhánh thắng" : src === "qf" ? "tứ kết nhánh thắng" : src === "r16" ? "vòng 16" : src.startsWith("lower") ? "LB" + src.slice(5) : "GF"}${src === "final" || src === "gf" ? "" : " · " + (j + 1)}`).join(" × ")}</p>` : ""}</div>`).join("")}</div></section>`;
 }
+export function doubleOverview(s: Tournament) {
+  const b = s.bracket!;
+  const lower = V.playoffStages(s).filter((d) => d.kind === "lower");
+  return `<div class="double-overview"><section class="double-overview-panel" aria-label="Nhánh thắng"><div class="section-head"><div><span class="eyebrow">NHÁNH THẮNG · 16 ĐỘI · ${b.r16.length} TRẬN MỞ MÀN</span><h3>Nhánh thắng</h3><p class="sub">Thắng để đi tiếp · thua lần đầu xuống nhánh thua.</p></div></div>${playoffTree(b, true)}</section><section class="double-overview-panel" aria-label="Nhánh thua"><div class="section-head"><div><span class="eyebrow">CƠ HỘI THỨ HAI</span><h3>Nhánh thua</h3><p class="sub">Thua thêm một trận sẽ bị loại · thua chung kết nhánh thua nhận hạng ba.</p></div></div><p class="tree-scroll-hint">LB1 → LB6 · các đội rơi từ nhánh thắng được ghi ở từng trận.</p><div class="double-lower-scroll" tabindex="0" role="region" aria-label="Sơ đồ nhánh thua, có thể cuộn ngang"><div class="double-lower-tree">${lower
+    .map((d, stage) => {
+      const next = lower[stage + 1];
+      return `<section class="lower-tree-stage"><div class="double-stage-title"><h3>${d.label}</h3><span class="badge">${b[d.key]!.filter((m) => m.sets).length}/${d.count}</span></div><div class="lower-tree-nodes">${V.stageSlots(
+        s,
+        d.key,
+      )
+        .map(
+          ({ m, waiting }, i) =>
+            `<div class="lower-tree-node ${next ? "has-next" : ""} ${stage ? "has-prev" : ""} ${next && next.count < d.count && i % 2 === 0 ? "join-upper" : ""}" style="grid-row:${i * (8 / d.count) + 1} / span ${8 / d.count}"><div>${playoffSlot(m, `LB${stage + 1}-${i + 1} · BO5`, waiting)}<p class="double-route">${d.pairs![i].map(([out, src, j]) => `${out === "l" ? "Thua" : "Thắng"} ${src.startsWith("lower") ? "LB" + src.slice(5) + "-" + (j + 1) : src === "final" ? "CK nhánh thắng" : src === "r16" ? "R" + (j + 1) : src === "qf" ? "Q" + (j + 1) : "S" + (j + 1)}`).join(" × ")}</p></div></div>`,
+        )
+        .join("")}</div></section>`;
+    })
+    .join(
+      "",
+    )}</div></div></section><section class="double-overview-panel" aria-label="Chung kết tổng"><div class="section-head"><div><span class="eyebrow">TRANH NGÔI VÔ ĐỊCH</span><h3>Chung kết tổng</h3><p class="sub">Đại diện nhánh thua thắng trận đầu → đánh thêm trận reset.</p></div></div><div class="double-grand-grid">${doubleStagePanel(s, "gf")}${b.gf?.[0]?.sets && V.winner(b.gf[0]) === b.gf[0].a ? '<div class="double-stage-panel reset-not-needed"><h3>✓ Không cần trận reset</h3><p>Đại diện nhánh thắng đã vô địch.</p></div>' : doubleStagePanel(s, "reset")}</div></section></div>`;
+}
 export function doublePlayoffHtml(s: Tournament) {
   const b = s.bracket!,
     stages = V.playoffStages(s),
@@ -108,10 +128,9 @@ export function doublePlayoffHtml(s: Tournament) {
       stages
         .filter((d) => d.kind === kind)
         .reduce((n, d) => n + b[d.key]!.filter((m) => m.sets).length, 0),
-    lowerBronze = b.lower6![0]?.sets ? V.loser(b.lower6![0]) : null,
     gf = b.gf![0],
     resetRequired = !!(gf?.sets && V.winner(gf) === gf.b);
-  let body = "";
+  let body = store.doubleView === "overview" ? doubleOverview(s) : "";
   if (store.doubleView === "upper")
     body = `<div class="playoff-toolbar"><div class="playoff-view-switch" role="group" aria-label="Cách xem nhánh thắng"><button data-action="setPlayoffLayout" data-arg="branches" aria-pressed="${store.playoffLayout === "branches"}">Theo nhánh</button><button data-action="setPlayoffLayout" data-arg="tree" aria-pressed="${store.playoffLayout === "tree"}">Sơ đồ đầy đủ</button></div><p class="sub">Thua lần đầu xuống nhánh thua · Thắng nhánh này vào chung kết tổng</p></div>${store.playoffLayout === "tree" ? playoffTree(b, true) : `<div class="playoff-quarters">${[0, 1, 2, 3].map((i) => playoffQuarter(b, i)).join("")}</div><div class="double-upper-end">${doubleStagePanel(s, "sf")}${doubleStagePanel(s, "final")}</div>`}`;
   if (store.doubleView === "lower")
@@ -120,8 +139,17 @@ export function doublePlayoffHtml(s: Tournament) {
       .map((d) => doubleStagePanel(s, d.key))
       .join("")}</div>`;
   if (store.doubleView === "grand")
-    body = `<div class="double-help"><b>Chung kết tổng có reset</b><p>Đại diện nhánh thắng chưa thua trận nào. Nếu họ thắng trận 1 thì vô địch; nếu đại diện nhánh thua thắng trận 1 thì hai đội thi đấu thêm một trận BO5 quyết định.</p></div><div class="double-grand-grid">${doubleStagePanel(s, "gf")}${gf?.sets && !resetRequired ? '<section class="double-stage-panel reset-not-needed"><span>✓</span><h3>Không cần trận reset</h3><p>Đại diện nhánh thắng đã thắng trận chung kết tổng đầu tiên.</p></section>' : doubleStagePanel(s, "reset")}</div><div class="double-bronze"><span>🥉</span><div><small>HẠNG BA · THUA CHUNG KẾT NHÁNH THUA</small>${lowerBronze ? team(lowerBronze, true) : "<p>Chờ kết quả chung kết nhánh thua</p>"}</div></div>`;
+    body = `<div class="double-help"><b>Chung kết tổng có reset</b><p>Đại diện nhánh thắng chưa thua trận nào. Nếu họ thắng trận 1 thì vô địch; nếu đại diện nhánh thua thắng trận 1 thì hai đội thi đấu thêm một trận BO5 quyết định.</p></div><div class="double-grand-grid">${doubleStagePanel(s, "gf")}${gf?.sets && !resetRequired ? '<section class="double-stage-panel reset-not-needed"><span>✓</span><h3>Không cần trận reset</h3><p>Đại diện nhánh thắng đã thắng trận chung kết tổng đầu tiên.</p></section>' : doubleStagePanel(s, "reset")}</div>`;
   return `<section class="playoff-dashboard"><div><span class="eyebrow">DOUBLE ELIMINATION · BO5</span><h2>Nhánh thắng – nhánh thua</h2><p>16 đội · thua hai lần mới bị loại · chung kết tổng có reset</p></div><div class="playoff-dashboard-action"><span class="badge">${V.complete(s) ? "MÙA GIẢI HOÀN TẤT" : "30–31 TRẬN PLAYOFF"}</span>${playoffStageAction(b)}</div></section>${store.tab === "season-results" ? "" : podiumHtml(s)}<div class="double-tabs" role="group" aria-label="Chọn nhánh playoff">${[
+    [
+      "overview",
+      "Tổng thể",
+      played("upper") +
+        played("lower") +
+        played("grand") +
+        "/" +
+        (resetRequired ? "31" : gf?.sets ? "30" : "30–31"),
+    ],
     ["upper", "Nhánh thắng", played("upper") + "/15"],
     ["lower", "Nhánh thua", played("lower") + "/14"],
     [
@@ -165,12 +193,13 @@ export function renderPlayoff() {
           ["r16", "Vòng 16 đội"],
           ["qf", "Tứ kết"],
           ["sf", "Bán kết"],
+          ["bronze", "Tranh hạng ba"],
           ["final", "Chung kết"],
         ] as [StageKey, string][]
       ).find(([key]) => !b[key]!.length || b[key]!.some((m) => !m.sets)),
       champion = b.final[0] && V.winner(b.final[0]);
     html += `<section class="playoff-dashboard"><div><span class="eyebrow">THE ROAD TO WORLD CHAMPION</span><h2>Đường đến ngôi vô địch</h2><p>Bốn nhánh cố định. Một hành trình đến chiếc cúp.</p></div><div class="playoff-dashboard-action"><span class="badge">${champion ? "ĐÃ CÓ NHÀ VÔ ĐỊCH" : next?.[1] || "Tranh hạng ba"}</span>${playoffStageAction(b)}</div></section><div class="playoff-toolbar"><div class="playoff-view-switch" role="group" aria-label="Cách xem playoff"><button data-action="setPlayoffLayout" data-arg="branches" aria-pressed="${store.playoffLayout === "branches"}">Theo nhánh</button><button data-action="setPlayoffLayout" data-arg="tree" aria-pressed="${store.playoffLayout === "tree"}">Sơ đồ đầy đủ</button></div><p class="sub">Bấm vào trận để xem điểm từng set hoặc thi đấu · S1–S4 là seed</p></div>`;
-    if (champion && store.tab !== "season-results") html += podiumHtml(s);
+    if (store.tab !== "season-results") html += podiumHtml(s);
     html +=
       store.playoffLayout === "branches"
         ? `<div class="playoff-quarters">${[0, 1, 2, 3].map((i) => playoffQuarter(b, i)).join("")}</div>${playoffFinals(b)}`

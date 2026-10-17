@@ -116,7 +116,11 @@ assert.equal(
       same("grand final");
       both("setDoubleView('upper')");
     }
-    both("V.finishAll(state);save();render()");
+    // Hold completion order at the legacy baseline for data compatibility.
+    // Production finishAll now plays bronze first (playoff-overview.cjs).
+    both(
+      "for(const d of V.playoffStages(state)){state.bracket[d.key].filter(m=>!m.sets).forEach(V.simulate);V.advance(state)}V.stampResults(state);save();render()",
+    );
     same("finished");
     both("navigate('home');Seasons.start()");
     a.run("Seasons.customize()");
