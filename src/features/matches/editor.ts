@@ -4,6 +4,15 @@ import { formHtml, team } from "../../components/team";
 import * as V from "../../domain/index";
 import { $, input as scoreInput } from "../../shared/dom";
 import { findMatch, isLocked } from "./selectors";
+import type { Match, SetScore } from "../../domain/types";
+import { toast } from "../../shared/feedback";
+export interface FullScoreContext {
+  match: Match;
+  current(): boolean;
+  teamMarkup(id: string): string;
+  commit(sets: SetScore[]): void;
+}
+let fullContext: FullScoreContext | null = null;
 
 let draftSeason: string | undefined;
 let draftScope: string | undefined;
@@ -14,13 +23,22 @@ export function editMatch(id: string) {
   if (!m || isLocked(m)) return;
   draftSeason = store.state.seasonId;
   draftScope = getPorts().cloud?.storageKey();
-  store.editId = id;
+  fullContext = null;
+  showEditor(m);
+}
+export function editFullScore(context: FullScoreContext) {
+  if (!context.current()) return;
+  fullContext = context;
+  showEditor(context.match);
+}
+function showEditor(m: Match) {
+  store.editId = m.id;
   store.editorSubmitted = false;
   $("editorTitle").textContent = "Nhập kết quả trận đấu";
   $("editorScoreboard").innerHTML = [m.a, m.b]
     .map(
       (id, i) =>
-        `<div class="editor-team-row"><span class="match-team-info">${team(id, true, store.state)}${formHtml(id, store.state)}</span><b class="live-set-score" id="liveScore${i}" hidden></b></div>`,
+        `<div class="editor-team-row"><span class="match-team-info">${fullContext ? fullContext.teamMarkup(id) : team(id, true, store.state) + formHtml(id, store.state)}</span><b class="live-set-score" id="liveScore${i}" hidden></b></div>`,
     )
     .join("");
   $("setInputs").innerHTML =
@@ -79,6 +97,8 @@ export function updateScoreEditor() {
 }
 
 function editableMatch() {
+  if (fullContext)
+    return $("editor").open && fullContext.current() ? fullContext.match : null;
   if (
     !$("editor").open ||
     !getPorts().seasons.editable() ||
@@ -125,4 +145,40 @@ export function generateScore() {
       scoreInput(key + i).value = sets[i] ? String(sets[i][side]) : "";
   store.editorSubmitted = false;
   updateScoreEditor();
+}
+
+export function saveScoreEditor() {
+  const m = editableMatch();
+  if (!m) {
+    if ($("editor").open)
+      toast(
+        "Trận đã khóa hoặc tiến trình đã thay đổi. Hãy đóng và mở lại trận để xem dữ liệu mới.",
+      );
+    return;
+  }
+  store.editorSubmitted = true;
+  const result = updateScoreEditor();
+  if (!result.valid) {
+    const index = Math.max(0, result.errors.findIndex(Boolean)),
+      side = result.focusSides[index] === 1 ? "b" : "a";
+    $("setBlock" + index).scrollIntoView({
+      block: "nearest",
+      behavior: "smooth",
+    });
+    $(side + index).focus();
+    return;
+  }
+  try {
+    if (fullContext) fullContext.commit(result.sets);
+    else {
+      m.sets = result.sets;
+      V.advance(store.state);
+      getPorts().commands.save();
+    }
+    $("editor").close();
+    getPorts().commands.render();
+    toast("Đã lưu kết quả");
+  } catch (e) {
+    toast(e instanceof Error ? e.message : "Chưa lưu được kết quả.");
+  }
 }

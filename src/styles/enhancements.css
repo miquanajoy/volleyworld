@@ -568,3 +568,274 @@
     width: 100%;
   }
 }
+
+/* Full Season uses the existing palette and match components. */
+.full-format-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+.full-region-summary {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.full-region-summary strong {
+  font-size: 20px;
+}
+.full-region-summary .progress {
+  margin-bottom: 8px;
+}
+.full-region-summary button {
+  margin-top: auto;
+}
+.full-region-summary .team {
+  font-size: 13px;
+}
+.full-library-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.full-empty {
+  padding: 28px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.full-world-gate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  margin: 24px 0;
+  background: #edf4e8;
+}
+.full-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 20px 0 28px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: white;
+}
+.full-nav button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--muted);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.full-nav button:hover:not(:disabled):not(.active) {
+  background: #edf2e8;
+  color: var(--green);
+}
+.full-nav button.active {
+  border: 0;
+  background: var(--green);
+  color: white;
+}
+.full-nav button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.full-groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.full-group {
+  padding: 20px;
+  min-width: 0;
+}
+.full-group-team {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 30px 60px;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.full-group-team .team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.full-group-team b {
+  font-size: 11px;
+  text-align: right;
+}
+.full-group > button {
+  margin-top: 14px;
+  width: 100%;
+}
+.full-thirds {
+  padding: 20px;
+}
+.full-pots {
+  padding: 20px;
+  margin-top: 20px;
+}
+.full-pots summary,
+.full-league-table summary,
+.full-finals-table summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.full-pots .full-groups {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.full-team-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+}
+.full-team-line > .team {
+  min-width: 0;
+  flex: 1;
+}
+.full-team-line .team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.full-match .side {
+  gap: 10px;
+}
+.full-match .result {
+  flex: 0 0 24px;
+  text-align: right;
+}
+.full-match .form-strip {
+  flex: 0 0 88px;
+  margin-left: auto;
+}
+.full-match .form-dot {
+  width: 15px;
+  height: 18px;
+  font-size: 9px;
+}
+.full-match .sets {
+  line-height: 1.8;
+}
+.full-league-table {
+  margin-top: 24px;
+  overflow: hidden;
+}
+.full-league-table > summary,
+.full-finals-table > summary {
+  padding: 20px;
+}
+.full-standings {
+  min-width: 760px;
+  width: 100%;
+}
+.full-team-button {
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+.full-qualification {
+  display: block;
+  font-size: 10px;
+  color: var(--green);
+  margin-top: 4px;
+}
+.full-bracket {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(300px, 1fr));
+  gap: 20px;
+  overflow-x: auto;
+  align-items: start;
+  padding-bottom: 20px;
+}
+.full-bracket-stage {
+  min-width: 0;
+}
+.full-bracket-stage > .section-head {
+  min-height: 64px;
+  margin-bottom: 16px;
+}
+.full-bracket-stage h3 {
+  font-size: 16px;
+}
+.full-bracket-stage .full-team-line {
+  flex-wrap: wrap;
+}
+.full-bracket-stage .full-match .form-strip {
+  flex-basis: 88px;
+}
+.full-bracket-slot {
+  margin-bottom: 16px;
+}
+.full-bracket-slot > .eyebrow {
+  display: block;
+  margin: 8px;
+}
+.full-finals-table {
+  overflow: hidden;
+  margin: 24px 0;
+}
+.full-finals-table table {
+  width: 100%;
+  min-width: 440px;
+}
+.full-season-summary {
+  margin-top: 24px;
+}
+.full-honours {
+  margin: 24px 0;
+  overflow: hidden;
+}
+.full-honours table {
+  width: 100%;
+  min-width: 460px;
+}
+@media (max-width: 1100px) {
+  .full-format-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .full-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 650px) {
+  .full-format-grid,
+  .full-groups,
+  .full-pots .full-groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .full-world-gate {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .full-team-line {
+    flex-wrap: wrap;
+  }
+  .full-group {
+    padding: 16px;
+  }
+  .full-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  .full-nav button {
+    white-space: nowrap;
+  }
+}

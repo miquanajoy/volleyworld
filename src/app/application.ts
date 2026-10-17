@@ -1,3 +1,4 @@
+import { renderFull, exportFull } from "../features/full-season/controller";
 import { renderAchievements } from "../features/achievements/controller";
 import { KEY, writeTournament } from "../data/local/tournament-storage";
 import * as V from "../domain/index";
@@ -43,6 +44,14 @@ export function navigate(t: AppTab) {
   render();
 }
 export function render() {
+  if (store.tab === "full-season") {
+    $("homeHero").hidden = true;
+    $("stats").hidden = true;
+    $("nav").hidden = true;
+    $("seasonBar").hidden = true;
+    renderFull();
+    return;
+  }
   const s = displayState(),
     home = store.tab === "home",
     outer = ["home", "history", "settings", "achievements"].includes(store.tab),
@@ -109,6 +118,7 @@ export function render() {
   if (store.tab === "settings") getPorts().settings.render();
 }
 export async function exportSave() {
+  if (store.tab === "full-season") return exportFull();
   try {
     const bundle = await getPorts().seasons.exportAll(),
       url = URL.createObjectURL(

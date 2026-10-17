@@ -67,3 +67,8 @@ import { initializeActions } from "../../src/app/actions";
 target.__initializeActions = initializeActions;
 
 target.__ports = getPorts;
+
+import * as fullController from "../../src/features/full-season/controller";
+import * as fullCloud from "../../src/features/full-season/cloud";
+import * as fullModel from "../../src/features/full-season/model";
+target.__full = { ...fullController, ...fullCloud, ...fullModel };

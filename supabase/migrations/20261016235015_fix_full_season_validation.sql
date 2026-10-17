@@ -1,0 +1,76 @@
+create or replace function public.volleyworld_full_league_valid(g jsonb,expected jsonb,prefix text) returns boolean
+language plpgsql immutable set search_path = '' as $$
+declare n integer; ri integer:=0; round_data jsonb; m jsonb; seen text[]:='{}'; pair_keys text[]:='{}'; match_keys text[]:='{}'; players text[];
+begin
+ if jsonb_typeof(g)<>'object' or jsonb_typeof(g->'teamIds')<>'array' or jsonb_typeof(g->'tie')<>'array' or jsonb_typeof(g->'rounds')<>'array' then return false;end if;
+ n:=jsonb_array_length(expected);
+ if jsonb_array_length(g->'teamIds')<>n or not(g->'teamIds' @> expected and expected @> (g->'teamIds')) or jsonb_array_length(g->'tie')<>n or not(g->'tie' @> expected and expected @> (g->'tie')) or jsonb_array_length(g->'rounds')<>(case when n%2=1 then n else n-1 end) then return false;end if;
+ for round_data in select value from jsonb_array_elements(g->'rounds') loop
+  if jsonb_typeof(round_data)<>'array' or jsonb_array_length(round_data)<>n/2 then return false;end if;players:='{}';
+  for m in select value from jsonb_array_elements(round_data) loop
+   if jsonb_typeof(m)<>'object' or coalesce(m->>'id','') !~ ('^'||prefix||'-'||ri||'-[0-9]+$') or not(expected ? (m->>'a')) or not(expected ? (m->>'b')) or m->>'a'=m->>'b' or m->>'a'=any(players) or m->>'b'=any(players) or m->>'id'=any(match_keys) or not public.volleyworld_full_score_valid(m->'sets') then return false;end if;
+   seen:=array[least(m->>'a',m->>'b')||':'||greatest(m->>'a',m->>'b')];
+   if seen[1]=any(pair_keys) then return false;end if;pair_keys:=pair_keys||seen;
+   match_keys:=array_append(match_keys,m->>'id');players:=players||array[m->>'a',m->>'b'];
+  end loop;ri:=ri+1;
+ end loop;
+ return cardinality(pair_keys)=n*(n-1)/2;
+exception when others then return false;
+end $$;
+create or replace function public.volleyworld_full_state_valid(s jsonb) returns boolean
+language plpgsql immutable set search_path = '' as $$
+declare catalog jsonb := '{"CEV":["POL","ITA","RUS","SLO","FRA","BUL","FIN","GER","UKR","BEL","TUR","SRB","CZE","GRE","ROU","NED","DEN","EST","POR","SUI","ISR","ESP","SWE","BLR","CRO","LAT","HUN","SVK","MKD","AUT","SMR","SCO","MNE","CYP","ALB","NOR","BIH","NIR","FRO"],"AVC":["JPN","IRI","KOR","CHN","PAK","AUS","QAT","BRN","INA","IND","THA","TPE","VIE","OMA","TKM","KGZ","KAZ","UAE","BAN","KSA","SRI","PHI","IRQ","KUW"],"NORCECA":["USA","CUB","CAN","MEX","PUR","DOM","DMA","LCA","BIZ","BAR","JAM","NCA","ANT","GUA","CUW","GRN","ESA","BAH"],"CAVB":["EGY","TUN","CMR","KEN","NGR","ALG","GHA","RWA","LBA","NIG","UGA","SEN","MAR"],"CSV":["BRA","ARG","CHI","COL","VEN","BOL"]}'::jsonb; quotas jsonb:='{"CEV":9,"AVC":5,"NORCECA":4,"CAVB":3,"CSV":3}';
+ r text; g jsonb; w jsonb; m jsonb; item jsonb; k text; n integer; i integer:=0; regional_done integer:=0; world_done integer:=0; all_ids jsonb:='[]'; pot_ids jsonb:='[]'; match_keys text[]:='{}'; participants text[]; orders bigint[]:='{}'; stage_count integer; prior text; expected_count integer;
+begin
+ if jsonb_typeof(s)<>'object' or octet_length(s::text)>1000000 or s->>'mode' is distinct from 'full-season' or s->>'version' is distinct from '1' or jsonb_typeof(s->'version') is distinct from 'number' or jsonb_typeof(s->'seasonNumber')<>'number' or (s->>'seasonNumber')::numeric not between 1 and 2147483647 or (s->>'seasonNumber')::numeric<>trunc((s->>'seasonNumber')::numeric) or coalesce(s->>'seasonId','') !~ '^[a-zA-Z0-9-]{1,100}$' or coalesce(s->>'createdAt','')='' or jsonb_typeof(s->'regions')<>'object' or (select count(*) from jsonb_object_keys(s->'regions'))<>5 then return false;end if;
+ for r in select jsonb_object_keys(catalog) loop
+  if not public.volleyworld_full_league_valid(s->'regions'->r,catalog->r,r) then return false;end if;
+ end loop;
+ select count(*) into regional_done from jsonb_path_query(s,'$.regions.*.rounds[*][*]') as q(value) where value->'sets'<>'null'::jsonb;
+ w:=s->'world';if w is null then return false;end if;if w='null'::jsonb then return true;end if;
+ if regional_done<>1263 or jsonb_typeof(w)<>'object' or jsonb_typeof(w->'groups')<>'array' or jsonb_array_length(w->'groups')<>6 or jsonb_typeof(w->'pots')<>'array' or jsonb_array_length(w->'pots')<>4 or jsonb_typeof(w->'tie')<>'array' or jsonb_array_length(w->'tie')<>24 then return false;end if;
+ for g in select value from jsonb_array_elements(w->'groups') loop
+  if jsonb_array_length(g->'teamIds')<>4 or not public.volleyworld_full_league_valid(g,g->'teamIds','WG'||i) then return false;end if;
+  all_ids:=all_ids||(g->'teamIds');
+  for r in select jsonb_object_keys(catalog) loop
+   if (select count(*) from jsonb_array_elements_text(g->'teamIds') t where catalog->r ? t)>2 then return false;end if;
+  end loop;i:=i+1;
+ end loop;
+ if (select count(distinct value) from jsonb_array_elements_text(all_ids))<>24 or not(w->'tie' @> all_ids and all_ids @> (w->'tie')) then return false;end if;
+ for r in select jsonb_object_keys(catalog) loop
+  if (select count(*) from jsonb_array_elements_text(all_ids) t where catalog->r ? t)<>(quotas->>r)::integer then return false;end if;
+ end loop;
+ for item in select value from jsonb_array_elements(w->'pots') loop
+  if jsonb_typeof(item) is distinct from 'array' or jsonb_array_length(item)<>6 then return false;end if;pot_ids:=pot_ids||item;
+  for g in select value from jsonb_array_elements(w->'groups') loop
+   if (select count(*) from jsonb_array_elements_text(g->'teamIds') t where item ? t)<>1 then return false;end if;
+  end loop;
+ end loop;
+ if (select count(distinct value) from jsonb_array_elements_text(pot_ids))<>24 or not(pot_ids @> all_ids and all_ids @> pot_ids) then return false;end if;
+ if w->'bracket'='null'::jsonb then return true;end if;
+ select count(*) into world_done from jsonb_path_query(w,'$.groups[*].rounds[*][*]') as q(value) where value->'sets'<>'null'::jsonb;
+ if world_done<>36 or jsonb_typeof(w->'bracket') is distinct from 'object' or not(w->'bracket' ?& array['r16','qf','sf','final','bronze']) or (select count(*) from jsonb_object_keys(w->'bracket'))<>5 then return false;end if;
+ foreach k in array array['r16','qf','sf','final','bronze'] loop
+  item:=w->'bracket'->k;
+  if jsonb_typeof(item) is distinct from 'array' then return false;end if;
+  prior:=case k when 'qf' then 'r16' when 'sf' then 'qf' when 'final' then 'sf' when 'bronze' then 'sf' else null end;
+  if prior is null then expected_count:=8;
+  elsif (select count(*) from jsonb_array_elements(w->'bracket'->prior) q where q->'sets'='null'::jsonb)=0 then expected_count:=case k when 'qf' then 4 when 'sf' then 2 else 1 end;
+  else expected_count:=0;end if;
+  -- Empty predecessors are not ready.
+  if prior is not null and jsonb_array_length(w->'bracket'->prior)=0 then expected_count:=0;end if;
+  if jsonb_array_length(item)<>expected_count then return false;end if;participants:='{}';
+  for m in select value from jsonb_array_elements(item) loop
+   if jsonb_typeof(m)<>'object' or not(all_ids ? (m->>'a')) or not(all_ids ? (m->>'b')) or m->>'a'=m->>'b' or m->>'a'=any(participants) or m->>'b'=any(participants) or not public.volleyworld_full_score_valid(m->'sets') then return false;end if;
+   participants:=participants||array[m->>'a',m->>'b'];
+  end loop;
+ end loop;
+ for m in select value from jsonb_path_query(s,'$.regions.*.rounds[*][*]') as q(value) union all select value from jsonb_path_query(w,'$.groups[*].rounds[*][*]') as q(value) union all select value from jsonb_path_query(w,'$.bracket.*[*]') as q(value) loop
+  if coalesce(m->>'id','') !~ '^[A-Z0-9-]{1,64}$' or m->>'id'=any(match_keys) then return false;end if;match_keys:=array_append(match_keys,m->>'id');
+  if m ? 'resultOrder' then
+   if m->'sets'='null'::jsonb or jsonb_typeof(m->'resultOrder')<>'number' or (m->>'resultOrder')::numeric<>trunc((m->>'resultOrder')::numeric) or (m->>'resultOrder')::numeric not between 1 and 9007199254740991 or (m->>'resultOrder')::bigint=any(orders) then return false;end if;orders:=array_append(orders,(m->>'resultOrder')::bigint);
+  end if;
+ end loop;
+ return true;
+exception when others then return false;
+end $$;
