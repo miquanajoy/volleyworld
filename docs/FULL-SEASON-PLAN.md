@@ -1,10 +1,10 @@
 # Kế hoạch Full Season Mode
 
-Trạng thái: **Chỉ lưu kế hoạch. Chưa triển khai. Chờ người dùng yêu cầu “start”.**
+Trạng thái: **Đã triển khai trên `feature/full-season-mode` theo yêu cầu start ngày 17/10/2026. Chưa merge vào main.**
 
 Branch triển khai: `feature/full-season-mode`.
 
-Kế hoạch được chốt trong trao đổi ngày 16–17/10/2026. Branch đã nhận các cập nhật mới nhất từ main, bao gồm trang tổng kết mùa gọn và bảng thành tích cuối mùa. Việc lưu tài liệu này không thay đổi ứng dụng hoặc DB.
+Kế hoạch được chốt trong trao đổi ngày 16–17/10/2026. Branch đã nhận các cập nhật mới nhất từ main, bao gồm trang tổng kết mùa gọn và bảng thành tích cuối mùa. Phần kế hoạch ban đầu dưới đây được giữ để đối chiếu; quyết định triển khai được ghi ở mục 10 và `FULL-SEASON-IMPLEMENTATION.md`.
 
 ## 1. Phạm vi đã chốt
 
@@ -110,6 +110,19 @@ Không xem các mục này là đã được triển khai hoặc đã chốt thi
 - Kiểm thử lưu/khôi phục ở từng giai đoạn, mất mạng, xung đột nhiều thiết bị, lịch sử bất biến và tách biệt tài khoản.
 - Hồi quy giao diện, điểm/thứ hạng và save cũ; chạy typecheck, build và bộ kiểm thử liên quan.
 
-## 9. Điểm dừng hiện tại
+## 9. Điểm dừng trước khi start (đã qua)
 
-Chỉ tạo và commit tài liệu kế hoạch trên `feature/full-season-mode`. Không triển khai chế độ mới, không merge kế hoạch này vào main và không thay đổi dữ liệu người chơi cho tới khi có yêu cầu tiếp theo.
+Ban đầu chỉ lưu kế hoạch trên branch. Người dùng đã yêu cầu triển khai trên `feature/full-season-mode` ngày 17/10/2026. Việc merge vào main vẫn chờ yêu cầu riêng.
+
+## 10. Quyết định triển khai
+
+- Full Season có engine và dữ liệu riêng, không thay đổi định dạng save mùa 32 đội.
+- Cho phép nhiều mùa Full Season đang diễn ra cùng lúc; vào từ nút “Full Season · 100 đội” trên trang chủ.
+- Cloud dùng bảng `volleyworld_full_seasons`, mỗi tài khoản/mùa một bản lưu có revision. Mùa đã hoàn tất là lịch sử chỉ xem và không được sửa.
+- Chỉ cho bốc thăm/bắt đầu thế giới khi toàn bộ 1.263 trận của cả năm khu vực đã hoàn tất. Điều kiện này được kiểm tra ở UI, engine và DB.
+- Vòng 16: bốn nhất bảng gặp bốn hạng ba, hai nhất bảng còn lại gặp hai nhì bảng; bốn nhì bảng còn lại ghép thành hai cặp. Mọi cặp tránh cùng bảng, bốc thăm một lần và giữ nhánh.
+- Giải thế giới có nhóm hạng 17–18 cho hai đội hạng ba bị loại và 19–24 cho sáu đội hạng tư; các nhóm playoff là 1/2/3/4/5–8/9–16.
+- Khóa kết quả khu vực sau khi sinh giải thế giới; khóa vòng bảng sau khi sinh playoff; khóa từng vòng knockout khi đã tạo vòng kế tiếp.
+- Thành tích Full Season hiển thị riêng kết quả khu vực và thế giới qua các mùa, chưa có BXH điểm cộng chung với chế độ 32 đội.
+- Xuất/nhập, bản sao trước, lưu thiết bị và đồng bộ theo tài khoản được triển khai riêng. File nhập tạo các mùa mới sau khi xác nhận, giữ nguyên những mùa đã có.
+- Chi tiết kiến trúc và kiểm thử: [FULL-SEASON-IMPLEMENTATION.md](FULL-SEASON-IMPLEMENTATION.md).

@@ -1,6 +1,7 @@
 import type { Region, SeasonTournament, SeasonView } from "../domain/types";
 
 export type AppTab =
+  | "full-season"
   | "home"
   | "history"
   | "settings"

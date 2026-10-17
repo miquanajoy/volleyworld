@@ -92,6 +92,7 @@ const fs = require("node:fs"),
     "state",
     "render",
     "__installAccount",
+    "__full",
   ])
     assert.equal(w[name], undefined, "production global leak " + name);
   const click = (selector) => {
@@ -165,6 +166,28 @@ const fs = require("node:fs"),
   assert(
     w.document.querySelector(".points-rules").textContent.includes("4.170"),
   );
+  const classicBeforeFull = w.localStorage.getItem("volleyworld-v1");
+  click('[data-action="navigate"][data-arg="home"]');
+  click('[data-action="Full.enter"]');
+  click('[data-action="Full.create"]');
+  assert(w.document.querySelector('[data-action="Full.drawWorld"]').disabled);
+  click('[data-action="Full.section"][data-arg="CSV"]');
+  click('[data-action="Full.simLeague"]');
+  click('[data-action="Full.section"][data-arg="overview"]');
+  assert(w.document.querySelector('[data-action="Full.drawWorld"]').disabled);
+  click('[data-action="Full.finish"]');
+  const full = JSON.parse(w.localStorage.getItem("volleyworld-full-guest"))[0];
+  assert.equal(full.played, 1315);
+  assert.equal(full.status, "completed");
+  assert.equal(
+    w.document.querySelectorAll(".full-season-summary .medal-card").length,
+    3,
+  );
+  assert.equal(
+    w.document.querySelectorAll(".full-finals-table tbody tr").length,
+    24,
+  );
+  assert.equal(w.localStorage.getItem("volleyworld-v1"), classicBeforeFull);
   assert.equal(errors.length, 0, errors.map(String).join("\n"));
   dom.window.close();
   console.log(

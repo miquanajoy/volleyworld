@@ -122,6 +122,7 @@ function canonical(app, id = "body") {
       content.replaceChildren(...[heading, podium].filter(Boolean));
     }
   }
+  remove('[data-action="Full.enter"]');
   remove(".score-generator, .score-draft-status, .set-play, .set-clear");
   copy
     .querySelectorAll(".set-label")

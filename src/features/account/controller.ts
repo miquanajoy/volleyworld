@@ -1,3 +1,9 @@
+import {
+  switchFullAccount,
+  saveFullNow,
+  fullCloudPending,
+  reloadFullCloud,
+} from "../full-season/cloud";
 import type { User } from "@supabase/supabase-js";
 import { getPorts } from "../../app/ports";
 import { store } from "../../app/store";
@@ -73,7 +79,7 @@ export function status(p: CloudPhase, message = "") {
     conflict: "⚠ Có tiến độ từ thiết bị khác",
     error: "⚠ Chưa đồng bộ · bản máy đã giữ",
   };
-  text("saved", labels[p] || labels.local);
+  if (store.tab !== "full-season") text("saved", labels[p] || labels.local);
   text("accountButton", accountState.user ? "☁ Tài khoản" : "☁ Đăng nhập");
   if (el("cloudDialog").open) draw();
 }
@@ -202,6 +208,7 @@ export async function switchUser(next: User | null) {
   const guestArchives =
     !accountState.user && next ? getPorts().seasons.localRecords() : null;
   accountState.user = next;
+  void switchFullAccount(accountState.client, next?.id || null);
   if (!accountState.user) {
     let guest;
     try {
@@ -282,6 +289,7 @@ export async function syncNow() {
   await accountState.writer!.flush();
 }
 export async function manualSave(): Promise<ManualSaveResult> {
+  if (store.tab === "full-season") return saveFullNow();
   if (accountState.manualBusy) return { status: "busy" };
   accountState.manualBusy = true;
   const button = el("saveProgress"),
@@ -440,7 +448,11 @@ export async function login(e: SubmitEvent) {
   }
 }
 export async function logout() {
-  if (accountState.writer?.pending || accountState.phase === "saving") {
+  if (
+    accountState.writer?.pending ||
+    accountState.phase === "saving" ||
+    fullCloudPending()
+  ) {
     if (
       !confirm(
         "Một số tiến độ chưa đồng bộ. Bản trên thiết bị sẽ được giữ lại cho lần đăng nhập sau. Vẫn đăng xuất?",
@@ -521,13 +533,21 @@ export async function init(
 }
 export function initializeAccountEvents() {
   window.addEventListener("online", () => {
-    if (accountState.user) void retry();
+    if (accountState.user) {
+      void retry();
+      void reloadFullCloud();
+    }
   });
-  window.addEventListener("focus", () => void refresh());
+  window.addEventListener("focus", () => {
+    void refresh();
+    if (store.tab === "full-season") void reloadFullCloud();
+  });
   window.addEventListener("beforeunload", (e) => {
     if (
       accountState.user &&
-      (accountState.writer?.pending || accountState.writer?.running)
+      (accountState.writer?.pending ||
+        accountState.writer?.running ||
+        fullCloudPending())
     ) {
       e.preventDefault();
       e.returnValue = "";

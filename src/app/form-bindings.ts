@@ -1,6 +1,5 @@
 import * as V from "../domain/index";
-import { updateScoreEditor } from "../features/matches/editor";
-import { findMatch, isLocked } from "../features/matches/selectors";
+import { saveScoreEditor } from "../features/matches/editor";
 import { $ } from "../shared/dom";
 import { toast } from "../shared/feedback";
 import { render, save, validSave } from "./application";
@@ -10,27 +9,7 @@ import { store } from "./store";
 export function initializeForms() {
   $("scoreForm").onsubmit = (e) => {
     e.preventDefault();
-    if (!getPorts().seasons.editable()) return;
-    const m = findMatch(store.editId);
-    if (!m || isLocked(m)) return;
-    store.editorSubmitted = true;
-    const result = updateScoreEditor();
-    if (!result.valid) {
-      const index = Math.max(0, result.errors.findIndex(Boolean)),
-        side = result.focusSides[index] === 1 ? "b" : "a";
-      $("setBlock" + index).scrollIntoView({
-        block: "nearest",
-        behavior: "smooth",
-      });
-      $(side + index).focus();
-      return;
-    }
-    m.sets = result.sets;
-    V.advance(store.state);
-    save();
-    $("editor").close();
-    render();
-    toast("Đã lưu kết quả");
+    saveScoreEditor();
   };
   $("import").onchange = async () => {
     let f = $("import").files?.[0];

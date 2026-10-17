@@ -155,3 +155,7 @@ Open **Thành tích → BXH điểm qua các mùa** to rank qualifying teams wit
 ## Simulation previews and controlled upsets
 
 The simulator uses bounded set-win probabilities and strength-aware point margins, retaining a chance of an upset while reducing lopsided scores between nearby world-ranked teams. In the score editor, use ▶ to simulate the next set or choose a winner and 3–0/3–1/3–2 to generate an editable preview. Only **Lưu kết quả** commits the result. See [Simulation v2](docs/SIMULATION-V2.md) for formulas, gameplay assumptions and verification.
+
+## Full Season mode
+
+Choose **Full Season · 100 đội** on the home page to play all five fixed regional leagues and qualify 24 teams for a seeded six-group world championship, followed by a fixed 16-team knockout bracket and bronze match. The world stage stays locked until every regional fixture is finished. Full Season supports independent simultaneous seasons, the shared progressive score editor, account cloud sync, history, backups and export/import. Its country honours are separate from classic career points. See [Full Season implementation](docs/FULL-SEASON-IMPLEMENTATION.md) and [the plan](docs/FULL-SEASON-PLAN.md).

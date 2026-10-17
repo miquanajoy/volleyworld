@@ -7,6 +7,7 @@ fs.writeFileSync(
 );
 for (const [name, entry, format] of [
   ["engine", "src/domain/index.ts", "cjs"],
+  ["full-engine", "src/domain/full-season/index.ts", "cjs"],
   ["career-ranking", "src/features/achievements/rankings.ts", "cjs"],
   ["points-policy", "src/domain/honours/points.ts", "cjs"],
   ["achievement-model", "src/features/achievements/model.ts", "cjs"],

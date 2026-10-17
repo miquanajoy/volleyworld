@@ -1,19 +1,16 @@
 import type { Tournament } from "../../domain/types";
 import type { WriteAcknowledgement, WriterPhase } from "../contracts";
 /** Serial CAS writes. Snapshots are cloned before debounce; failed writes stay pending. */
-export class CloudWriter {
+export class CloudWriter<T = Tournament> {
   revision = 0;
-  latest: Tournament | null = null;
-  pending: Tournament | null = null;
+  latest: T | null = null;
+  pending: T | null = null;
   running: Promise<void> | null = null;
   paused = true;
   closed = false;
   timer: ReturnType<typeof setTimeout> | undefined;
   constructor(
-    public write: (
-      state: Tournament,
-      revision: number,
-    ) => Promise<WriteAcknowledgement>,
+    public write: (state: T, revision: number) => Promise<WriteAcknowledgement>,
     public status: (
       phase: WriterPhase,
       result?: WriteAcknowledgement | Error,
@@ -23,9 +20,9 @@ export class CloudWriter {
     this.revision = revision;
     this.paused = false;
   }
-  enqueue(state: Tournament) {
+  enqueue(state: T) {
     if (this.closed) return;
-    this.latest = JSON.parse(JSON.stringify(state)) as Tournament;
+    this.latest = JSON.parse(JSON.stringify(state)) as T;
     this.pending = this.latest;
     if (this.paused) return;
     clearTimeout(this.timer);

@@ -1,3 +1,4 @@
+import * as Full from "../features/full-season/controller";
 import { nextLeagueRound } from "../features/league/navigation";
 import {
   selectRegion,
@@ -26,6 +27,34 @@ type Action = (element: HTMLElement) => unknown;
 const arg = (e: HTMLElement) => e.dataset.arg || "";
 /** Explicit command table: markup carries data, never executable JavaScript. */
 const actions: Record<string, Action> = {
+  "Full.enter": () => Full.enterFull(),
+  "Full.library": () => Full.enterFull(),
+  "Full.create": () => Full.createFull(),
+  "Full.open": (e) => Full.openFull(arg(e)),
+  "Full.section": (e) => Full.sectionFull(arg(e)),
+  "Full.round": (e) => Full.setFullRound((e as HTMLSelectElement).value),
+  "Full.next": () => Full.nextFullRound(),
+  "Full.simMatch": (e) => Full.simulateFullMatch(arg(e)),
+  "Full.simRound": () => Full.simulateFullRound(),
+  "Full.simLeague": () => Full.simulateFullRound(true),
+  "Full.drawWorld": () => Full.drawFullWorld(),
+  "Full.drawPlayoff": () => Full.drawFullPlayoff(),
+  "Full.stage": (e) => Full.simulateFullStage(arg(e)),
+  "Full.finish": () => Full.finishFull(),
+  "Full.edit": (e) => Full.editFullMatch(arg(e)),
+  "Full.match": (e) => Full.showFullMatch(arg(e)),
+  "Full.team": (e) => Full.showFullTeam(arg(e)),
+  "Full.export": () => Full.exportFull(),
+  "Full.exportOne": () => Full.exportFull(true),
+  "Full.import": () => $("fullImport").click(),
+  "Full.importFile": (e) => Full.importFull((e as HTMLInputElement).files?.[0]),
+  "Full.restore": () => Full.restoreFull(),
+  "Full.honours": () => Full.showFullHonours(),
+  "Full.honourTeam": (e) =>
+    Full.showFullHonours((e as HTMLSelectElement).value),
+  "Full.sync": () => Full.reloadFullCloud(),
+  "Full.remote": () => Full.resolveFullConflict(true),
+  "Full.local": () => Full.resolveFullConflict(false),
   achievementView: (e) => selectView(arg(e)),
   achievementWorld: () => selectWorldwide(),
   achievementRegion: (e) => selectRegion(arg(e) as Region),
@@ -33,7 +62,8 @@ const actions: Record<string, Action> = {
   nextLeagueRound: () => nextLeagueRound(),
   navigate: (e) => navigate(arg(e) as AppTab),
   exportSave: () => exportSave(),
-  importFile: () => $("import").click(),
+  importFile: () =>
+    $(store.tab === "full-season" ? "fullImport" : "import").click(),
   closeDialog: (e) => ($(arg(e)) as HTMLDialogElement).close(),
   changeRound: (e) => {
     store.round += Number(arg(e));
@@ -65,7 +95,10 @@ const actions: Record<string, Action> = {
     playoffController.setDoubleView(arg(e) as "upper" | "lower" | "grand"),
   "Seasons.start": () => getPorts().seasons.start(),
   "Seasons.customize": () => getPorts().seasons.customize(),
-  "Seasons.requestNew": () => getPorts().seasons.requestNew(),
+  "Seasons.requestNew": () =>
+    store.tab === "full-season"
+      ? Full.createFull()
+      : getPorts().seasons.requestNew(),
   "Seasons.view": (e) => getPorts().seasons.view(arg(e)),
   "Seasons.resolve": (e) =>
     getPorts().seasons.resolve(arg(e), e.dataset.arg1 === "true"),
