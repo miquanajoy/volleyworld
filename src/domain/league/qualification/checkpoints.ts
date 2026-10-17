@@ -11,7 +11,11 @@ import type {
 export const cache: Map<string, Checkpoint> = new Map();
 
 export function checkpoint(s: Tournament, completed: number[]): Checkpoint {
+  const { direct, advance } = V.entrySlots(s),
+    expanded = V.expandedSingle(s);
   const key = JSON.stringify([
+    direct,
+    advance,
     V.ids(s),
     s.tie,
     completed.map((i) => [i, s.rounds[i].map((m) => [m.a, m.b, m.sets])]),
@@ -28,7 +32,13 @@ export function checkpoint(s: Tournament, completed: number[]): Checkpoint {
     remaining = snapshot.rounds.flat().filter((m) => !m.sets),
     final = remaining.length === 0;
   const certificates =
-      final || !completed.length ? null : solve(rows, remaining),
+      final || !completed.length
+        ? null
+        : solve(
+            rows,
+            remaining,
+            expanded ? [12, direct, advance] : [direct, advance],
+          ),
     teams: Record<string, QualificationState> = {};
   // A certificate stays true under any completion of another round. Carry it
   // forward even if a later relaxed search hits its budget. Reconstruct from
@@ -39,12 +49,14 @@ export function checkpoint(s: Tournament, completed: number[]): Checkpoint {
     const a = certificates?.[r.id],
       old = previous?.teams[r.id] || ({} as Partial<QualificationState>);
     teams[r.id] = {
-      direct: final ? i < 12 : !!a?.[12].clinched || !!old.direct,
-      advance: final ? i < 20 : !!a?.[20].clinched || !!old.advance,
-      noDirect: final ? i >= 12 : !!a?.[12].excluded || !!old.noDirect,
-      out: final ? i >= 20 : !!a?.[20].excluded || !!old.out,
-      limited: final ? false : !!(a?.[12].limited || a?.[20].limited),
+      direct: final ? i < direct : !!a?.[direct].clinched || !!old.direct,
+      advance: final ? i < advance : !!a?.[advance].clinched || !!old.advance,
+      noDirect: final ? i >= direct : !!a?.[direct].excluded || !!old.noDirect,
+      out: final ? i >= advance : !!a?.[advance].excluded || !!old.out,
+      limited: final ? false : !!(a?.[direct].limited || a?.[advance].limited),
     };
+    if (expanded)
+      teams[r.id].bye = final ? i < 12 : !!a?.[12].clinched || !!old.bye;
     const t = teams[r.id];
     t.advance = t.advance || t.direct;
     t.noDirect = t.noDirect || t.out;
@@ -103,10 +115,12 @@ function reportCompleted(
     playin: [],
     noDirect: [],
     out: [],
+    ...(V.expandedSingle(s) ? { bye: [] } : {}),
   };
   for (const id of V.ids(s)) {
     const now = current.teams[id],
       old = previous?.teams[id] || ({} as Partial<QualificationState>);
+    if (now.bye && !old.bye) events.bye!.push(id);
     if (now.direct && !old.direct) events.direct.push(id);
     if (now.out && !old.out) events.out.push(id);
     if (now.playin && !old.playin) events.playin.push(id);

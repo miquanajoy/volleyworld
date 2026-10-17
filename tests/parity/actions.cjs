@@ -68,6 +68,7 @@ const assert = require("node:assert/strict"),
   same("back");
   command("Settings.review()", "Settings.review");
   command("Settings.apply()", "Settings.apply");
+  b.run("delete state.playoffEntry;save()"); // Compare legacy-rule seasons; expanded-single has its own suite.
   a.run("navigate('league')");
   same("apply");
   click("#heroAction", "#heroAction");

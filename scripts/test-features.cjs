@@ -6,6 +6,7 @@ for (const file of [
   "career-ranking",
   "season-summary",
   "playoff-overview",
+  "expanded-single",
   "simulation-v2",
   "full-season",
   "full-season-cloud",

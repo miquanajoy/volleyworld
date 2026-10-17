@@ -166,6 +166,37 @@ const fs = require("node:fs"),
   assert(
     w.document.querySelector(".points-rules").textContent.includes("4.170"),
   );
+  // Exercise the expanded single-elimination flow through the actual Vite bundle.
+  assert.equal(
+    JSON.parse(w.localStorage.getItem("volleyworld-v1")).playoffEntry,
+    "top16",
+  );
+  click('[data-action="navigate"][data-arg="league"]');
+  click('[data-action="simLeague"]');
+  click('[data-action="navigate"][data-arg="playoff"]');
+  click('[data-action="startPlayin"]');
+  click('[data-action="simPlayin"]');
+  click('[data-action="drawBracket"]');
+  assert.equal(
+    w.document.querySelectorAll(
+      '.round20-section [data-action="openPlayoffMatch"]',
+    ).length,
+    4,
+  );
+  click('[data-action="simStage"][data-arg="r20"]');
+  click('[data-action="drawBracket"]');
+  for (const key of ["r16", "qf", "sf", "bronze", "final"])
+    click(`[data-action="simStage"][data-arg="${key}"]`);
+  const completedClassic = JSON.parse(w.localStorage.getItem("volleyworld-v1"));
+  assert.equal(completedClassic.bracket.r20.length, 4);
+  assert(
+    completedClassic.bracket.bronze[0].resultOrder <
+      completedClassic.bracket.final[0].resultOrder,
+  );
+  assert.equal(
+    w.document.querySelectorAll(".live-podium .medal-card").length,
+    3,
+  );
   const classicBeforeFull = w.localStorage.getItem("volleyworld-v1");
   click('[data-action="navigate"][data-arg="home"]');
   click('[data-action="Full.enter"]');

@@ -127,6 +127,9 @@ function canonical(app, id = "body") {
     // Bracket overview/podium/order are covered by playoff-overview.cjs.
     if (content) content.replaceChildren();
   }
+  remove(".playoff-format-setup"); // Updated entry-slot descriptions are feature-tested.
+  if (app.run("tab") === "settings")
+    copy.querySelectorAll(".notice > .badge + p").forEach((el) => el.remove());
   remove('[data-action="Full.enter"]');
   remove(".score-generator, .score-draft-status, .set-play, .set-clear");
   copy

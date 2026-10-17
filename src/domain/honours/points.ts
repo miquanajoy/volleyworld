@@ -8,8 +8,14 @@ function weight(rank: number): number {
   return (CHAMPION_POINTS * (1 / Math.sqrt(rank) - floor)) / (1 - floor);
 }
 /** Average all tied positions BEFORE rounding, so no arbitrary order is invented. */
-export function placementPoints(placement: Placement): number {
+export function placementPoints(
+  placement: Placement,
+  extendedPlayin = false,
+): number {
   const { from, to } = placement;
+  // Preserve all historical awards; the four new Play-in finishers receive
+  // a small participation tail, below the existing 20-point #17–#20 group.
+  if (extendedPlayin && from === 21 && to === 24) return 10;
   if (
     !Number.isSafeInteger(from) ||
     !Number.isSafeInteger(to) ||

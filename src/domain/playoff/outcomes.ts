@@ -1,5 +1,6 @@
 import { loser, winner } from "../match/scoring";
 import type { Match, Tournament } from "../types";
+import { expandedSingle } from "./entry";
 import { isDouble, playoffStages } from "./definitions";
 
 export function decidingFinal(s: Tournament) {
@@ -22,7 +23,7 @@ export function podium(s: Tournament) {
 }
 
 export function totalMatches(s: Tournament) {
-  if (!isDouble(s)) return 516;
+  if (!isDouble(s)) return expandedSingle(s) ? 520 : 516;
   const gf = s.bracket?.gf?.[0];
   return gf?.sets && winner(gf) === gf.a ? 530 : 531;
 }

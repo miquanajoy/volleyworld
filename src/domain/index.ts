@@ -17,3 +17,5 @@ export * from "./tournament/schedule";
 export * from "./tournament/validation";
 
 export * from "./tournament/placement";
+
+export * from "./playoff/entry";

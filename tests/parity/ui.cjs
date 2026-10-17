@@ -39,6 +39,7 @@ assert.equal(
     );
     same("review");
     both("Settings.apply()");
+    b.run("delete state.playoffEntry;save()"); // Compare legacy-rule seasons; expanded-single has its own suite.
     a.run("navigate('league')");
     same("apply");
     a.w.document.getElementById("heroAction").click();

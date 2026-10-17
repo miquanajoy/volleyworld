@@ -964,3 +964,14 @@
     grid-template-columns: repeat(4, minmax(130px, 1fr));
   }
 }
+
+.round20-byes {
+  padding: 20px;
+  margin-top: 20px;
+}
+.round20-byes .qualification-names {
+  margin-top: 14px;
+}
+.round20-section .playin-body > .sub {
+  margin-bottom: 18px;
+}

@@ -114,6 +114,7 @@ export function replaceRoster(
     ...V.fresh(selected, playoffFormat),
     ...meta,
     setupConfirmed: true,
+    ...(playoffFormat === "single" ? { playoffEntry: "top16" as const } : {}),
   };
   getPorts().settings.discard();
   store.round = 0;

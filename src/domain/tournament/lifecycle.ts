@@ -17,6 +17,7 @@ export function finishAll(s: Tournament) {
   advance(s);
   for (const { key } of playoffOrder(s)) {
     s.bracket![key]!.filter((m) => !m.sets).forEach(simulate);
+    if (key === "r20" && !s.bracket!.r16.length) draw(s);
     advance(s);
     stampResults(s);
   }

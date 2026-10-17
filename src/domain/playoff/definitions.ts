@@ -1,14 +1,17 @@
 import type { StageDefinition, Tournament } from "../types";
+import { expandedSingle } from "./entry";
 import { doubleStages } from "./double/rules";
 import { pairRound } from "./shared-rules";
 import { singleStages } from "./single/rules";
 export { source } from "./shared-rules";
-export const isDouble = (s: Pick<Tournament, "playoffFormat">): boolean =>
-  s.playoffFormat === "double";
-export const formatName = (s: Pick<Tournament, "playoffFormat">): string =>
-  isDouble(s) ? "Nhánh thắng – nhánh thua" : "Loại trực tiếp";
+export const isDouble = (
+  s: Pick<Tournament, "playoffFormat" | "playoffEntry">,
+): boolean => s.playoffFormat === "double";
+export const formatName = (
+  s: Pick<Tournament, "playoffFormat" | "playoffEntry">,
+): string => (isDouble(s) ? "Nhánh thắng – nhánh thua" : "Loại trực tiếp");
 export function playoffStages(
-  s: Pick<Tournament, "playoffFormat">,
+  s: Pick<Tournament, "playoffFormat" | "playoffEntry">,
 ): StageDefinition[] {
   const upper: StageDefinition[] = [
     { key: "r16", label: "Vòng 16 đội", count: 8, prefix: "R", kind: "upper" },
@@ -22,12 +25,27 @@ export function playoffStages(
       "F",
     ),
   ];
-  return isDouble(s) ? doubleStages(upper) : singleStages(upper);
+  return isDouble(s)
+    ? doubleStages(upper)
+    : [
+        ...(expandedSingle(s)
+          ? [
+              {
+                key: "r20" as const,
+                label: "Vòng 20 đội",
+                count: 4,
+                prefix: "D",
+                kind: "upper" as const,
+              },
+            ]
+          : []),
+        ...singleStages(upper),
+      ];
 }
 
 /** Competition order differs from the stable bracket/schema order. */
 export function playoffOrder(
-  s: Pick<Tournament, "playoffFormat">,
+  s: Pick<Tournament, "playoffFormat" | "playoffEntry">,
 ): StageDefinition[] {
   const stages = playoffStages(s);
   return isDouble(s)

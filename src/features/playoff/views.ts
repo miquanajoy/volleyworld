@@ -34,6 +34,12 @@ export function playoffWinner(m: Match | null | undefined, fallback: string) {
 }
 export function playoffStageAction(b: Bracket) {
   if (isReadOnly()) return "";
+  if (
+    V.expandedSingle(displayState()) &&
+    !b.r16.length &&
+    b.r20?.every((m) => m.sets)
+  )
+    return '<button class="primary" data-action="drawBracket">Bốc thăm vòng 16 đội →</button>';
   for (const { key, label } of V.playoffOrder(displayState()))
     if (b[key]!.some((m) => !m.sets))
       return `<button class="primary" data-action="simStage" data-arg="${key}">Mô phỏng ${label.toLowerCase()} →</button>`;
@@ -92,8 +98,13 @@ export function playoffTree(b: Bracket, upperOnly = false) {
 }
 export function playinSectionHtml(s: Tournament) {
   const b = s.bracket,
-    pDone = s.playin!.every((m) => m.sets);
-  return `<details class="playin-section" ${b ? "" : "open"}><summary><span><span class="eyebrow">VÒNG PLAY-IN</span><b>8 đội · 4 suất vào Playoff</b></span><span class="badge">${s.playin!.filter((m) => m.sets).length}/4 ĐÃ ĐẤU ${b ? "· XEM LẠI" : ""}</span></summary><div class="playin-body"><div class="section-head"><p class="sub">Hạng 13–20 · một trận BO5 loại trực tiếp</p>${isReadOnly() ? "" : !pDone ? '<button class="primary" data-action="simPlayin">Mô phỏng vòng Play-in →</button>' : !b ? '<button class="primary" data-action="drawBracket">Bốc thăm playoff →</button>' : ""}</div><div class="playin-matches">${s.playin!.map((m, i) => playoffSlot(m, `HẠNG ${13 + i} vs ${20 - i}`)).join("")}</div></div></details>`;
+    pDone = s.playin!.every((m) => m.sets),
+    slots = V.entrySlots(s);
+  return `<details class="playin-section" ${b ? "" : "open"}><summary><span><span class="eyebrow">VÒNG PLAY-IN</span><b>8 đội · 4 suất vào Playoff</b></span><span class="badge">${s.playin!.filter((m) => m.sets).length}/4 ĐÃ ĐẤU ${b ? "· XEM LẠI" : ""}</span></summary><div class="playin-body"><div class="section-head"><p class="sub">Hạng ${slots.direct + 1}–${slots.advance} · một trận BO5 loại trực tiếp</p>${isReadOnly() ? "" : !pDone ? '<button class="primary" data-action="simPlayin">Mô phỏng vòng Play-in →</button>' : !b ? `<button class="primary" data-action="drawBracket">${V.expandedSingle(s) ? "Tạo vòng 20 đội" : "Bốc thăm playoff"} →</button>` : ""}</div><div class="playin-matches">${s.playin!.map((m, i) => playoffSlot(m, `HẠNG ${slots.direct + 1 + i} vs ${slots.advance - i}`)).join("")}</div></div></details>`;
+}
+export function round20Html(s: Tournament) {
+  const b = s.bracket!;
+  return `<details class="playin-section round20-section" ${b.r16.length ? "" : "open"}><summary><span><span class="eyebrow">VÒNG 20 ĐỘI</span><b>Hạng 13–16 × 4 đội thắng Play-in</b></span><span class="badge">${b.r20!.filter((m) => m.sets).length}/4 ĐÃ ĐẤU</span></summary><div class="playin-body"><p class="sub">Top 12 miễn vòng này. Bốn đội thắng vào seed 4 của vòng 16 đội. Ghép cố định: #13–P4, #14–P3, #15–P2, #16–P1; không đổi cặp khi có bất ngờ.</p><div class="playin-matches">${b.r20!.map((m, i) => playoffSlot(m, `D${i + 1} · Vòng 20 đội`)).join("")}</div></div></details>`;
 }
 export function doubleStagePanel(s: Tournament, key: StageKey) {
   const def = V.playoffStages(s).find((d) => d.key === key)!,
@@ -165,7 +176,8 @@ export function doublePlayoffHtml(s: Tournament) {
     .join("")}</div>${body}`;
 }
 export function renderPlayoff() {
-  const s = displayState();
+  const s = displayState(),
+    slots = V.entrySlots(s);
   if (isReadOnly() && !s.playin) {
     $("content").innerHTML =
       '<div class="notice">Mùa này chưa có vòng Play-in hoặc nhánh playoff.</div>';
@@ -173,15 +185,25 @@ export function renderPlayoff() {
   }
   if (!V.leagueDone(s)) {
     $("content").innerHTML =
-      `<div class="notice"><span class="badge">CHẶNG TIẾP THEO</span><h2 style="margin-top:12px">Con đường đến chức vô địch</h2><p>Hoàn tất 31 vòng league để xác định 12 đội vào thẳng playoff và 8 đội dự vòng Play-in.</p><button class="primary" data-action="navigate" data-arg="league">Tiếp tục league →</button></div>${qualificationNews(qualificationData(s))}${qualificationEntries(qualificationData(s))}<div class="rule-grid"><div class="panel rule"><h3>01 / Vòng Play-in</h3><p>Hạng 13–20 · 13 vs 20, 14 vs 19, 15 vs 18, 16 vs 17. Bốn trận BO5, bốn vé đi tiếp.</p></div><div class="panel rule"><h3>02 / ${V.formatName(s)}</h3><p>${V.isDouble(s) ? "16 đội: thua lần đầu xuống nhánh thua, thua lần hai bị loại. Chung kết tổng có reset; không có trận tranh hạng ba riêng." : "Bốn nhánh, mỗi nhánh đủ seed 1–4. Bốc thăm một lần, sau đó đi theo nhánh đến chung kết."}</p></div></div>`;
+      `<div class="notice"><span class="badge">CHẶNG TIẾP THEO</span><h2 style="margin-top:12px">Con đường đến chức vô địch</h2><p>Hoàn tất 31 vòng league để xác định ${slots.direct} đội vào thẳng playoff và 8 đội dự vòng Play-in.</p><button class="primary" data-action="navigate" data-arg="league">Tiếp tục league →</button></div>${qualificationNews(qualificationData(s))}${qualificationEntries(qualificationData(s))}<div class="rule-grid"><div class="panel rule"><h3>01 / Vòng Play-in</h3><p>Hạng ${slots.direct + 1}–${slots.advance} · ghép đội cao nhất gặp thấp nhất, tiếp tục tương tự. Bốn trận BO5, bốn vé đi tiếp.</p></div><div class="panel rule"><h3>02 / ${V.formatName(s)}</h3><p>${V.isDouble(s) ? "16 đội: thua lần đầu xuống nhánh thua, thua lần hai bị loại. Chung kết tổng có reset; không có trận tranh hạng ba riêng." : (V.expandedSingle(s) ? "Top 12 miễn vòng 20. Hạng 13–16 gặp bốn đội thắng Play-in; bốn đội thắng vòng 20 vào seed 4. " : "") + "Bốn nhánh, mỗi nhánh đủ seed 1–4. Bốc thăm một lần, sau đó đi theo nhánh đến chung kết."}</p></div></div>`;
     return;
   }
   if (!s.playin) {
     $("content").innerHTML =
-      `${qualificationNews(qualificationData(s))}${qualificationEntries(qualificationData(s))}<div class="notice"><h2>Đã xác định top 20</h2><p>12 đội đầu vào thẳng playoff. Tạo các cặp Play-in theo thứ hạng league.</p><button class="primary" data-action="startPlayin">Tạo vòng Play-in →</button></div>`;
+      `${qualificationNews(qualificationData(s))}${qualificationEntries(qualificationData(s))}<div class="notice"><h2>Đã xác định top ${slots.advance}</h2><p>${slots.direct} đội đầu vào thẳng playoff.${V.expandedSingle(s) ? " Top 12 được miễn vòng 20 đội." : ""} Tạo các cặp Play-in theo thứ hạng league.</p><button class="primary" data-action="startPlayin">Tạo vòng Play-in →</button></div>`;
     return;
   }
   const b = s.bracket;
+  if (b && V.expandedSingle(s) && !b.r16.length) {
+    $("content").innerHTML =
+      `<section class="playoff-dashboard"><div><span class="eyebrow">PLAYOFF 20 ĐỘI · BO5</span><h2>Chặng mở màn playoff</h2><p>Top 12 chờ ở vòng 16 đội · hạng 13–16 gặp đội thắng Play-in.</p></div><div class="playoff-dashboard-action">${playoffStageAction(b)}</div></section><section class="panel round20-byes"><span class="eyebrow">12 ĐỘI ĐƯỢC MIỄN VÒNG 20</span><div class="qualification-names">${V.standings(
+        s,
+      )
+        .slice(0, 12)
+        .map((t) => team(t.id, false, s))
+        .join("")}</div></section>${round20Html(s)}${playinSectionHtml(s)}`;
+    return;
+  }
   if (b && V.isDouble(s)) {
     $("content").innerHTML = doublePlayoffHtml(s) + playinSectionHtml(s);
     return;
@@ -205,6 +227,7 @@ export function renderPlayoff() {
         ? `<div class="playoff-quarters">${[0, 1, 2, 3].map((i) => playoffQuarter(b, i)).join("")}</div>${playoffFinals(b)}`
         : playoffTree(b);
   }
+  if (b?.r20) html += round20Html(s);
   html += playinSectionHtml(s);
   $("content").innerHTML = html;
 }

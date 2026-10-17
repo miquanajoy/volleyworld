@@ -26,6 +26,7 @@ export interface Match {
   resultOrder?: number;
 }
 export type StageKey =
+  | "r20"
   | "r16"
   | "qf"
   | "sf"
@@ -53,6 +54,7 @@ export interface StageDefinition {
 }
 export interface Bracket {
   seeds: Record<TeamId, Seed>;
+  r20?: Match[];
   r16: Match[];
   qf: Match[];
   sf: Match[];
@@ -71,6 +73,7 @@ export interface Tournament {
   setupConfirmed?: boolean;
   version: 1;
   playoffFormat?: PlayoffFormat;
+  playoffEntry?: "top16";
   teamIds?: TeamId[];
   rounds: Match[][];
   tie: TeamId[];

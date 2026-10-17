@@ -32,6 +32,7 @@ export interface QualificationState {
   out: boolean;
   limited: boolean;
   playin?: boolean;
+  bye?: boolean;
 }
 export interface Checkpoint {
   teams: Record<TeamId, QualificationState>;
@@ -42,7 +43,7 @@ export interface Checkpoint {
 export type QualificationEvents = Record<
   "direct" | "advance" | "playin" | "noDirect" | "out",
   TeamId[]
->;
+> & { bye?: TeamId[] };
 export interface QualificationReport extends Checkpoint {
   events: QualificationEvents;
 }

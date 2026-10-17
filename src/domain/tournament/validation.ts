@@ -1,5 +1,6 @@
 import { leagueDone, standings } from "../league/standings";
 import { validate, winner } from "../match/scoring";
+import { entrySlots, expandedSingle } from "../playoff/entry";
 import { isDouble, playoffStages } from "../playoff/definitions";
 import { expectedStage } from "../playoff/progression";
 import type { Match, Tournament } from "../types";
@@ -29,6 +30,12 @@ export function validState(input: unknown): input is Tournament {
       !["single", "double"].includes(s.playoffFormat)
     )
       return false;
+    if (
+      s?.playoffEntry !== undefined &&
+      (s.playoffEntry !== "top16" || s.playoffFormat === "double")
+    )
+      return false;
+    const slots = entrySlots(s);
     if (
       s?.version !== 1 ||
       !validRoster(ids(s)) ||
@@ -93,7 +100,9 @@ export function validState(input: unknown): input is Tournament {
       const ranked = standings(s);
       if (
         !s.playin.every(
-          (m, i) => m.a === ranked[12 + i].id && m.b === ranked[19 - i].id,
+          (m, i) =>
+            m.a === ranked[slots.direct + i].id &&
+            m.b === ranked[slots.advance - 1 - i].id,
         )
       )
         return false;
@@ -117,6 +126,28 @@ export function validState(input: unknown): input is Tournament {
           return false;
       if (isDouble(s) && (!Array.isArray(b.bronze) || b.bronze.length))
         return false;
+      if (expandedSingle(s)) {
+        const ranked = standings(s);
+        if (
+          !b.r20 ||
+          b.r20.length !== 4 ||
+          !b.r20.every(
+            (m, i) =>
+              m.id === `D${i}` &&
+              m.a === ranked[12 + i].id &&
+              m.b === winner(s.playin![3 - i]),
+          )
+        )
+          return false;
+        if (!b.r16.length)
+          return (
+            Object.keys(b.seeds).length === 0 &&
+            stages
+              .filter((d) => d.key !== "r20")
+              .every((d) => !b[d.key]!.length)
+          );
+        if (!b.r20.every((m) => m.sets)) return false;
+      }
       if (b.r16.length !== 8 || !b.r16.every((m, i) => m.id === "R" + i))
         return false;
       const ranked = standings(s).map((t) => t.id),
@@ -124,7 +155,7 @@ export function validState(input: unknown): input is Tournament {
           ranked.slice(0, 4),
           ranked.slice(4, 8),
           ranked.slice(8, 12),
-          s.playin.map((m) => winner(m)!),
+          (expandedSingle(s) ? b.r20! : s.playin).map((m) => winner(m)!),
         ],
         eligible = seedGroups.flat();
       if (
@@ -155,7 +186,7 @@ export function validState(input: unknown): input is Tournament {
             .join("") !== "1234"
         )
           return false;
-      for (const def of stages.slice(1)) {
+      for (const def of stages.filter((d) => d.pairs)) {
         const expected = expectedStage(s, def);
         if (isDouble(s) && !!expected !== !!b[def.key]!.length) return false;
         if (

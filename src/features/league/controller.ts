@@ -48,7 +48,11 @@ export function drawBracket() {
   V.draw(store.state);
   getPorts().commands.save();
   getPorts().commands.render();
-  toast("Đã bốc thăm 4 nhánh. Nhánh đấu được giữ cố định!");
+  toast(
+    store.state.bracket?.r16.length
+      ? "Đã bốc thăm 4 nhánh. Nhánh đấu được giữ cố định!"
+      : "Đã tạo vòng 20 đội. Top 12 được miễn vòng này.",
+  );
 }
 export function simStage(key: StageKey) {
   if (!getPorts().seasons.editable()) return;

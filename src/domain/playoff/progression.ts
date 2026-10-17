@@ -28,7 +28,7 @@ export function expectedStage(s: Tournament, def: StageDefinition) {
 export function advance(s: Tournament) {
   const b = s.bracket;
   if (!b) return;
-  for (const def of playoffStages(s).slice(1)) {
+  for (const def of playoffStages(s)) {
     if (b[def.key]!.length) continue;
     const pairs = expectedStage(s, def);
     if (pairs)
@@ -40,6 +40,7 @@ export function advance(s: Tournament) {
 
 export function playoffLocked(s: Tournament, m: Match) {
   if (!s.bracket) return false;
+  if (s.bracket.r20?.includes(m)) return !!s.bracket.r16.length;
   const stages = playoffStages(s),
     key = stages.find((d) =>
       s.bracket![d.key]!.some((x) => x.id === m.id),

@@ -1,3 +1,4 @@
+import { expandedSingle } from "../../domain/playoff/entry";
 import { catalog } from "../../data/teams";
 import { placementPoints } from "../../domain/honours/points";
 import { finalPlacements } from "../../domain/tournament/placement";
@@ -32,7 +33,12 @@ export function seasonPoints(row: SeasonTile, id: TeamId): number | null {
   if (row.status !== "completed") return 0;
   const result = achievement(row, id);
   if (result.kind === "unavailable") return null;
-  return result.placement ? placementPoints(result.placement) : 0;
+  return result.placement
+    ? placementPoints(
+        result.placement,
+        !!row.snapshot && expandedSingle(row.snapshot),
+      )
+    : 0;
 }
 export function careerSummary(rows: SeasonTile[], id: TeamId) {
   let points = 0,
@@ -70,7 +76,10 @@ export function careerRanking(
             medals.map((id, i) => [id, { from: i + 1, to: i + 1 }]),
           );
     for (const [id, placement] of Object.entries(placements)) {
-      const points = placementPoints(placement);
+      const points = placementPoints(
+        placement,
+        !!row.snapshot && expandedSingle(row.snapshot),
+      );
       if (!points || !catalog.some((t) => t.id === id)) continue;
       const entry = map.get(id) || {
         id,

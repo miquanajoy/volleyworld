@@ -29,12 +29,12 @@ export function steps() {
   return `<div class="setup-steps">${["Thể thức & suất", "Chọn đội", "Xác nhận"].map((n, i) => `<span class="${setupState.draft!.step === i + 1 ? "current" : ""}"><b>${i + 1}</b>${n}</span>`).join("")}</div>`;
 }
 export function playoffChoices() {
-  return `<section class="playoff-format-setup"><h3>Thể thức playoff</h3><p class="sub">Chọn trước khi bắt đầu mùa. League và vòng Play-in giữ nguyên.</p><div class="format-choices" role="group" aria-label="Thể thức playoff">${[
+  return `<section class="playoff-format-setup"><h3>Thể thức playoff</h3><p class="sub">Chọn trước khi bắt đầu mùa. League giữ nguyên; suất Play-in phụ thuộc thể thức đã chọn.</p><div class="format-choices" role="group" aria-label="Thể thức playoff">${[
     [
       "single",
       "Loại trực tiếp",
-      "16 trận playoff",
-      "Thua một trận bị loại. Có trận tranh hạng ba.",
+      "20 trận playoff",
+      "Top 16 vào thẳng; hạng 17–24 dự Play-in. Top 12 miễn vòng 20 đội. Thua một trận bị loại; có tranh hạng ba.",
     ],
     [
       "double",
@@ -85,7 +85,7 @@ export function renderReview(c: HTMLElement) {
       (id) => !setupState.draft!.selected.includes(id),
     ),
     played = store.state.rounds.flat().filter((m) => m.sets).length;
-  c.innerHTML = `<div class="section-head"><div><h2>Xác nhận thể thức trước khi bắt đầu</h2><p class="sub">Kiểm tra danh sách trước khi áp dụng.</p></div><span class="round-tag">32 ĐỘI · 31 VÒNG · 496 TRẬN</span></div>${steps()}<div class="notice"><span class="badge">PLAYOFF · ${V.formatName({ playoffFormat: setupState.draft!.playoffFormat })}</span><p>${setupState.draft!.playoffFormat === "double" ? "Thua hai lần mới bị loại. Chung kết tổng có thể cần hai trận BO5; đội thua chung kết nhánh thua đứng hạng ba." : "Loại trực tiếp, có trận tranh hạng ba."}</p><b>${added.length} đội được thêm · ${removed.length} đội được bỏ</b><p>Lịch league và nhánh playoff sẽ được tạo lại theo danh sách mới.${played ? ` Giải hiện tại có ${played} trận league đã đấu; các kết quả đó không chuyển sang giải mới.` : ""} Cấu hình chỉ áp dụng cho mùa chưa bắt đầu.</p><button data-action="exportSave">Xuất tiến độ hiện tại trước khi đổi</button></div><div class="change-grid"><div class="panel change-card"><h3>+ Thêm vào giải</h3>${added.length ? added.map((id) => `<div>${team(id)}</div>`).join("") : '<p class="sub">Không thêm đội mới.</p>'}</div><div class="panel change-card"><h3>− Chuyển sang dự phòng</h3>${removed.length ? removed.map((id) => `<div>${team(id)}</div>`).join("") : '<p class="sub">Không bỏ đội nào.</p>'}</div></div><div class="region-grid">${regions
+  c.innerHTML = `<div class="section-head"><div><h2>Xác nhận thể thức trước khi bắt đầu</h2><p class="sub">Kiểm tra danh sách trước khi áp dụng.</p></div><span class="round-tag">32 ĐỘI · 31 VÒNG · 496 TRẬN</span></div>${steps()}<div class="notice"><span class="badge">PLAYOFF · ${V.formatName({ playoffFormat: setupState.draft!.playoffFormat })}</span><p>${setupState.draft!.playoffFormat === "double" ? "Thua hai lần mới bị loại. Chung kết tổng có thể cần hai trận BO5; đội thua chung kết nhánh thua đứng hạng ba." : "Top 16 vào thẳng; hạng 17–24 đánh Play-in. Top 12 miễn vòng 20; hạng 13–16 gặp đội thắng Play-in. Bốn đội thắng vòng 20 vào seed 4. Có trận tranh hạng ba."}</p><b>${added.length} đội được thêm · ${removed.length} đội được bỏ</b><p>Lịch league và nhánh playoff sẽ được tạo lại theo danh sách mới.${played ? ` Giải hiện tại có ${played} trận league đã đấu; các kết quả đó không chuyển sang giải mới.` : ""} Cấu hình chỉ áp dụng cho mùa chưa bắt đầu.</p><button data-action="exportSave">Xuất tiến độ hiện tại trước khi đổi</button></div><div class="change-grid"><div class="panel change-card"><h3>+ Thêm vào giải</h3>${added.length ? added.map((id) => `<div>${team(id)}</div>`).join("") : '<p class="sub">Không thêm đội mới.</p>'}</div><div class="panel change-card"><h3>− Chuyển sang dự phòng</h3>${removed.length ? removed.map((id) => `<div>${team(id)}</div>`).join("") : '<p class="sub">Không bỏ đội nào.</p>'}</div></div><div class="region-grid">${regions
     .map(
       (r) =>
         `<div class="panel region-card"><span class="badge">${r} · ${setupState.draft!.quotas[r]} ĐỘI</span><h3 style="margin-top:12px">${names[r]}</h3>${V.regionTeams(

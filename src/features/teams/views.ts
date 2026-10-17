@@ -24,10 +24,11 @@ export function renderTeams() {
       )}</div><p class="sub" style="margin-top:20px">Nguồn dữ liệu ban đầu: <a href="https://www.volleyballer.jp/senior_world_ranking_men/" target="_blank" rel="noopener">bảng tổng hợp FIVB của Volleyballer</a>, ngày 13/10/2026. Bộ đội cố định cho mùa giả lập; không tự cập nhật trực tiếp. Nga được giữ theo bộ BXH đã chọn, không mô phỏng điều kiện tham dự thực tế. Sức mạnh mô phỏng dựa trên điểm BXH, có yếu tố ngẫu nhiên; không phải dự đoán chính thức.</p>`;
 }
 export function renderRules() {
+  const expanded = V.expandedSingle(displayState());
   const rules = [
     [
       "01 / Phân bổ suất",
-      "Giải luôn có 32 đội. Mặc định: CEV 14, NORCECA 6, AVC 5, CSV 5, CAVB 2; bạn có thể thay đổi số suất và chọn đội ở nút Tùy chỉnh thể thức ở trang chủ, trước khi mùa giải bắt đầu. Danh sách đội và dự phòng xếp theo BXH khu vực.",
+      "Giải luôn có 32 đội. Mặc định: CEV 14, NORCECA 6, AVC 5, CSV 5, CAVB 2; bạn có thể thay đổi số suất và chọn đội trong bước thiết lập mùa mới, trước khi mùa giải bắt đầu. Danh sách đội và dự phòng xếp theo BXH khu vực.",
     ],
     [
       "02 / League phase",
@@ -43,11 +44,13 @@ export function renderRules() {
     ],
     [
       "05 / Play-in",
-      "Top 12 vào thẳng playoff. Hạng 13–20 đấu BO5 loại trực tiếp: 13 vs 20, 14 vs 19, 15 vs 18, 16 vs 17. Hạng 21–32 bị loại.",
+      expanded
+        ? "Top 16 vào thẳng playoff; #17–#24 đánh Play-in (17–24, 18–23, 19–22, 20–21). Top 12 miễn vòng 20; #13 gặp thắng P4, #14–P3, #15–P2, #16–P1. Bốn đội thắng vào vòng 16; #25–#32 bị loại sau league."
+        : "Top 12 vào thẳng playoff. Hạng 13–20 đấu BO5 loại trực tiếp: 13 vs 20, 14 vs 19, 15 vs 18, 16 vs 17. Hạng 21–32 bị loại.",
     ],
     [
       "06 / Seed & bốc thăm",
-      "Seed 1: hạng 1–4; seed 2: 5–8; seed 3: 9–12; seed 4: bốn đội thắng vòng Play-in. Mỗi nhánh A–D có đủ bốn seed. Vòng 16 đội: S1 vs S4 và S2 vs S3.",
+      `Seed 1: hạng 1–4; seed 2: 5–8; seed 3: 9–12; seed 4: bốn đội thắng ${expanded ? "vòng 20 đội" : "vòng Play-in"}. Mỗi nhánh A–D có đủ bốn seed. Vòng 16 đội: S1 vs S4 và S2 vs S3.`,
     ],
     [
       "07 / " + V.formatName(displayState()),
