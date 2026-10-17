@@ -1,3 +1,4 @@
+import { preserveBracketScroll } from "../../shared/bracket-scroll";
 import { getPorts } from "../../app/ports";
 import { displayState } from "../../app/selectors";
 import { store } from "../../app/store";
@@ -58,6 +59,13 @@ export function resultHeader() {
   }`;
 }
 export function results() {
+  preserveBracketScroll(
+    $("content"),
+    `classic:${displayState().seasonId || "legacy"}`,
+    renderResultsContent,
+  );
+}
+function renderResultsContent() {
   const s = displayState();
   if (V.complete(s)) {
     const content = $("content"),

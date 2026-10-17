@@ -1,3 +1,4 @@
+import { preserveBracketScroll } from "../../shared/bracket-scroll";
 import { podiumHtml } from "../../components/podium";
 import { displayState, isReadOnly } from "../../app/selectors";
 import { store } from "../../app/store";
@@ -176,6 +177,13 @@ export function doublePlayoffHtml(s: Tournament) {
     .join("")}</div>${body}`;
 }
 export function renderPlayoff() {
+  preserveBracketScroll(
+    $("content"),
+    `classic:${displayState().seasonId || "legacy"}`,
+    renderPlayoffContent,
+  );
+}
+function renderPlayoffContent() {
   const s = displayState(),
     slots = V.entrySlots(s);
   if (isReadOnly() && !s.playin) {

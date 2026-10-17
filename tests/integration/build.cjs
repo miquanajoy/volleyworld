@@ -200,8 +200,16 @@ const fs = require("node:fs"),
   );
   click('[data-action="simStage"][data-arg="r20"]');
   click('[data-action="drawBracket"]');
-  for (const key of ["r16", "qf", "sf", "bronze", "final"])
+  click('[data-action="setPlayoffLayout"][data-arg="tree"]');
+  w.document.querySelector(".playoff-tree-scroll").scrollLeft = 480;
+  for (const key of ["r16", "qf", "sf", "bronze", "final"]) {
     click(`[data-action="simStage"][data-arg="${key}"]`);
+    assert.equal(
+      w.document.querySelector(".playoff-tree-scroll").scrollLeft,
+      480,
+      "actual production render must retain bracket position",
+    );
+  }
   const completedClassic = JSON.parse(w.localStorage.getItem("volleyworld-v1"));
   assert.equal(completedClassic.bracket.r20.length, 4);
   assert(

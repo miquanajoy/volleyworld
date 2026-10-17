@@ -1,3 +1,4 @@
+import { preserveBracketScroll } from "../../shared/bracket-scroll";
 import { leagueRoundSnapshot } from "../../domain/league/round-standings";
 import { getPorts } from "../../app/ports";
 import { store } from "../../app/store";
@@ -427,6 +428,13 @@ function honoursHtml() {
 }
 export function renderFull() {
   initializeFullScope();
+  preserveBracketScroll(
+    $("content"),
+    `full:${fullModel.scope}:${fullModel.selected || "library"}`,
+    renderFullContent,
+  );
+}
+function renderFullContent() {
   const row = selectedFull(),
     s = row?.snapshot;
   $("saved").textContent = fullModel.records.some((r) => r.phase === "conflict")
