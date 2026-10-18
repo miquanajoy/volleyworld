@@ -18,6 +18,7 @@ for (const file of [
   "full-season-cloud",
   "nations-league",
   "nations-ui",
+  "nations-continuation",
   "nations-cloud",
 ]) {
   const r = spawnSync(process.execPath, ["tests/features/" + file + ".cjs"], {

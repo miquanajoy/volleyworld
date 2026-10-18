@@ -261,12 +261,14 @@ const fs = require("node:fs"),
     w.document.querySelectorAll(".full-season-summary .medal-card").length,
     3,
   );
-  click('[data-action="Nations.nextSeason"]');
+  click('footer [data-action="Seasons.requestNew"]');
   await new Promise((r) => setTimeout(r, 10));
   nations = JSON.parse(w.localStorage.getItem("volleyworld-nations-guest"));
   assert.equal(nations.length, 2);
   assert.equal(nations[1].cycle_number, 2);
   assert.equal(nations[1].previous_id, nations[0].season_id);
+  assert.equal(nations[1].campaign_id, nations[0].campaign_id);
+  assert.equal(w.document.querySelectorAll("[data-transfer-team]").length, 24);
   click("#saveProgress");
   await new Promise((r) => setTimeout(r, 10));
   assert(

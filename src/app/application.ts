@@ -48,6 +48,10 @@ export function navigate(t: AppTab) {
   render();
 }
 export function render() {
+  const footer = document.querySelector?.<HTMLButtonElement>(
+    'footer [data-action="Seasons.requestNew"]',
+  );
+  if (footer) footer.textContent = "Mùa giải mới";
   if (store.tab === "full-season" || store.tab === "nations-league") {
     $("homeHero").hidden = true;
     $("stats").hidden = true;

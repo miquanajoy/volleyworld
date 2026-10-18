@@ -169,7 +169,10 @@ function meta(r) {
   );
   root.snapshot = undefined;
   const classic = t.run("JSON.stringify(state)");
-  assert(N.nationsComplete(await c.load(root.season_id)));
+  await n.continueNations(root.season_id);
+  assert(N.nationsComplete(root.snapshot));
+  assert.equal(n.selected().season_id, other.seasonId);
+  assert.equal(n.nationsModel.records.length, 2);
   assert.equal(t.run("JSON.stringify(state)"), classic);
   root.snapshot = undefined;
   let release;

@@ -1623,3 +1623,67 @@
     flex-direction: column;
   }
 }
+
+.nations-campaign-heading {
+  align-items: center;
+  gap: 18px;
+}
+.nations-campaign-heading h3 {
+  margin: 0 0 8px;
+}
+.nations-campaign-heading .sub {
+  margin: 0;
+}
+.nations-campaign-heading > button {
+  flex-shrink: 0;
+}
+.nations-transfer-summary {
+  padding: 22px;
+  margin: 0 0 22px;
+}
+.nations-transfer-summary h3 {
+  margin: 10px 0;
+}
+.nations-transfer-summary summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+}
+.nations-transfer-summary details {
+  margin-top: 18px;
+}
+.nations-transfer-summary .table-wrap {
+  margin-top: 14px;
+}
+.nations-transfer-tag {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.nations-transfer-tag.is-promoted {
+  color: var(--green);
+  background: #edf5e9;
+}
+.nations-transfer-tag.is-relegated {
+  color: #b04d29;
+  background: #fff0e8;
+}
+.nations-cycle-note {
+  margin: 0 0 18px;
+  line-height: 1.6;
+}
+@media (max-width: 700px) {
+  .nations-campaign-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .nations-campaign-heading > button {
+    width: 100%;
+  }
+  .nations-transfer-summary {
+    padding: 18px;
+  }
+}

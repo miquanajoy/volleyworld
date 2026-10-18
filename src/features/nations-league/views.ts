@@ -63,12 +63,12 @@ export function statusHtml() {
 }
 export function libraryHtml() {
   const campaigns = [...new Set(model.records.map((r) => r.campaign_id))];
-  return `<div class="section-head"><div><span class="eyebrow">NATIONS LEAGUE · 64 QUỐC GIA</span><h2>VolleyWorld Nations League</h2><p class="sub">Bốn hạng đấu. Sáu lượt trận. Lên hạng, trụ hạng và tranh ngôi vô địch qua từng mùa.</p></div><div class="controls"><button data-action="navigate" data-arg="home">← Trang chủ</button><button class="primary" data-action="Nations.create">Bắt đầu chuỗi mùa mới</button></div></div><div class="full-format-grid nations-format">${N.tiers.map((t) => `<section class="panel full-region-summary"><span class="eyebrow">DIVISION ${t}</span><strong>16 đội · 4 bảng</strong><span>${t === "A" ? "Top 2 mỗi bảng → playoff 8 đội" : "Nhất mỗi bảng → lên hạng"}${t === "D" ? "" : " · Cuối bảng xuống hạng"}</span></section>`).join("")}</div>${rulesHtml(false)}<div class="full-library-toolbar"><button data-action="Nations.export">Xuất lịch sử Nations League</button><button data-action="Nations.import">Nhập lịch sử</button><button data-action="Nations.honours">Thành tích</button><button data-action="Nations.sync">Đồng bộ lịch sử</button></div>${
+  return `<div class="section-head"><div><span class="eyebrow">NATIONS LEAGUE · 64 QUỐC GIA</span><h2>VolleyWorld Nations League</h2><p class="sub">Bốn hạng đấu. Sáu lượt trận. Lên hạng, trụ hạng và tranh ngôi vô địch qua từng mùa.</p><p class="sub">Chọn Tiếp tục / Tạo mùa kế tiếp trong chuỗi để kế thừa lên/xuống hạng. Chuỗi độc lập mới bắt đầu lại từ mùa 1.</p></div><div class="controls"><button data-action="navigate" data-arg="home">← Trang chủ</button><button class="${campaigns.length ? "" : "primary"}" data-action="Nations.create">Tạo chuỗi độc lập mới</button></div></div><div class="full-format-grid nations-format">${N.tiers.map((t) => `<section class="panel full-region-summary"><span class="eyebrow">DIVISION ${t}</span><strong>16 đội · 4 bảng</strong><span>${t === "A" ? "Top 2 mỗi bảng → playoff 8 đội" : "Nhất mỗi bảng → lên hạng"}${t === "D" ? "" : " · Cuối bảng xuống hạng"}</span></section>`).join("")}</div>${rulesHtml(false)}<div class="full-library-toolbar"><button data-action="Nations.export">Xuất lịch sử Nations League</button><button data-action="Nations.import">Nhập lịch sử</button><button data-action="Nations.honours">Thành tích</button><button data-action="Nations.sync">Đồng bộ lịch sử</button></div>${
     campaigns.length
       ? campaigns
           .map(
             (id) =>
-              `<section class="nations-campaign"><h3>${campaignName(id)}</h3><div class="season-grid">${model.records
+              `<section class="nations-campaign">${campaignHeaderHtml(id)}<div class="season-grid">${model.records
                 .filter((r) => r.campaign_id === id)
                 .sort((a, b) => a.cycle_number - b.cycle_number)
                 .map(
@@ -102,7 +102,7 @@ export function toolbar(s: N.NationsSeason) {
 }
 export function overviewHtml(s: N.NationsSeason) {
   if (N.nationsComplete(s)) return summaryHtml(s);
-  return `${toolbar(s)}<div class="full-format-grid nations-format">${N.tiers.map((t) => `<section class="panel full-region-summary"><span class="eyebrow">DIVISION ${t}</span><strong>16 đội · 4 bảng</strong><p class="sub">${s.divisions[t].groups.flatMap((g) => g.rounds.flat()).filter((m) => m.sets).length}/48 trận</p><button data-action="Nations.section" data-arg="${t}">Xem lịch & BXH →</button></section>`).join("")}</div>${s.playoff ? '<section class="panel full-world-gate"><h3>Playoff Division A</h3><button class="primary" data-action="Nations.section" data-arg="playoff">Vào nhánh đấu →</button></section>' : ""}`;
+  return `${transferSummaryHtml(s)}${toolbar(s)}<div class="full-format-grid nations-format">${N.tiers.map((t) => `<section class="panel full-region-summary"><span class="eyebrow">DIVISION ${t}</span><strong>16 đội · 4 bảng</strong><p class="sub">${s.divisions[t].groups.flatMap((g) => g.rounds.flat()).filter((m) => m.sets).length}/48 trận</p><button data-action="Nations.section" data-arg="${t}">Xem lịch & BXH →</button></section>`).join("")}</div>${s.playoff ? '<section class="panel full-world-gate"><h3>Playoff Division A</h3><button class="primary" data-action="Nations.section" data-arg="playoff">Vào nhánh đấu →</button></section>' : ""}`;
 }
 export function groupsHtml(s: N.NationsSeason) {
   const round = Math.min(model.round, N.nationsCurrentRound(s));
@@ -231,4 +231,34 @@ export function matchDetailHtml(s: N.NationsSeason, m: Match, locked: boolean) {
     win = winner(m),
     waitingBronze = s.playoff?.final.includes(m) && !s.playoff.bronze[0]?.sets;
   return `<section class="nations-match-detail"><div class="nations-match-meta"><div><span class="eyebrow">NATIONS LEAGUE · MÙA ${s.cycleNumber}</span><p>${label}</p></div><span class="nations-match-status ${m.sets ? "is-complete" : ""}">${m.sets ? "✓ Đã thi đấu" : "Chưa thi đấu"}</span></div><div class="nations-match-scoreboard">${[m.a, m.b].map((id, i) => `${i ? `<div class="nations-match-score" aria-label="${m.sets ? "Tỉ số set " + result.join("–") : "Trận chưa thi đấu"}"><strong>${m.sets ? `${result[0]}<span>–</span>${result[1]}` : "VS"}</strong><small>${m.sets ? "TỈ SỐ SET" : "BEST OF 5"}</small></div>` : ""}<div class="nations-match-team ${win === id ? "is-winner" : ""}">${seasonTeam(id, N.nationsMatches(s))}${win ? `<span class="nations-match-outcome">${win === id ? "Đội thắng" : "Đội thua"}</span>` : ""}</div>`).join("")}</div>${m.sets ? `<div class="nations-match-sets table-wrap"><table aria-label="Điểm từng set"><thead><tr><th>ĐỘI TUYỂN</th>${m.sets.map((_, i) => `<th>SET ${i + 1}</th>`).join("")}</tr></thead><tbody>${[m.a, m.b].map((id, i) => `<tr><th scope="row">${team(id)}</th>${m.sets!.map((pair) => `<td class="${pair[i] > pair[1 - i] ? "set-winner" : ""}">${pair[i]}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : '<p class="nations-match-help">Mô phỏng hoặc nhập điểm để bắt đầu trận đấu.</p>'}${locked ? `<p class="nations-match-lock" role="status">${waitingBronze ? "Hoàn tất trận tranh hạng ba để mở chung kết." : selected()?.status === "completed" ? "Mùa giải đã hoàn tất · Chỉ xem kết quả" : m.sets ? "Kết quả đã khóa · Chỉ xem" : "Trận đấu chưa mở"}</p>` : `<div class="nations-match-actions">${!m.sets ? '<button class="primary" data-action="Nations.dialogSim"><span aria-hidden="true">▶</span> Mô phỏng trận</button>' : ""}<button ${m.sets ? 'class="primary"' : ""} data-action="Nations.dialogEdit">${m.sets ? "Chỉnh sửa điểm" : "Nhập điểm thủ công"}</button></div>`}</section>`;
+}
+
+function campaignHeaderHtml(id: string) {
+  const latest = model.records
+    .filter((r) => r.campaign_id === id)
+    .sort((a, b) => b.cycle_number - a.cycle_number)[0];
+  return `<div class="section-head nations-campaign-heading"><div><h3>${campaignName(id)}</h3><p class="sub">Mùa kế tiếp giữ nguyên chuỗi và áp dụng kết quả lên/xuống hạng.</p></div><button class="primary" data-action="Nations.continue" data-arg="${esc(latest.season_id)}" ${latest.phase === "conflict" ? "disabled" : ""}>${latest.status === "completed" ? `Tạo mùa ${latest.cycle_number + 1} · lên/xuống hạng` : `Tiếp tục mùa ${latest.cycle_number}`} →</button></div>`;
+}
+export function transferSummaryHtml(s: N.NationsSeason) {
+  if (!s.previousSeasonId)
+    return '<p class="sub nations-cycle-note">Mùa 1 của chuỗi độc lập · Division chia theo BXH thế giới. Lên/xuống hạng được kế thừa khi tạo mùa kế tiếp trong cùng chuỗi.</p>';
+  const previous = model.records.find(
+    (r) => r.season_id === s.previousSeasonId,
+  )?.snapshot;
+  if (!previous)
+    return `<section class="panel nations-transfer-summary"><h3>Lên/xuống hạng đầu mùa ${s.cycleNumber}</h3><p class="sub">Mùa này kế thừa Division từ mùa ${s.cycleNumber - 1}. Tải kết quả mùa trước để xem danh sách đội đổi hạng.</p><button data-action="Nations.transfers" data-arg="${esc(s.previousSeasonId)}">Xem các đội lên/xuống hạng</button></section>`;
+  if (!N.validNationsTransition(previous, s))
+    return '<div class="notice">Chưa xác minh được kết quả chuyển hạng của hai mùa. Hãy thử đồng bộ lịch sử.</div>';
+  const changes = N.nationsTransfers(previous, s);
+  return `<section class="panel nations-transfer-summary"><span class="eyebrow">KẾ THỪA TỪ MÙA ${previous.cycleNumber}</span><h3>Đã áp dụng lên/xuống hạng cho mùa ${s.cycleNumber}</h3><p class="sub"><b>${changes.filter((t) => t.promoted).length} đội lên hạng</b> · <b>${changes.filter((t) => !t.promoted).length} đội xuống hạng</b> · 16 đội mỗi Division.</p><details><summary>Xem ${changes.length} đội đổi Division</summary><div class="table-wrap"><table><thead><tr><th>ĐỘI TUYỂN</th><th>MÙA ${previous.cycleNumber}</th><th>MÙA ${s.cycleNumber}</th><th>THAY ĐỔI</th></tr></thead><tbody>${changes
+    .sort(
+      (a, b) =>
+        N.tiers.indexOf(a.to) - N.tiers.indexOf(b.to) ||
+        get(a.id).rank - get(b.id).rank,
+    )
+    .map(
+      (t) =>
+        `<tr data-transfer-team="${t.id}" data-from="${t.from}" data-to="${t.to}"><td>${team(t.id)}</td><td>Division ${t.from}</td><td><b>Division ${t.to}</b></td><td><span class="nations-transfer-tag ${t.promoted ? "is-promoted" : "is-relegated"}">${t.promoted ? "↑ Lên hạng" : "↓ Xuống hạng"}</span></td></tr>`,
+    )
+    .join("")}</tbody></table></div></details></section>`;
 }

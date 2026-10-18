@@ -73,6 +73,63 @@ export function createNations() {
   cloud.initialize();
   run(() => add(N.freshNationsSeason(nextNumber())));
 }
+/** Continue a campaign from its latest season, loading cloud history if needed. */
+export async function continueNations(id: string) {
+  const scope = model.scope,
+    token = model.token,
+    selection = model.selected,
+    tab = store.tab,
+    row = model.records.find((r) => r.season_id === id);
+  if (!row) return;
+  if (row.phase === "conflict") {
+    toast("Cần chọn bản lưu trước khi tiếp tục chuỗi mùa này.");
+    return;
+  }
+  if (row.status !== "completed") {
+    openNations(id);
+    return;
+  }
+  try {
+    const s = await cloud.load(id);
+    if (
+      scope !== model.scope ||
+      token !== model.token ||
+      model.selected !== selection ||
+      store.tab !== tab
+    )
+      return;
+    if (!s) throw Error("Chưa tải được mùa trước để áp dụng lên/xuống hạng.");
+    openNations(id);
+    await nextNationsSeason();
+  } catch (e) {
+    toast(e instanceof Error ? e.message : "Chưa tiếp tục được chuỗi mùa.");
+  }
+}
+/** The shared footer must never turn a continuation into a fresh campaign. */
+export function requestNationsSeason() {
+  const row = selected();
+  if (row?.status === "completed") return continueNations(row.season_id);
+  if (!model.records.length) return createNations();
+  enterNations();
+  toast("Chọn Tiếp tục mùa hoặc Tạo mùa kế tiếp ở chuỗi bạn muốn chơi.");
+}
+export async function loadNationsTransfers(id: string) {
+  const scope = model.scope,
+    token = model.token,
+    current = selected();
+  if (!current?.snapshot || current.snapshot.previousSeasonId !== id) return;
+  try {
+    await cloud.load(id);
+    if (
+      scope === model.scope &&
+      token === model.token &&
+      selected() === current
+    )
+      render();
+  } catch (e) {
+    toast(e instanceof Error ? e.message : "Chưa tải được kết quả mùa trước.");
+  }
+}
 let creating = false;
 export async function nextNationsSeason() {
   if (creating) return;
@@ -88,6 +145,8 @@ export async function nextNationsSeason() {
   try {
     await cloud.reload();
     if (model.scope !== scope || selected() !== row) return;
+    if (row.phase === "conflict")
+      throw Error("Cần xử lý xung đột mùa trước trước khi tạo mùa kế tiếp.");
     const existing = model.records.find(
       (r) =>
         r.campaign_id === row.campaign_id &&
@@ -435,6 +494,14 @@ export function renderNations() {
         : model.records.some((r) => r.dirty)
           ? "● Nations League đã giữ trên thiết bị · chờ đồng bộ"
           : "● Nations League đã lưu";
+      const footer = document.querySelector?.<HTMLButtonElement>(
+        'footer [data-action="Seasons.requestNew"]',
+      );
+      if (footer)
+        footer.textContent =
+          row?.status === "completed"
+            ? "Mùa kế tiếp · lên/xuống hạng"
+            : "Quản lý mùa giải";
       let html = view.statusHtml();
       if (model.section === "honours") html += view.honoursHtml();
       else if (!row) html += view.libraryHtml();

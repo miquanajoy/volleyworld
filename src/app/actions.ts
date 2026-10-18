@@ -36,6 +36,8 @@ const actions: Record<string, Action> = {
   "Nations.enter": () => Nations.enterNations(),
   "Nations.library": () => Nations.enterNations(),
   "Nations.create": () => Nations.createNations(),
+  "Nations.continue": (e) => Nations.continueNations(arg(e)),
+  "Nations.transfers": (e) => Nations.loadNationsTransfers(arg(e)),
   "Nations.nextSeason": () => Nations.nextNationsSeason(),
   "Nations.open": (e) => Nations.openNations(arg(e)),
   "Nations.section": (e) => Nations.sectionNations(arg(e)),
@@ -156,7 +158,7 @@ const actions: Record<string, Action> = {
   "Seasons.customize": () => getPorts().seasons.customize(),
   "Seasons.requestNew": () =>
     store.tab === "nations-league"
-      ? Nations.createNations()
+      ? Nations.requestNationsSeason()
       : store.tab === "full-season"
         ? Full.createFull()
         : getPorts().seasons.requestNew(),

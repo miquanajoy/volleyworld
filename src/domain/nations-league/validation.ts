@@ -216,3 +216,16 @@ export function validNationsTransition(
   const expected = nextDivisions(previous);
   return tiers.every((t) => same(next.divisions[t].teamIds, expected[t]));
 }
+
+/** Actual division membership changes, independently of this season's group draw. */
+export function nationsTransfers(previous: NationsSeason, next: NationsSeason) {
+  if (!validNationsTransition(previous, next))
+    throw Error("Hai mùa không có kết quả chuyển hạng hợp lệ.");
+  return previous.roster.flatMap((id) => {
+    const from = tiers.find((t) => previous.divisions[t].teamIds.includes(id))!,
+      to = tiers.find((t) => next.divisions[t].teamIds.includes(id))!;
+    return from === to
+      ? []
+      : [{ id, from, to, promoted: tiers.indexOf(to) < tiers.indexOf(from) }];
+  });
+}
