@@ -47,6 +47,8 @@ const actions: Record<string, Action> = {
   "Full.finish": () => Full.finishFull(),
   "Full.edit": (e) => Full.editFullMatch(arg(e)),
   "Full.match": (e) => Full.showFullMatch(arg(e)),
+  "Full.dialogSim": () => Full.actFullMatchDialog(),
+  "Full.dialogEdit": () => Full.actFullMatchDialog(true),
   "Full.team": (e) =>
     Full.showFullTeam(
       arg(e),

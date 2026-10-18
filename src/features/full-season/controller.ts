@@ -157,15 +157,16 @@ export function nextFullRound() {
   getPorts().commands.render();
 }
 export function simulateFullMatch(id: string) {
-  run(() =>
+  run(() => {
     mutate((s) => {
       const m = F.fullMatches(s).find((m) => m.id === id);
       if (!m || m.sets || F.fullMatchLocked(s, m))
         throw Error("Trận chưa sẵn sàng hoặc đã khóa.");
       simulate(m);
       F.advanceWorld(s);
-    }),
-  );
+    });
+    if ($("playoffMatchDialog").open) $("playoffMatchDialog").close();
+  });
 }
 export function simulateFullRound(all = false) {
   run(() => {
@@ -220,6 +221,7 @@ export function editFullMatch(id: string) {
   )
     return;
   const scope = fullModel.scope;
+  if ($("playoffMatchDialog").open) $("playoffMatchDialog").close();
   editFullScore({
     match: m,
     current: () =>
@@ -234,13 +236,44 @@ export function editFullMatch(id: string) {
     commit: (sets) => mutate((draft) => F.recordFullScore(draft, id, sets)),
   });
 }
+let matchDialogContext: {
+  scope: string;
+  row: ReturnType<typeof selectedFull>;
+  snapshot: FullSeason;
+  id: string;
+} | null = null;
+export function actFullMatchDialog(edit = false) {
+  const context = matchDialogContext;
+  if (
+    !context ||
+    fullModel.scope !== context.scope ||
+    selectedFull() !== context.row ||
+    selectedFull()?.snapshot !== context.snapshot
+  ) {
+    $("playoffMatchDialog").close();
+    toast("Tiến trình đã thay đổi. Hãy mở lại trận đấu.");
+    return;
+  }
+  if (edit) editFullMatch(context.id);
+  else simulateFullMatch(context.id);
+}
 export function showFullMatch(id: string) {
   const s = selectedFull()?.snapshot,
     m = s && F.fullMatches(s).find((m) => m.id === id);
   if (!s || !m) return;
+  const locked =
+    selectedFull()!.status === "completed" ||
+    selectedFull()!.phase === "conflict" ||
+    F.fullMatchLocked(s, m);
+  matchDialogContext = {
+    scope: fullModel.scope,
+    row: selectedFull(),
+    snapshot: s,
+    id,
+  };
   $("playoffMatchTitle").textContent = "Chi tiết trận Full Season";
   $("playoffMatchBody").innerHTML =
-    `<h3>${team(m.a)} – ${team(m.b)}</h3><p>${m.sets ? `Kết quả ${score(m).join("–")}` : "Chưa thi đấu"}</p>${m.sets ? m.sets.map(([a, b], i) => `<p>Set ${i + 1}: <b>${a}–${b}</b></p>`).join("") : ""}`;
+    `<h3>${team(m.a)} – ${team(m.b)}</h3><p>${m.sets ? `Kết quả ${score(m).join("–")}` : "Chưa thi đấu"}</p>${m.sets ? m.sets.map(([a, b], i) => `<p>Set ${i + 1}: <b>${a}–${b}</b></p>`).join("") : ""}<div class="actions">${locked ? '<span class="badge">CHỈ XEM · KẾT QUẢ ĐÃ KHÓA</span>' : `${!m.sets ? `<button class="primary" data-action="Full.dialogSim">Mô phỏng trận</button>` : ""}<button data-action="Full.dialogEdit">${m.sets ? "Sửa điểm" : "Nhập điểm"}</button>`}</div>`;
   $("playoffMatchDialog").showModal();
 }
 export function showFullTeam(id: string, round?: number) {

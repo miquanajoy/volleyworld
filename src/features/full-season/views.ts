@@ -1,3 +1,4 @@
+import { worldPlayoffTree } from "./playoff-tree";
 import {
   leagueRoundSnapshot,
   latestLeagueRound,
@@ -182,10 +183,8 @@ export function fullPodiumHtml(s: FullSeason) {
 export function playoffHtml(s: FullSeason, readonly: boolean) {
   const b = s.world?.bracket;
   if (!b) return worldHtml(s);
-  const stage = (k: WorldStage) =>
-    `<section class="full-bracket-stage" data-world-stage="${k}"><div class="section-head"><h3>${stageNames[k]}</h3>${!readonly && b[k].some((m) => !m.sets) ? `<button data-action="Full.stage" data-arg="${k}">Chạy vòng</button>` : ""}</div>${b[k].length ? b[k].map((m, i) => `<div class="full-bracket-slot"><span class="eyebrow">${k === "r16" ? `Nhánh ${"ABCD"[Math.floor(i / 2)]}` : `Trận ${i + 1}`}</span>${fullCard(s, m, readonly)}</div>`).join("") : '<div class="panel full-empty">Chờ kết quả vòng trước.</div>'}</section>`;
   const next = F.worldPlayOrder.find((k) => b[k].some((m) => !m.sets));
-  return `${F.worldComplete(s) ? summaryHtml(s) : fullPodiumHtml(s)}<div class="section-head"><div><h3>Playoff thế giới</h3><p class="sub">Nhánh cố định sau bốc thăm · tranh hạng ba trước chung kết.</p></div>${!readonly && next ? `<button class="primary" data-action="Full.stage" data-arg="${next}">Mô phỏng ${stageNames[next].toLowerCase()} →</button>` : ""}</div><div class="full-bracket">${(["r16", "qf", "sf"] as WorldStage[]).map(stage).join("")}<div class="full-bracket-medals">${stage("final")}${stage("bronze")}</div></div>`;
+  return `${F.worldComplete(s) ? summaryHtml(s) : fullPodiumHtml(s)}<div class="section-head"><div><h3>Playoff thế giới</h3><p class="sub">Nhánh cố định sau bốc thăm · tranh hạng ba trước chung kết.</p></div>${!readonly && next ? `<button class="primary" data-action="Full.stage" data-arg="${next}">Mô phỏng ${stageNames[next].toLowerCase()} →</button>` : ""}</div>${worldPlayoffTree(s, readonly, (id) => fullTeam(id, s))}`;
 }
 export function summaryHtml(s: FullSeason) {
   const placements = F.worldPlacements(s);

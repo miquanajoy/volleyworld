@@ -13,6 +13,7 @@ for (const file of [
   "simulation-v2",
   "full-season",
   "full-season-groups",
+  "full-playoff-tree",
   "full-season-cloud",
 ]) {
   const r = spawnSync(process.execPath, ["tests/features/" + file + ".cjs"], {

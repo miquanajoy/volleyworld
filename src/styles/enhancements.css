@@ -756,37 +756,6 @@
   color: var(--green);
   margin-top: 4px;
 }
-.full-bracket {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(300px, 1fr));
-  gap: 20px;
-  overflow-x: auto;
-  align-items: start;
-  padding-bottom: 20px;
-}
-.full-bracket-stage {
-  min-width: 0;
-}
-.full-bracket-stage > .section-head {
-  min-height: 64px;
-  margin-bottom: 16px;
-}
-.full-bracket-stage h3 {
-  font-size: 16px;
-}
-.full-bracket-stage .full-team-line {
-  flex-wrap: wrap;
-}
-.full-bracket-stage .full-match .form-strip {
-  flex-basis: 88px;
-}
-.full-bracket-slot {
-  margin-bottom: 16px;
-}
-.full-bracket-slot > .eyebrow {
-  display: block;
-  margin: 8px;
-}
 .full-finals-table {
   overflow: hidden;
   margin: 24px 0;
@@ -945,15 +914,6 @@
   right: -16px;
   height: 100%;
   border-right: 1px solid #bca887;
-}
-.full-bracket-medals {
-  display: grid;
-  gap: 20px;
-  min-width: 0;
-}
-.full-bracket-medals [data-world-stage="bronze"] {
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
 }
 @media (max-width: 650px) {
   .double-overview-panel {
@@ -1124,4 +1084,96 @@
   grid-column: 2 / -1;
   grid-row: 2;
   margin: 0;
+}
+
+/* Full Season shares the connected tree geometry with the classic bracket. */
+.full-bracket.full-playoff-tree {
+  display: block;
+  overflow: auto;
+  padding: 16px 14px 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f0f3eb;
+}
+.full-playoff-tree > .playoff-tree-head,
+.full-playoff-tree > .playoff-tree {
+  min-width: 1160px;
+}
+.full-playoff-tree .playoff-tree-head > div {
+  min-height: 46px;
+  gap: 8px;
+}
+.full-playoff-tree .playoff-tree-head small {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.full-playoff-tree .playoff-tree-head button {
+  font-size: 10px;
+  padding: 7px 9px;
+  white-space: nowrap;
+}
+.full-playoff-tree .tree-stage {
+  grid-template-rows: repeat(16, 58px);
+}
+.full-playoff-tree .full-tree-match {
+  height: 104px;
+  padding: 9px 10px;
+}
+.full-tree-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 2px 3px;
+  border-radius: 4px;
+}
+.full-tree-side.is-winner {
+  background: #edf4e8;
+  color: var(--green);
+}
+.full-tree-side.is-loser {
+  color: var(--muted);
+}
+.full-tree-side .full-team-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 78px;
+  gap: 6px;
+}
+.full-tree-side .team {
+  gap: 6px;
+  font-size: 12px;
+}
+.full-tree-side .flag {
+  flex-shrink: 0;
+}
+.full-tree-side .form-strip {
+  justify-self: end;
+}
+.full-tree-side .form-dot {
+  width: 13px;
+  height: 17px;
+  font-size: 8px;
+}
+.full-tree-side .bracket-set-score {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.full-tree-waiting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.full-tree-waiting > span:last-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.full-playoff-tree .full-bracket-medals {
+  display: block;
 }

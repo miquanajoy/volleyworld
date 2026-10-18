@@ -123,7 +123,8 @@ const submit = (t) => {
   fd.querySelector('[data-action="Full.open"]').click();
   fd.querySelector('[data-action="Full.section"][data-arg="playoff"]').click();
   fd.querySelector(".full-bracket").scrollLeft = 630;
-  fd.querySelector('[data-action="Full.simMatch"]').click();
+  fd.querySelector('.full-bracket [data-action="Full.match"]').click();
+  fd.querySelector('[data-action="Full.dialogSim"]').click();
   assert.equal(fd.querySelector(".full-bracket").scrollLeft, 630);
   fd.querySelector('[data-action="Full.stage"][data-arg="r16"]').click();
   assert.equal(fd.querySelector(".full-bracket").scrollLeft, 630);
