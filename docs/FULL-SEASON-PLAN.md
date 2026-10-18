@@ -158,3 +158,9 @@ Triển khai trực tiếp trên `main`. Các mục mô tả league chung và 1.
 - Tổng quan hiển thị lịch 12 trận của lượt và BXH sáu bảng tới lượt đang xem. Thanh chọn nhanh A–F và nút trở về tất cả bảng giữ nguyên lượt khi chuyển bảng. Khu vực chia bảng cũng có thanh chọn nhanh và nút về tổng quan khu vực.
 - Có thể quay lại các lượt trước; BXH và cuộc đua hạng ba không tính kết quả tương lai. Save cũ có tiến độ lệch bảng giữ nguyên mọi điểm đã nhập, tiếp tục từ lượt chung chưa hoàn tất, không mô phỏng lại trận đã có kết quả.
 - Thay đổi áp dụng cả mùa đang chơi, không cần migration hoặc tạo lại mùa. Kiểm thử: `tests/features/full-world-matchdays.cjs`.
+
+## 13. Tên chế độ
+
+- Tên sản phẩm: **VolleyWorld Cup**; menu và thông báo dùng **World Cup** (trước đây là Full Season).
+- Giải 32 đội gốc: **VolleyWorld League**; menu dùng **World League**.
+- Chỉ đổi tên hiển thị. Không đổi `full-season`, `volleyworld-full-seasons`, tên bảng DB, khóa localStorage hoặc định dạng file để giữ tương thích lịch sử và bản sao lưu.

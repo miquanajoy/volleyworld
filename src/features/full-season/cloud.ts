@@ -71,7 +71,7 @@ function writerFor(row: FullRecord) {
       const { data, error } = await writeFullSeason(service, state, revision);
       if (error) throw Error(error.message);
       if (!Array.isArray(data) || !data[0])
-        throw Error("Chưa xác nhận lưu Full Season.");
+        throw Error("Chưa xác nhận lưu World Cup.");
       return data[0];
     },
     (phase, result) => {
@@ -92,10 +92,10 @@ function writerFor(row: FullRecord) {
       }
       if (phase === "error")
         fullModel.error =
-          "Chưa lưu Full Season online. Bản thiết bị được giữ; hãy thử đồng bộ lại.";
+          "Chưa lưu World Cup online. Bản thiết bị được giữ; hãy thử đồng bộ lại.";
       if (phase === "conflict")
         fullModel.error =
-          "Full Season có thay đổi trên thiết bị khác. Chọn bản cần giữ.";
+          "World Cup có thay đổi trên thiết bị khác. Chọn bản cần giữ.";
       redraw();
     },
   );
@@ -125,7 +125,7 @@ export async function reloadFullCloud() {
       if (error) throw error;
       if (token !== fullModel.token) return;
       if (!(data || []).every(validFullRecord))
-        throw Error("Full Season metadata không hợp lệ.");
+        throw Error("World Cup metadata không hợp lệ.");
       remote.push(...(data || []));
       if (!data || data.length < 100) break;
     }
@@ -169,7 +169,7 @@ export async function reloadFullCloud() {
   } catch {
     if (token === fullModel.token) {
       fullModel.error =
-        "Chưa tải được Full Season online. Tiến trình trên thiết bị vẫn được giữ.";
+        "Chưa tải được World Cup online. Tiến trình trên thiết bị vẫn được giữ.";
       ready = false;
     }
   } finally {
@@ -184,12 +184,12 @@ export async function loadFullSnapshot(id: string) {
   if (!row) return;
   if (row.snapshot) return row.snapshot;
   if (!uid || !client)
-    throw Error("Cần kết nối mạng để tải mùa Full Season này.");
+    throw Error("Cần kết nối mạng để tải mùa World Cup này.");
   const token = fullModel.token,
     { data, error } = await fetchFullSeason(client, uid, id);
   if (token !== fullModel.token) return;
   if (error || !data || !validFullSeason(data.state))
-    throw Error("Không tải được dữ liệu Full Season hợp lệ.");
+    throw Error("Không tải được dữ liệu World Cup hợp lệ.");
   if (row.dirty) return row.snapshot;
   Object.assign(row, recordOf(data.state, data.revision), {
     updated_at: data.updated_at,
@@ -247,8 +247,8 @@ async function saveFullNowInternal() {
   if (!uid) {
     toast(
       local
-        ? "Đã lưu Full Season trên thiết bị. Đăng nhập để lưu online."
-        : "Chưa lưu được. Hãy xuất file Full Season.",
+        ? "Đã lưu World Cup trên thiết bị. Đăng nhập để lưu online."
+        : "Chưa lưu được. Hãy xuất file World Cup.",
     );
     return { local, online: false, status: "local" };
   }
@@ -274,8 +274,8 @@ async function saveFullNowInternal() {
   const online = ready && !fullModel.records.some((r) => r.dirty);
   toast(
     online
-      ? "Đã lưu Full Season online."
-      : "Full Season chưa đồng bộ hoàn tất. Bản trên thiết bị được giữ.",
+      ? "Đã lưu World Cup online."
+      : "World Cup chưa đồng bộ hoàn tất. Bản trên thiết bị được giữ.",
   );
   return { local, online, status: online ? "saved" : "error" };
 }

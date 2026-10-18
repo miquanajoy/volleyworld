@@ -57,11 +57,11 @@ function mutate(action: (s: FullSeason) => void) {
   F.advanceRegions(s);
   F.stampFull(s);
   if (!F.validFullSeason(s))
-    throw Error("Tiến trình Full Season không hợp lệ; chưa thay đổi bản lưu.");
+    throw Error("Tiến trình World Cup không hợp lệ; chưa thay đổi bản lưu.");
   fullBackup(old);
   Object.assign(row, recordOf(s, row.revision), { dirty: true });
   if (!persistFull())
-    toast("Chưa lưu được trên thiết bị. Hãy xuất file Full Season.");
+    toast("Chưa lưu được trên thiết bị. Hãy xuất file World Cup.");
   queueFull(row);
   getPorts().commands.render();
 }
@@ -259,7 +259,7 @@ export function simulateFullStage(stage: string) {
 export function finishFull() {
   if (
     confirm(
-      "Mô phỏng toàn bộ trận chưa đấu của mùa Full Season này, gồm 5 khu vực và giải thế giới?",
+      "Mô phỏng toàn bộ trận chưa đấu của mùa World Cup này, gồm 5 khu vực và giải thế giới?",
     )
   )
     run(() => mutate(F.finishFullSeason));
@@ -327,7 +327,7 @@ export function showFullMatch(id: string) {
     snapshot: s,
     id,
   };
-  $("playoffMatchTitle").textContent = "Chi tiết trận Full Season";
+  $("playoffMatchTitle").textContent = "Chi tiết trận World Cup";
   $("playoffMatchBody").innerHTML =
     `<h3>${team(m.a)} – ${team(m.b)}</h3><p>${m.sets ? `Kết quả ${score(m).join("–")}` : "Chưa thi đấu"}</p>${m.sets ? m.sets.map(([a, b], i) => `<p>Set ${i + 1}: <b>${a}–${b}</b></p>`).join("") : ""}<div class="actions">${locked ? '<span class="badge">CHỈ XEM · KẾT QUẢ ĐÃ KHÓA</span>' : `${!m.sets ? `<button class="primary" data-action="Full.dialogSim">Mô phỏng trận</button>` : ""}<button data-action="Full.dialogEdit">${m.sets ? "Sửa điểm" : "Nhập điểm"}</button>`}</div>`;
   $("playoffMatchDialog").showModal();
@@ -349,7 +349,7 @@ export function showFullTeam(id: string, round?: number) {
     ).filter((m) => m.a === id || m.b === id);
   $("teamLeagueTitle").innerHTML = team(id);
   $("teamLeagueSummary").textContent =
-    `Full Season ${s.seasonNumber}${historical ? ` · Tới vòng ${round! + 1}` : ""} · ${matches.filter((m) => m.sets).length}/${matches.length} trận`;
+    `World Cup ${s.seasonNumber}${historical ? ` · Tới vòng ${round! + 1}` : ""} · ${matches.filter((m) => m.sets).length}/${matches.length} trận`;
   $("teamLeagueRows").innerHTML = matches
     .map((m) => {
       const own = m.a === id,
@@ -399,7 +399,7 @@ export async function importFull(file?: File) {
   const token = fullModel.token,
     scope = fullModel.scope;
   try {
-    if (file.size > 20_000_000) throw Error("File Full Season quá lớn.");
+    if (file.size > 20_000_000) throw Error("File World Cup quá lớn.");
     const data = JSON.parse(await file.text());
     if (token !== fullModel.token || scope !== fullModel.scope) return;
     if (
@@ -410,10 +410,10 @@ export async function importFull(file?: File) {
       data.seasons.length > 100 ||
       !data.seasons.every(F.validFullSeason)
     )
-      throw Error("File Full Season không hợp lệ.");
+      throw Error("File World Cup không hợp lệ.");
     if (
       !confirm(
-        `Nhập ${data.seasons.length} mùa thành các mùa Full Season mới? Các mùa đang có được giữ nguyên.`,
+        `Nhập ${data.seasons.length} mùa thành các mùa World Cup mới? Các mùa đang có được giữ nguyên.`,
       )
     )
       return;
@@ -431,7 +431,7 @@ export async function importFull(file?: File) {
     incoming.forEach(queueFull);
     fullModel.selected = null;
     getPorts().commands.render();
-    toast("Đã nhập Full Season. Bấm Lưu tiến trình để xác nhận đồng bộ.");
+    toast("Đã nhập World Cup. Bấm Lưu tiến trình để xác nhận đồng bộ.");
   } catch (e) {
     toast(e instanceof Error ? e.message : "Chưa nhập được file.");
   }
@@ -451,7 +451,7 @@ export function restoreFull() {
       toast("Chưa có bản sao trước của mùa này.");
       return;
     }
-    if (confirm("Khôi phục bản lưu trước của Full Season này?"))
+    if (confirm("Khôi phục bản lưu trước của World Cup này?"))
       mutate((s) => Object.assign(s, clone(backup.state)));
   });
 }
@@ -482,7 +482,7 @@ export async function showFullHonours(id?: string) {
     getPorts().commands.render();
 }
 function honoursHtml() {
-  return `<div class="section-head"><div><h2>Thành tích Full Season</h2><p class="sub">Xem riêng kết quả khu vực và thế giới. Không cộng vào BXH điểm của chế độ 32 đội.</p></div><button data-action="Full.library">← Các mùa Full Season</button></div><label>Quốc gia<select aria-label="Chọn quốc gia Full Season" data-action="Full.honourTeam" data-trigger="change">${F.regionOrder
+  return `<div class="section-head"><div><h2>Thành tích World Cup</h2><p class="sub">Xem riêng kết quả khu vực và thế giới. Không cộng vào BXH điểm của World League.</p></div><button data-action="Full.library">← Các mùa World Cup</button></div><label>Quốc gia<select aria-label="Chọn quốc gia World Cup" data-action="Full.honourTeam" data-trigger="change">${F.regionOrder
     .map(
       (r) =>
         `<optgroup label="${names[r]}">${regionTeams(r)
@@ -538,16 +538,16 @@ function renderFullContent() {
   const row = selectedFull(),
     s = row?.snapshot;
   $("saved").textContent = fullModel.records.some((r) => r.phase === "conflict")
-    ? "⚠ Full Season có xung đột"
+    ? "⚠ World Cup có xung đột"
     : fullModel.records.some((r) => r.dirty)
-      ? "● Full Season đã giữ trên thiết bị · chờ đồng bộ"
-      : "● Full Season đã lưu";
+      ? "● World Cup đã giữ trên thiết bị · chờ đồng bộ"
+      : "● World Cup đã lưu";
   let html = view.fullStatusHtml();
   if (fullModel.section === "honours") html += honoursHtml();
   else if (!row) html += view.libraryHtml();
   else if (!s) {
     html +=
-      '<div class="panel full-empty"><p>Đang tải mùa Full Season…</p><button data-action="Full.library">← Các mùa Full Season</button><button data-action="Full.open" data-arg="' +
+      '<div class="panel full-empty"><p>Đang tải mùa World Cup…</p><button data-action="Full.library">← Các mùa World Cup</button><button data-action="Full.open" data-arg="' +
       esc(row.season_id) +
       '">Thử tải lại</button></div>';
     const key = fullModel.scope + row.season_id;

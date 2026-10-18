@@ -127,6 +127,21 @@ function canonical(app, id = "body") {
     // Bracket overview/podium/order are covered by playoff-overview.cjs.
     if (content) content.replaceChildren();
   }
+  // Approved mode names are presentation-only; keep the remaining legacy UI comparison.
+  const edition = copy.querySelector(".edition"),
+    leagueTitle = copy.querySelector("#homeHero .eyebrow");
+  if (edition?.textContent === "WORLD LEAGUE · WORLD CUP")
+    edition.textContent = "MEN’S WORLD CUP · SIMULATOR";
+  if (leagueTitle?.textContent === "VOLLEYWORLD LEAGUE")
+    leagueTitle.textContent = "YOUR TOURNAMENT. YOUR STORY.";
+  const modeBadge =
+    id === "seasonBar"
+      ? copy.querySelector(".badge")
+      : copy.querySelector("#seasonBar > .badge");
+  if (modeBadge?.textContent.startsWith("WORLD LEAGUE · "))
+    modeBadge.textContent = modeBadge.textContent.slice(
+      "WORLD LEAGUE · ".length,
+    );
   remove(
     ".standings-history-controls, .standings-round-note, .standings-detail-cutoff, .rank-legend, .rank-movement",
   ); // Round standings have separate UI/data coverage.

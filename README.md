@@ -1,6 +1,11 @@
 # VolleyWorld Simulator
 
-A Vietnamese-language men's volleyball World Cup simulator with 32 national teams.
+A Vietnamese-language men's volleyball simulator with two modes:
+
+- **VolleyWorld League** (World League in menus): the original 32-team league, Play-in and playoff competition.
+- **VolleyWorld Cup** (World Cup in menus, previously Full Season): regional qualification followed by the 24-team world championship.
+
+The rename affects display text only. Existing storage keys, JSON formats, cloud tables and saved seasons retain their technical identifiers.
 
 ## Play
 

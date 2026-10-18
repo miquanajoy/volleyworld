@@ -69,7 +69,7 @@ export function render() {
   $("nav").hidden = outer;
   $("seasonBar").hidden = home;
   $("seasonBar").innerHTML =
-    `<button data-action="navigate" data-arg="home">← Trang chủ</button><span class="badge">MÙA ${s.seasonNumber || 1}${isReadOnly() ? " · CHỈ XEM" : ""}</span>${store.seasonView ? '<button data-action="navigate" data-arg="history">Lịch sử mùa giải</button>' : ""}`;
+    `<button data-action="navigate" data-arg="home">← Trang chủ</button><span class="badge">WORLD LEAGUE · MÙA ${s.seasonNumber || 1}${isReadOnly() ? " · CHỈ XEM" : ""}</span>${store.seasonView ? '<button data-action="navigate" data-arg="history">Lịch sử mùa giải</button>' : ""}`;
   $("stats").innerHTML = [
     ["32", "ĐỘI TUYỂN · 5 KHU VỰC"],
     [
