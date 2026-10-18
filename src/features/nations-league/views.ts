@@ -258,15 +258,21 @@ export function transferSummaryHtml(s: N.NationsSeason) {
   if (!N.validNationsTransition(previous, s))
     return '<div class="notice">Chưa xác minh được kết quả chuyển hạng của hai mùa. Hãy thử đồng bộ lịch sử.</div>';
   const changes = N.nationsTransfers(previous, s);
-  return `<section class="panel nations-transfer-summary"><span class="eyebrow">KẾ THỪA TỪ MÙA ${previous.cycleNumber}</span><h3>Đã áp dụng lên/xuống hạng cho mùa ${s.cycleNumber}</h3><p class="sub"><b>${changes.filter((t) => t.promoted).length} đội lên hạng</b> · <b>${changes.filter((t) => !t.promoted).length} đội xuống hạng</b> · 16 đội mỗi Division.</p><details><summary>Xem ${changes.length} đội đổi Division</summary><div class="table-wrap"><table><thead><tr><th>ĐỘI TUYỂN</th><th>MÙA ${previous.cycleNumber}</th><th>MÙA ${s.cycleNumber}</th><th>THAY ĐỔI</th></tr></thead><tbody>${changes
-    .sort(
-      (a, b) =>
-        N.tiers.indexOf(a.to) - N.tiers.indexOf(b.to) ||
-        get(a.id).rank - get(b.id).rank,
-    )
-    .map(
-      (t) =>
-        `<tr data-transfer-team="${t.id}" data-from="${t.from}" data-to="${t.to}"><td>${team(t.id)}</td><td>Division ${t.from}</td><td><b>Division ${t.to}</b></td><td><span class="nations-transfer-tag ${t.promoted ? "is-promoted" : "is-relegated"}">${t.promoted ? "↑ Lên hạng" : "↓ Xuống hạng"}</span></td></tr>`,
-    )
-    .join("")}</tbody></table></div></details></section>`;
+  return `<section class="panel nations-transfer-summary"><span class="eyebrow">KẾ THỪA TỪ MÙA ${previous.cycleNumber}</span><h3>Đã áp dụng lên/xuống hạng cho mùa ${s.cycleNumber}</h3><p class="sub"><b>${changes.filter((t) => t.promoted).length} đội lên hạng</b> · <b>${changes.filter((t) => !t.promoted).length} đội xuống hạng</b> · 16 đội mỗi Division.</p><details><summary>Xem ${changes.length} đội đổi Division</summary><p class="sub nations-transfer-legend">Division cũ → Division mới · Mùa ${previous.cycleNumber} → Mùa ${s.cycleNumber}</p><div class="nations-transfer-grid">${N.tiers
+    .map((tier) => {
+      const arrivals = changes.filter((t) => t.to === tier);
+      return `<section class="nations-transfer-division" aria-label="Các đội chuyển đến Division ${tier}"><div class="nations-transfer-division-head"><h4>Division ${tier}</h4><span>${arrivals.length} đội chuyển đến</span></div>${[
+        true,
+        false,
+      ]
+        .map((promoted) => {
+          const group = arrivals
+            .filter((t) => t.promoted === promoted)
+            .sort((a, b) => get(a.id).rank - get(b.id).rank);
+          if (!group.length) return "";
+          return `<div class="nations-transfer-group"><div class="nations-transfer-group-head"><span class="nations-transfer-tag ${promoted ? "is-promoted" : "is-relegated"}">${promoted ? "↑ Lên hạng" : "↓ Xuống hạng"}</span><small>${group.length} đội</small></div><div role="list" class="nations-transfer-list">${group.map((t) => `<div class="nations-transfer-row" role="listitem" data-transfer-team="${t.id}" data-from="${t.from}" data-to="${t.to}"><span class="nations-transfer-team" title="${esc(get(t.id).name)}">${team(t.id)}</span><span class="nations-transfer-route ${t.promoted ? "is-promoted" : "is-relegated"}" aria-label="Division ${t.from} sang Division ${t.to}"><span>${t.from}</span><span aria-hidden="true">→</span><b>${t.to}</b></span></div>`).join("")}</div></div>`;
+        })
+        .join("")}</section>`;
+    })
+    .join("")}</div></details></section>`;
 }
