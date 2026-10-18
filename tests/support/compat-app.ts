@@ -72,3 +72,8 @@ import * as fullController from "../../src/features/full-season/controller";
 import * as fullCloud from "../../src/features/full-season/cloud";
 import * as fullModel from "../../src/features/full-season/model";
 target.__full = { ...fullController, ...fullCloud, ...fullModel };
+
+import * as nationsController from "../../src/features/nations-league/controller";
+import { nationsCloud } from "../../src/features/nations-league/cloud";
+import * as nationsModel from "../../src/features/nations-league/model";
+target.__nations = { ...nationsController, ...nationsModel, nationsCloud };

@@ -1234,3 +1234,76 @@
     flex-shrink: 0;
   }
 }
+
+/* Nations League shares score cards, standings and the connected playoff tree. */
+.nations-format {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.nations-roster {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+.nations-campaign,
+.nations-division {
+  margin-block: 28px;
+}
+.nations-playoff-tree > .playoff-tree-head,
+.nations-playoff-tree > .playoff-tree {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 860px;
+}
+.nations-playoff-tree .tree-stage {
+  grid-template-rows: repeat(8, 58px);
+}
+.nations-division .full-standings {
+  min-width: 640px;
+}
+.nations-division .full-team-button {
+  width: 100%;
+}
+.nations-division .full-team-line {
+  flex-wrap: nowrap;
+}
+.nations-division .full-team-line .form-strip {
+  margin-left: auto;
+}
+@media (max-width: 900px) {
+  .nations-format,
+  .nations-roster {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .nations-format,
+  .nations-roster {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nations-playoff-tree .full-tree-side .full-team-line {
+  grid-template-columns: 24px minmax(0, 1fr) 78px;
+}
+.nations-division .full-groups {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.nations-division .full-standings {
+  min-width: 580px;
+}
+@media (max-width: 1100px) {
+  .nations-division .full-groups {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nations-details {
+  padding: 20px;
+  margin: 20px 0;
+}
+.nations-details > summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.nations-details .table-wrap {
+  margin-top: 18px;
+}

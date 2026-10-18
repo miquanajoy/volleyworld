@@ -16,6 +16,9 @@ for (const file of [
   "full-playoff-tree",
   "full-world-matchdays",
   "full-season-cloud",
+  "nations-league",
+  "nations-ui",
+  "nations-cloud",
 ]) {
   const r = spawnSync(process.execPath, ["tests/features/" + file + ".cjs"], {
     encoding: "utf8",

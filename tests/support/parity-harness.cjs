@@ -130,7 +130,12 @@ function canonical(app, id = "body") {
   // Approved mode names are presentation-only; keep the remaining legacy UI comparison.
   const edition = copy.querySelector(".edition"),
     leagueTitle = copy.querySelector("#homeHero .eyebrow");
-  if (edition?.textContent === "WORLD LEAGUE · WORLD CUP")
+  if (
+    [
+      "WORLD LEAGUE · WORLD CUP",
+      "WORLD LEAGUE · WORLD CUP · NATIONS LEAGUE",
+    ].includes(edition?.textContent)
+  )
     edition.textContent = "MEN’S WORLD CUP · SIMULATOR";
   if (leagueTitle?.textContent === "VOLLEYWORLD LEAGUE")
     leagueTitle.textContent = "YOUR TOURNAMENT. YOUR STORY.";
@@ -149,6 +154,7 @@ function canonical(app, id = "body") {
   if (app.run("tab") === "settings")
     copy.querySelectorAll(".notice > .badge + p").forEach((el) => el.remove());
   remove('[data-action="Full.enter"]');
+  remove('[data-action="Nations.enter"]');
   remove(".score-generator, .score-draft-status, .set-play, .set-clear");
   copy
     .querySelectorAll(".set-label")

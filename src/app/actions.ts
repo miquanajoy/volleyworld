@@ -1,3 +1,5 @@
+import * as Nations from "../features/nations-league/controller";
+import { nationsCloud } from "../features/nations-league/cloud";
 import * as Full from "../features/full-season/controller";
 import { nextLeagueRound } from "../features/league/navigation";
 import {
@@ -31,6 +33,41 @@ type Action = (element: HTMLElement) => unknown;
 const arg = (e: HTMLElement) => e.dataset.arg || "";
 /** Explicit command table: markup carries data, never executable JavaScript. */
 const actions: Record<string, Action> = {
+  "Nations.enter": () => Nations.enterNations(),
+  "Nations.library": () => Nations.enterNations(),
+  "Nations.create": () => Nations.createNations(),
+  "Nations.nextSeason": () => Nations.nextNationsSeason(),
+  "Nations.open": (e) => Nations.openNations(arg(e)),
+  "Nations.section": (e) => Nations.sectionNations(arg(e)),
+  "Nations.round": (e) => Nations.roundNations((e as HTMLSelectElement).value),
+  "Nations.next": () => Nations.nextNationsRound(),
+  "Nations.simRound": () => Nations.simulateNationsRound(),
+  "Nations.simMatch": (e) => Nations.simulateNationsMatch(arg(e)),
+  "Nations.draw": () => Nations.drawNations(),
+  "Nations.stage": (e) => Nations.simulateNationsStage(arg(e)),
+  "Nations.finish": () => Nations.finishNations(),
+  "Nations.edit": (e) => Nations.editNationsMatch(arg(e)),
+  "Nations.match": (e) => Nations.showNationsMatch(arg(e)),
+  "Nations.dialogSim": () => Nations.actNationsDialog(),
+  "Nations.dialogEdit": () => Nations.actNationsDialog(true),
+  "Nations.team": (e) =>
+    Nations.showNationsTeam(
+      arg(e),
+      e.dataset.arg1 === undefined ? undefined : Number(e.dataset.arg1),
+    ),
+  "Nations.export": () => Nations.exportNations(),
+  "Nations.exportOne": () => Nations.exportNations(true),
+  "Nations.import": () => $("nationsImport").click(),
+  "Nations.importFile": (e) =>
+    Nations.importNations((e as HTMLInputElement).files?.[0]),
+  "Nations.restore": () => Nations.restoreNations(),
+  "Nations.honours": () => Nations.showNationsHonours(),
+  "Nations.honourTeam": (e) =>
+    Nations.showNationsHonours((e as HTMLSelectElement).value),
+  "Nations.sync": () => nationsCloud.reload(),
+  "Nations.remote": () => nationsCloud.resolve(true),
+  "Nations.local": () => nationsCloud.resolve(false),
+
   "Full.enter": () => Full.enterFull(),
   "Full.library": () => Full.enterFull(),
   "Full.create": () => Full.createFull(),
@@ -73,7 +110,13 @@ const actions: Record<string, Action> = {
   navigate: (e) => navigate(arg(e) as AppTab),
   exportSave: () => exportSave(),
   importFile: () =>
-    $(store.tab === "full-season" ? "fullImport" : "import").click(),
+    $(
+      store.tab === "nations-league"
+        ? "nationsImport"
+        : store.tab === "full-season"
+          ? "fullImport"
+          : "import",
+    ).click(),
   closeDialog: (e) => ($(arg(e)) as HTMLDialogElement).close(),
   changeRound: (e) => {
     store.round += Number(arg(e));
@@ -112,9 +155,11 @@ const actions: Record<string, Action> = {
   "Seasons.start": () => getPorts().seasons.start(),
   "Seasons.customize": () => getPorts().seasons.customize(),
   "Seasons.requestNew": () =>
-    store.tab === "full-season"
-      ? Full.createFull()
-      : getPorts().seasons.requestNew(),
+    store.tab === "nations-league"
+      ? Nations.createNations()
+      : store.tab === "full-season"
+        ? Full.createFull()
+        : getPorts().seasons.requestNew(),
   "Seasons.view": (e) => getPorts().seasons.view(arg(e)),
   "Seasons.resolve": (e) =>
     getPorts().seasons.resolve(arg(e), e.dataset.arg1 === "true"),

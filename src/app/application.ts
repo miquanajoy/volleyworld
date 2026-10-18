@@ -1,3 +1,7 @@
+import {
+  renderNations,
+  exportNations,
+} from "../features/nations-league/controller";
 import { renderFull, exportFull } from "../features/full-season/controller";
 import { renderAchievements } from "../features/achievements/controller";
 import { KEY, writeTournament } from "../data/local/tournament-storage";
@@ -44,12 +48,13 @@ export function navigate(t: AppTab) {
   render();
 }
 export function render() {
-  if (store.tab === "full-season") {
+  if (store.tab === "full-season" || store.tab === "nations-league") {
     $("homeHero").hidden = true;
     $("stats").hidden = true;
     $("nav").hidden = true;
     $("seasonBar").hidden = true;
-    renderFull();
+    if (store.tab === "nations-league") renderNations();
+    else renderFull();
     return;
   }
   const s = displayState(),
@@ -118,6 +123,7 @@ export function render() {
   if (store.tab === "settings") getPorts().settings.render();
 }
 export async function exportSave() {
+  if (store.tab === "nations-league") return exportNations();
   if (store.tab === "full-season") return exportFull();
   try {
     const bundle = await getPorts().seasons.exportAll(),

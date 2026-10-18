@@ -1,3 +1,4 @@
+import { seasonTeam, seasonMatchCard } from "../../components/season-match";
 import { worldPlayoffTree } from "./playoff-tree";
 import {
   leagueRoundSnapshot,
@@ -12,7 +13,7 @@ import {
 import { get, regionTeams } from "../../data/teams";
 import * as F from "../../domain/full-season/index";
 import { medalPodiumHtml } from "../../components/podium";
-import { score, winner, loser } from "../../domain/match/scoring";
+import { winner, loser } from "../../domain/match/scoring";
 import type {
   FullSeason,
   FullLeague,
@@ -26,14 +27,16 @@ export function fullTeam(id: string, s: FullSeason, source?: FullLeague) {
   const rank = source
     ? F.fullStandings(source).findIndex((t) => t.id === id) + 1
     : 0;
-  const form = F.fullForm(F.fullMatches(s), id);
-  return `<span class="full-team-line">${rank ? `<span class="team-rank">#${rank}</span>` : ""}${team(id)}<span class="form-strip" role="img" aria-label="5 trận gần nhất, cũ đến mới: ${esc(form.map((t) => (t.win ? "Thắng" : "Thua")).join(", "))}">${Array.from({ length: 5 - form.length }, () => '<span class="form-dot empty">–</span>').join("")}${form.map((t) => `<span class="form-dot ${t.win ? "form-win" : "form-loss"}" title="${t.win ? "Thắng" : "Thua"} ${esc(t.opponent)}">${t.win ? "W" : "L"}</span>`).join("")}</span></span>`;
+  return seasonTeam(id, F.fullMatches(s), rank);
 }
 export function fullCard(s: FullSeason, m: Match, readonly = false) {
-  const [a, b] = score(m),
-    win = winner(m),
-    locked = readonly || F.fullMatchLocked(s, m);
-  return `<article class="match full-match"><div class="match-top"><span>${/^(AVC|CAVB)D0$/.test(m.id) ? "TRANH SUẤT THẾ GIỚI · BO5" : esc(m.id)}</span><span>${m.sets ? "HOÀN TẤT" : "CHƯA ĐẤU"}</span></div>${[m.a, m.b].map((id, i) => `<div class="side ${win === id ? "win" : ""}">${fullTeam(id, s)}<span class="result">${m.sets ? (i ? b : a) : "–"}</span></div>`).join("")}${m.sets ? `<div class="sets">${m.sets.map(([x, y], i) => `S${i + 1} ${x}–${y}`).join(" · ")}</div>` : ""}<div class="match-actions"><button data-action="Full.match" data-arg="${m.id}">Chi tiết</button>${locked ? "" : `${!m.sets ? `<button class="primary" data-action="Full.simMatch" data-arg="${m.id}">Mô phỏng</button>` : ""}<button data-action="Full.edit" data-arg="${m.id}">${m.sets ? "Sửa điểm" : "Nhập điểm"}</button>`}</div></article>`;
+  return seasonMatchCard(
+    m,
+    (id) => fullTeam(id, s),
+    "Full",
+    readonly || F.fullMatchLocked(s, m),
+    /^(AVC|CAVB)D0$/.test(m.id) ? "TRANH SUẤT THẾ GIỚI · BO5" : m.id,
+  );
 }
 export function fullStandingsTable(
   g: FullLeague,

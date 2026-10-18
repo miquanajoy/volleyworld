@@ -7,6 +7,7 @@ import type {
 
 export type AppTab =
   | "full-season"
+  | "nations-league"
   | "home"
   | "history"
   | "settings"

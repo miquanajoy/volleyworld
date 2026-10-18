@@ -242,6 +242,41 @@ const fs = require("node:fs"),
     24,
   );
   assert.equal(w.localStorage.getItem("volleyworld-v1"), classicBeforeFull);
+  // The third mode must work through production ESM, including a second cycle.
+  const fullBeforeNations = w.localStorage.getItem("volleyworld-full-guest");
+  click('[data-action="navigate"][data-arg="home"]');
+  click('[data-action="Nations.enter"]');
+  click('[data-action="Nations.create"]');
+  click('[data-action="Nations.section"][data-arg="groups"]');
+  assert.equal(w.document.querySelectorAll(".full-match").length, 32);
+  click('[data-action="Nations.simRound"]');
+  assert(w.document.querySelector('[data-action="Nations.next"]'));
+  click('[data-action="Nations.next"]');
+  click('[data-action="Nations.finish"]');
+  let nations = JSON.parse(w.localStorage.getItem("volleyworld-nations-guest"));
+  assert.equal(nations[0].played, 200);
+  assert.equal(nations[0].status, "completed");
+  click('[data-action="Nations.section"][data-arg="overview"]');
+  assert.equal(
+    w.document.querySelectorAll(".full-season-summary .medal-card").length,
+    3,
+  );
+  click('[data-action="Nations.nextSeason"]');
+  await new Promise((r) => setTimeout(r, 10));
+  nations = JSON.parse(w.localStorage.getItem("volleyworld-nations-guest"));
+  assert.equal(nations.length, 2);
+  assert.equal(nations[1].cycle_number, 2);
+  assert.equal(nations[1].previous_id, nations[0].season_id);
+  click("#saveProgress");
+  await new Promise((r) => setTimeout(r, 10));
+  assert(
+    w.document.getElementById("toast").textContent.includes("Nations League"),
+  );
+  assert.equal(
+    w.localStorage.getItem("volleyworld-full-guest"),
+    fullBeforeNations,
+  );
+  assert.equal(w.localStorage.getItem("volleyworld-v1"), classicBeforeFull);
   assert.equal(errors.length, 0, errors.map(String).join("\n"));
   dom.window.close();
   console.log(

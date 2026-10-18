@@ -1,3 +1,4 @@
+import { nationsCloud } from "../nations-league/cloud";
 import {
   switchFullAccount,
   saveFullNow,
@@ -79,7 +80,8 @@ export function status(p: CloudPhase, message = "") {
     conflict: "⚠ Có tiến độ từ thiết bị khác",
     error: "⚠ Chưa đồng bộ · bản máy đã giữ",
   };
-  if (store.tab !== "full-season") text("saved", labels[p] || labels.local);
+  if (!["full-season", "nations-league"].includes(store.tab))
+    text("saved", labels[p] || labels.local);
   text("accountButton", accountState.user ? "☁ Tài khoản" : "☁ Đăng nhập");
   if (el("cloudDialog").open) draw();
 }
@@ -209,6 +211,7 @@ export async function switchUser(next: User | null) {
     !accountState.user && next ? getPorts().seasons.localRecords() : null;
   accountState.user = next;
   void switchFullAccount(accountState.client, next?.id || null);
+  void nationsCloud.switchAccount(accountState.client, next?.id || null);
   if (!accountState.user) {
     let guest;
     try {
@@ -289,6 +292,7 @@ export async function syncNow() {
   await accountState.writer!.flush();
 }
 export async function manualSave(): Promise<ManualSaveResult> {
+  if (store.tab === "nations-league") return nationsCloud.saveNow();
   if (store.tab === "full-season") return saveFullNow();
   if (accountState.manualBusy) return { status: "busy" };
   accountState.manualBusy = true;
@@ -451,7 +455,8 @@ export async function logout() {
   if (
     accountState.writer?.pending ||
     accountState.phase === "saving" ||
-    fullCloudPending()
+    fullCloudPending() ||
+    nationsCloud.pending()
   ) {
     if (
       !confirm(
@@ -536,18 +541,21 @@ export function initializeAccountEvents() {
     if (accountState.user) {
       void retry();
       void reloadFullCloud();
+      void nationsCloud.reload();
     }
   });
   window.addEventListener("focus", () => {
     void refresh();
     if (store.tab === "full-season") void reloadFullCloud();
+    if (store.tab === "nations-league") void nationsCloud.reload();
   });
   window.addEventListener("beforeunload", (e) => {
     if (
       accountState.user &&
       (accountState.writer?.pending ||
         accountState.writer?.running ||
-        fullCloudPending())
+        fullCloudPending() ||
+        nationsCloud.pending())
     ) {
       e.preventDefault();
       e.returnValue = "";
