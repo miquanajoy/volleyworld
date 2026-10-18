@@ -3,7 +3,7 @@ const assert = require("node:assert/strict"),
   V = require("../../.test-build/engine.js"),
   { ui } = require("../support/parity-harness.cjs");
 for (let i = 0; i < 40; i++) {
-  const s = F.freshFullSeason(i + 1);
+  const s = F.freshFullSeason(i + 1, "legacy");
   assert(F.validFullSeason(s));
   assert.equal(F.fullMatches(s).length, 1263);
   assert.throws(() => F.drawWorld(s));
@@ -137,7 +137,7 @@ for (let i = 0; i < 40; i++) {
   );
   assert.equal(d.querySelectorAll(".full-finals-table tbody tr").length, 24);
   rows = JSON.parse(t.w.localStorage.getItem("volleyworld-full-guest"));
-  assert.equal(rows[0].played, 1315);
+  assert.equal(rows[0].played, 543);
   assert.equal(rows[0].status, "completed");
   click('[data-action="Full.section"][data-arg="playoff"]');
   assert.equal(d.querySelectorAll('[data-action="Full.simMatch"]').length, 0);

@@ -136,7 +136,7 @@ function meta(r) {
   await full.resolveFullConflict(true);
   row = full.fullModel.records[0];
   assert.equal(row.status, "completed");
-  assert.equal(row.played, 1315);
+  assert.equal(row.played, 543);
   assert.equal(row.revision, 3);
   assert(!row.dirty);
   assert(F.validFullSeason(row.snapshot));

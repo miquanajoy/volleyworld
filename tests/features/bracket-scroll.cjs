@@ -111,7 +111,7 @@ const submit = (t) => {
     season_number: 1,
     created_at: s.createdAt,
     status: "active",
-    played: 1299,
+    played: 527,
     podium: [],
     revision: 0,
     snapshot: s,

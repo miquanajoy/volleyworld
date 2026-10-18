@@ -12,6 +12,13 @@ export interface FullLeague {
   rounds: Match[][];
   tie: TeamId[];
 }
+export interface RegionalLeague extends FullLeague {
+  /** Rosters only: each fixture is stored once in the shared round calendar. */
+  groups?: TeamId[][];
+  pots?: TeamId[][];
+  /** null until both group tables are final; absent for regions without a decider. */
+  decider?: Match | null;
+}
 export const worldStages = ["r16", "qf", "sf", "final", "bronze"] as const;
 export const worldPlayOrder = ["r16", "qf", "sf", "bronze", "final"] as const;
 export type WorldStage = (typeof worldStages)[number];
@@ -27,6 +34,7 @@ export interface FullSeason {
   seasonId: string;
   seasonNumber: number;
   createdAt: string;
-  regions: Record<Region, FullLeague>;
+  regionalFormat?: "groups-v1";
+  regions: Record<Region, RegionalLeague>;
   world: WorldCup | null;
 }

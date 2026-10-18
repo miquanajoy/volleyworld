@@ -18,20 +18,28 @@ import {
 export * from "./types";
 export * from "./league";
 export * from "./world";
-export function freshFullSeason(number = 1): FullSeason {
+export * from "./regional";
+import { freshRegion, advanceRegions } from "./regional";
+export function freshFullSeason(
+  number = 1,
+  format: "groups" | "legacy" = "groups",
+): FullSeason {
   return {
     version: 1,
     mode: "full-season",
     seasonId: crypto.randomUUID(),
     seasonNumber: number,
     createdAt: new Date().toISOString(),
+    ...(format === "groups" ? { regionalFormat: "groups-v1" as const } : {}),
     regions: Object.fromEntries(
       regionOrder.map((r) => [
         r,
-        fullLeague(
-          regionTeams(r).map((t) => t.id),
-          r,
-        ),
+        format === "groups"
+          ? freshRegion(r)
+          : fullLeague(
+              regionTeams(r).map((t) => t.id),
+              r,
+            ),
       ]),
     ) as FullSeason["regions"],
     world: null,
@@ -39,7 +47,10 @@ export function freshFullSeason(number = 1): FullSeason {
 }
 export function fullMatches(s: FullSeason): Match[] {
   return [
-    ...regionOrder.flatMap((r) => leagueMatches(s.regions[r])),
+    ...regionOrder.flatMap((r) => [
+      ...leagueMatches(s.regions[r]),
+      ...(s.regions[r].decider ? [s.regions[r].decider!] : []),
+    ]),
     ...(s.world?.groups.flatMap(leagueMatches) || []),
     ...worldStages.flatMap((k) => s.world?.bracket?.[k] || []),
   ];
@@ -51,8 +62,11 @@ export function stampFull(s: FullSeason) {
 }
 export function fullMatchLocked(s: FullSeason, m: Match) {
   if (worldComplete(s)) return true;
-  if (regionOrder.some((r) => leagueMatches(s.regions[r]).includes(m)))
-    return !!s.world;
+  for (const r of regionOrder) {
+    const g = s.regions[r];
+    if (g.decider === m) return !!s.world;
+    if (leagueMatches(g).includes(m)) return !!s.world || !!g.decider;
+  }
   if (s.world?.groups.some((g) => leagueMatches(g).includes(m)))
     return !!s.world.bracket;
   const b = s.world?.bracket;
@@ -67,11 +81,17 @@ export function recordFullScore(s: FullSeason, id: string, sets: SetScore[]) {
   if (!m || fullMatchLocked(s, m) || !validate(sets))
     throw Error("Kết quả không hợp lệ hoặc trận đã khóa.");
   m.sets = sets.map((p) => [...p]);
+  advanceRegions(s);
   advanceWorld(s);
   stampFull(s);
 }
 export function finishFullSeason(s: FullSeason) {
   regionOrder.forEach((r) => simulateLeague(s.regions[r]));
+  advanceRegions(s);
+  regionOrder.forEach((r) => {
+    const m = s.regions[r].decider;
+    if (m && !m.sets) simulate(m);
+  });
   if (!s.world) drawWorld(s);
   s.world!.groups.forEach((g) => simulateLeague(g));
   if (!s.world!.bracket) drawWorldPlayoff(s);

@@ -1,8 +1,8 @@
 # Kế hoạch Full Season Mode
 
-Trạng thái: **Đã triển khai trên `feature/full-season-mode` theo yêu cầu start ngày 17/10/2026. Chưa merge vào main.**
+Trạng thái: **Đã triển khai trên `main`. Cập nhật chia bảng khu vực ngày 18/10/2026 ở mục 11; các mùa cũ giữ nguyên thể thức ban đầu.**
 
-Branch triển khai: `feature/full-season-mode`.
+Branch hiện tại: `main` (ban đầu phát triển trên `feature/full-season-mode`).
 
 Kế hoạch được chốt trong trao đổi ngày 16–17/10/2026. Branch đã nhận các cập nhật mới nhất từ main, bao gồm trang tổng kết mùa gọn và bảng thành tích cuối mùa. Phần kế hoạch ban đầu dưới đây được giữ để đối chiếu; quyết định triển khai được ghi ở mục 10 và `FULL-SEASON-IMPLEMENTATION.md`.
 
@@ -112,7 +112,7 @@ Không xem các mục này là đã được triển khai hoặc đã chốt thi
 
 ## 9. Điểm dừng trước khi start (đã qua)
 
-Ban đầu chỉ lưu kế hoạch trên branch. Người dùng đã yêu cầu triển khai trên `feature/full-season-mode` ngày 17/10/2026. Việc merge vào main vẫn chờ yêu cầu riêng.
+Ban đầu chỉ lưu kế hoạch trên branch. Đã triển khai trên `feature/full-season-mode` ngày 17/10/2026 và sau đó đưa lên `main` theo yêu cầu người dùng.
 
 ## 10. Quyết định triển khai
 
@@ -126,3 +126,27 @@ Ban đầu chỉ lưu kế hoạch trên branch. Người dùng đã yêu cầu 
 - Thành tích Full Season hiển thị riêng kết quả khu vực và thế giới qua các mùa, chưa có BXH điểm cộng chung với chế độ 32 đội.
 - Xuất/nhập, bản sao trước, lưu thiết bị và đồng bộ theo tài khoản được triển khai riêng. File nhập tạo các mùa mới sau khi xác nhận, giữ nguyên những mùa đã có.
 - Chi tiết kiến trúc và kiểm thử: [FULL-SEASON-IMPLEMENTATION.md](FULL-SEASON-IMPLEMENTATION.md).
+
+## 11. Cập nhật đã chốt ngày 18/10/2026 — chia bảng khu vực
+
+Triển khai trực tiếp trên `main`. Các mục mô tả league chung và 1.315 trận phía trên là thể thức cũ, được giữ nguyên cho các mùa đã tạo trước cập nhật.
+
+| Khu vực | Bảng   | Suất thế giới                                   | Trận khu vực |
+| ------- | ------ | ----------------------------------------------- | -----------: |
+| CEV     | 3 × 13 | Top 3 mỗi bảng                                  |          234 |
+| AVC     | 2 × 12 | Top 2 mỗi bảng + hai hạng 3 tranh một suất BO5  |          133 |
+| NORCECA | 2 × 9  | Top 2 mỗi bảng                                  |           72 |
+| CAVB    | 7 + 6  | Hai nhất bảng + hai nhì bảng tranh một suất BO5 |           37 |
+| CSV     | 1 × 6  | Top 3                                           |           15 |
+
+- Tổng: 491 trận khu vực và 52 trận thế giới, bằng **543 trận**. 24 suất thế giới và thể thức thế giới giữ nguyên.
+- Chia nhóm hạt giống theo BXH thế giới, mỗi nhóm có số đội bằng số bảng; mỗi bảng nhận tối đa một đội từ mỗi nhóm. Châu Phi có nhóm cuối một đội, vào bảng A để tạo hai bảng 7/6 đội.
+- Mỗi bảng vòng tròn một lượt BO5; đội nghỉ không được tính thắng/thua. BXH và biến động hạng tính riêng trong bảng.
+- Trận tranh suất chỉ sinh sau khi cả hai bảng hoàn tất. Khóa điểm vòng bảng khu vực khi trận tranh suất được tạo; khóa toàn bộ khu vực khi thế giới được bốc thăm.
+- Giải thế giới chỉ mở khi mọi trận khu vực, kể cả hai trận tranh suất, đã kết thúc; có vé sớm không bỏ qua điều kiện này.
+- Hiện “Giành vé” khi có chứng nhận chắc chắn; “Bảo đảm ít nhất trận tranh suất” tại AVC/CAVB khi chắc chắn đạt nhóm tương ứng nhưng chưa chắc vé trực tiếp. Vòng bảng thế giới cũng có trạng thái chắc suất playoff trong top 2.
+- Trạng thái ở BXH theo vòng chỉ dùng kết quả tới vòng đang xem; kết quả tương lai hoặc các trận nhập trước không được tính vào quá khứ. Ngân sách tìm kiếm hữu hạn có thể khiến thông báo muộn; không công bố suất chưa được chứng minh.
+- Không so chéo bảng để chọn suất, nhất là hai bảng châu Phi có số đội khác nhau. Thành tích khu vực ghi rõ thứ hạng/bảng, không tự phong một nhà vô địch chung.
+- Save mới có `regionalFormat: "groups-v1"`; save không có marker giữ nguyên thể thức cũ. Không tự chuyển lịch hoặc sửa mùa đang chơi/đã hoàn tất. Người chơi tạo mùa Full Season mới để dùng thể thức này.
+- Mỗi trận chỉ lưu một lần trong `regions[r].rounds`; `groups` chỉ lưu danh sách đội. Trận tranh suất lưu riêng ở `decider`; tổng trận, thống kê phong độ, nhập/xuất và cloud đều tính cả trận này.
+- Kiểm thử: `tests/features/full-season-groups.cjs`; giữ bộ legacy Full Season; `supabase/tests/full_season_groups.sql` được sinh bằng `node scripts/full-season-groups-sql.cjs` sau khi build test engine. Toàn bộ ghi dữ liệu kiểm thử SQL được rollback.

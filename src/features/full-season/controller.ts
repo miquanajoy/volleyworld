@@ -38,6 +38,12 @@ function source(s: FullSeason): FullLeague | undefined {
     F.regionOrder.includes(fullModel.section as (typeof F.regionOrder)[number])
   )
     return s.regions[fullModel.section as (typeof F.regionOrder)[number]];
+  const regional = fullModel.section.match(/^(CEV|AVC|NORCECA|CAVB)G([0-2])$/);
+  if (regional)
+    return F.regionalGroup(
+      s.regions[regional[1] as (typeof F.regionOrder)[number]],
+      Number(regional[2]),
+    );
   if (/^WG[0-5]$/.test(fullModel.section))
     return s.world?.groups[Number(fullModel.section.slice(2))];
 }
@@ -48,6 +54,7 @@ function mutate(action: (s: FullSeason) => void) {
   const old = row.snapshot,
     s = clone(old);
   action(s);
+  F.advanceRegions(s);
   F.stampFull(s);
   if (!F.validFullSeason(s))
     throw Error("Tiến trình Full Season không hợp lệ; chưa thay đổi bản lưu.");
@@ -103,6 +110,9 @@ export function sectionFull(section: string) {
       "world",
       "playoff",
       ...F.regionOrder,
+      ...F.regionOrder.flatMap((r) =>
+        Array.from({ length: F.regionalGroupCount[r] }, (_, i) => `${r}G${i}`),
+      ),
       ...Array.from({ length: 6 }, (_, i) => "WG" + i),
     ].includes(section)
   )
@@ -140,7 +150,10 @@ export function nextFullRound() {
     g = s && source(s);
   if (!g || !g.rounds[fullModel.round]?.every((m) => m.sets)) return;
   if (fullModel.round < g.rounds.length - 1) fullModel.round++;
-  else fullModel.section = "overview";
+  else
+    fullModel.section =
+      F.regionOrder.find((r) => fullModel.section.startsWith(`${r}G`)) ||
+      "overview";
   getPorts().commands.render();
 }
 export function simulateFullMatch(id: string) {
@@ -398,12 +411,10 @@ function honoursHtml() {
         r = F.regionOrder.find((r) =>
           s?.regions[r].teamIds.includes(honourTeam),
         ),
-        regional =
-          s && r
-            ? F.fullStandings(s.regions[r]).findIndex(
-                (t) => t.id === honourTeam,
-              ) + 1
-            : 0,
+        qualified =
+          s && r && F.regionalDone(s.regions[r])
+            ? F.regionQualifiers(s.regions[r], r).includes(honourTeam)
+            : false,
         p = s && F.worldPlacements(s)[honourTeam];
       const label = p
         ? p.from <= 3
@@ -412,15 +423,15 @@ function honoursHtml() {
             ? `#${p.from}`
             : `#${p.from}–#${p.to}`
         : s && !s.world
-          ? r && F.fullLeagueDone(s.regions[r])
-            ? regional <= F.worldSlots[r]
+          ? r && F.regionalDone(s.regions[r])
+            ? qualified
               ? "Chờ giải thế giới"
               : "-"
             : "Chưa xác định"
           : s?.world?.groups.some((g) => g.teamIds.includes(honourTeam))
             ? "Đang diễn ra"
             : "-";
-      return `<tr><td>SS ${row.season_number}</td><td>${!s ? "Chưa tải được" : r && F.fullLeagueDone(s.regions[r]) ? (regional <= 3 ? ["🥇", "🥈", "🥉"][regional - 1] : `#${regional}`) : "Đang diễn ra"}</td><td>${s ? label : "Chưa tải được"}</td></tr>`;
+      return `<tr><td>SS ${row.season_number}</td><td>${!s ? "Chưa tải được" : r && F.regionalDone(s.regions[r]) ? F.regionalHonour(s, r, honourTeam) : "Đang diễn ra"}</td><td>${s ? label : "Chưa tải được"}</td></tr>`;
     })
     .join(
       "",
@@ -466,24 +477,39 @@ function renderFullContent() {
     }
   } else {
     html += view.selectedHeader(s);
-    const g = source(s);
-    html += g
-      ? view.leagueHtml(
-          s,
-          g,
-          fullModel.section.startsWith("WG")
-            ? `Bảng ${"ABCDEF"[Number(fullModel.section.slice(2))]}`
-            : names[fullModel.section as (typeof F.regionOrder)[number]],
-          fullModel.section.startsWith("WG")
-            ? 2
-            : F.worldSlots[fullModel.section as (typeof F.regionOrder)[number]],
-          row.status === "completed",
-        )
-      : fullModel.section === "world"
-        ? view.worldHtml(s)
-        : fullModel.section === "playoff"
-          ? view.playoffHtml(s, row.status === "completed")
-          : view.overviewHtml(s);
+    const g = source(s),
+      region = F.regionOrder.find(
+        (r) => fullModel.section === r || fullModel.section.startsWith(`${r}G`),
+      ),
+      grouped = region && s.regions[region].groups,
+      groupIndex = region ? Number(fullModel.section.split("G").at(-1)) : 0;
+    html +=
+      region && grouped && fullModel.section === region
+        ? view.regionHtml(s, region, row.status === "completed")
+        : g
+          ? view.leagueHtml(
+              s,
+              g,
+              fullModel.section.startsWith("WG")
+                ? `Bảng ${"ABCDEF"[Number(fullModel.section.slice(2))]}`
+                : region
+                  ? `${names[region]}${grouped ? ` · Bảng ${"ABC"[groupIndex]}` : ""}`
+                  : "Khu vực",
+              fullModel.section.startsWith("WG")
+                ? 2
+                : region
+                  ? grouped
+                    ? F.groupDirectSlots[region]
+                    : F.worldSlots[region]
+                  : 0,
+              row.status === "completed",
+              !!(region && grouped && s.regions[region].decider !== undefined),
+            )
+          : fullModel.section === "world"
+            ? view.worldHtml(s)
+            : fullModel.section === "playoff"
+              ? view.playoffHtml(s, row.status === "completed")
+              : view.overviewHtml(s);
   }
   $("content").innerHTML =
     html +

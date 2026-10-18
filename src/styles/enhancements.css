@@ -1065,7 +1065,7 @@
 .season-card .season-medals > div {
   min-height: 26px;
 }
-.season-card .season-medals > div > span:first-child {
+.season-card .season-medals > div > span:first-child:not(.team) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1085,4 +1085,43 @@
 }
 .season-card .actions {
   padding-top: 20px;
+}
+
+.full-regional-standing {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.full-regional-standing .team {
+  min-width: 0;
+}
+.full-regional-standing .team-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.full-regional-standing .full-qualification {
+  grid-column: 2 / -1;
+  margin: 0;
+}
+.full-qualification[data-berth="contender"] {
+  color: #986b00;
+}
+.full-qualification[data-berth="eliminated"] {
+  color: var(--muted);
+}
+.full-regional-decider {
+  padding: 24px;
+  margin: 24px 0;
+}
+.full-regional-decider .full-match {
+  max-width: 520px;
+}
+.full-group-team > .full-qualification {
+  grid-column: 2 / -1;
+  grid-row: 2;
+  margin: 0;
 }

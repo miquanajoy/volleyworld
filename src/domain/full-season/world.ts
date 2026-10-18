@@ -10,19 +10,15 @@ import {
 } from "./league";
 import {
   regionOrder,
-  worldSlots,
   type FullSeason,
   type WorldCup,
   type WorldStage,
 } from "./types";
+import { regionalDone, regionQualifiers } from "./regional";
 export function regionalQualifiers(s: FullSeason): TeamId[] {
-  if (!regionOrder.every((r) => fullLeagueDone(s.regions[r])))
+  if (!regionOrder.every((r) => regionalDone(s.regions[r])))
     throw Error("Cần hoàn tất cả 5 giải khu vực.");
-  return regionOrder.flatMap((r) =>
-    fullStandings(s.regions[r])
-      .slice(0, worldSlots[r])
-      .map((t) => t.id),
-  );
+  return regionOrder.flatMap((r) => regionQualifiers(s.regions[r], r));
 }
 /** Exact constrained assignment; bounded by the 24-team state space, no random retry loop. */
 export function drawWorld(s: FullSeason) {

@@ -1,13 +1,19 @@
 import { regionTeams } from "../../data/teams";
 import { validate, winner, loser } from "../match/scoring";
 import type { Match, TeamId } from "../types";
-import { fullLeagueDone } from "./league";
+import { fullLeagueDone, fullStandings } from "./league";
 import {
   regionOrder,
   worldStages,
   type FullLeague,
   type FullSeason,
 } from "./types";
+import {
+  regionalGroup,
+  regionalDone,
+  regionalGroupCount,
+  groupDirectSlots,
+} from "./regional";
 import { regionalQualifiers, worldEntrants, worldThirds } from "./world";
 const sameSet = (a: TeamId[], b: TeamId[]) =>
   a.length === b.length &&
@@ -91,17 +97,97 @@ export function validFullSeason(input: unknown): input is FullSeason {
       }
       return pairs.size === (n * (n - 1)) / 2;
     }
-    for (const r of regionOrder)
+    if (s.regionalFormat !== undefined && s.regionalFormat !== "groups-v1")
+      return false;
+    for (const r of regionOrder) {
+      const g = s.regions[r],
+        ids = regionTeams(r).map((t) => t.id);
+      if (s.regionalFormat !== "groups-v1" || r === "CSV") {
+        if (
+          g.groups !== undefined ||
+          g.pots !== undefined ||
+          g.decider !== undefined ||
+          !league(g, ids, r)
+        )
+          return false;
+        continue;
+      }
+      const count = regionalGroupCount[r];
       if (
-        !league(
-          s.regions[r],
-          regionTeams(r).map((t) => t.id),
-          r,
+        !Array.isArray(g.groups) ||
+        g.groups.length !== count ||
+        !sameSet(g.groups.flat(), ids) ||
+        !sameSet(g.teamIds, ids) ||
+        !sameSet(g.tie, ids) ||
+        !Array.isArray(g.pots) ||
+        g.pots.length !== Math.ceil(ids.length / count)
+      )
+        return false;
+      for (let p = 0; p < g.pots.length; p++) {
+        if (
+          !sameSet(g.pots[p], ids.slice(p * count, (p + 1) * count)) ||
+          g.groups.some(
+            (group) => group.filter((id) => g.pots![p].includes(id)).length > 1,
+          )
+        )
+          return false;
+      }
+      if (
+        g.groups.some(
+          (group, i) => group.length !== Math.ceil((ids.length - i) / count),
         )
       )
         return false;
+      const expectedRounds = Math.max(
+        ...g.groups.map((group) =>
+          group.length % 2 ? group.length : group.length - 1,
+        ),
+      );
+      if (
+        !Array.isArray(g.rounds) ||
+        g.rounds.length !== expectedRounds ||
+        g.rounds.some(
+          (row, i) =>
+            !Array.isArray(row) ||
+            row.length !==
+              g.groups!.reduce(
+                (n, group) =>
+                  n +
+                  (i < (group.length % 2 ? group.length : group.length - 1)
+                    ? Math.floor(group.length / 2)
+                    : 0),
+                0,
+              ),
+        )
+      )
+        return false;
+      for (let i = 0; i < count; i++)
+        if (!league(regionalGroup(g, i), g.groups[i], `${r}G${i}`))
+          return false;
+      const hasDecider = r === "AVC" || r === "CAVB";
+      if (!hasDecider) {
+        if (g.decider !== undefined) return false;
+      } else {
+        const ready = fullLeagueDone(g);
+        if (!ready) {
+          if (g.decider !== null) return false;
+        } else {
+          const expected = g.groups.map(
+            (_, i) =>
+              fullStandings(regionalGroup(g, i))[groupDirectSlots[r]].id,
+          );
+          if (
+            !g.decider ||
+            g.decider.a !== expected[0] ||
+            g.decider.b !== expected[1] ||
+            !check(g.decider, expected, `${r}D0`)
+          )
+            return false;
+        }
+      }
+    }
     if (s.world === null) return true;
-    if (!regionOrder.every((r) => fullLeagueDone(s.regions[r]))) return false;
+    if (!regionOrder.every((r) => regionalDone(s.regions[r]))) return false;
     const w = s.world,
       expected = regionalQualifiers(s).sort((a, b) => {
         const all = regionOrder.flatMap((r) => regionTeams(r));
