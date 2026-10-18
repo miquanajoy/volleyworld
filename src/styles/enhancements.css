@@ -1307,3 +1307,84 @@
 .nations-details .table-wrap {
   margin-top: 18px;
 }
+
+/* Group selectors are buttons, independent of the global underline navigation. */
+.nations-navigation {
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.nations-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.nations-nav-row + .nations-nav-row {
+  border-top: 1px solid var(--line);
+  margin-top: 14px;
+  padding-top: 14px;
+}
+.nations-nav-label {
+  flex: 0 0 80px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.nations-navigation .full-group-nav {
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.nations-navigation .full-group-nav button {
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f5f7f2;
+  color: var(--muted);
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.nations-navigation .full-group-nav button:hover:not([aria-current="page"]) {
+  background: #edf2e8;
+  border-color: #a5b8aa;
+  color: var(--green);
+}
+.nations-navigation .full-group-nav button[aria-current="page"] {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}
+.nations-navigation .full-group-nav button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+@media (max-width: 700px) {
+  .nations-navigation {
+    padding: 16px;
+  }
+  .nations-nav-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .nations-nav-label {
+    flex-basis: auto;
+  }
+  .nations-navigation .full-group-nav {
+    flex: none;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 2px 2px 6px;
+    scrollbar-width: thin;
+  }
+  .nations-navigation .full-group-nav button {
+    flex-shrink: 0;
+  }
+}
