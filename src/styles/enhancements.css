@@ -1244,7 +1244,6 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
 }
-.nations-campaign,
 .nations-division {
   margin-block: 28px;
 }
@@ -1624,19 +1623,6 @@
   }
 }
 
-.nations-campaign-heading {
-  align-items: center;
-  gap: 18px;
-}
-.nations-campaign-heading h3 {
-  margin: 0 0 8px;
-}
-.nations-campaign-heading .sub {
-  margin: 0;
-}
-.nations-campaign-heading > button {
-  flex-shrink: 0;
-}
 .nations-transfer-summary {
   padding: 22px;
   margin: 0 0 22px;
@@ -1676,14 +1662,28 @@
   line-height: 1.6;
 }
 @media (max-width: 700px) {
-  .nations-campaign-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .nations-campaign-heading > button {
-    width: 100%;
-  }
   .nations-transfer-summary {
     padding: 18px;
   }
+}
+
+/* Reuse the shared season-card grid, medal rows and bottom action placement. */
+.nations-season-grid .season-card-top .eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+}
+.nations-season-grid .season-card-top .badge {
+  white-space: nowrap;
+}
+.nations-season-grid .season-card .actions {
+  display: grid;
+  gap: 10px;
+}
+.nations-season-grid .season-card .actions > button {
+  width: 100%;
+  margin: 0;
+}
+.nations-season-grid .nations-season-save {
+  margin: 16px 0 0;
+  font-size: 11px;
 }
