@@ -51,6 +51,7 @@ export function enterNations() {
   store.tab = "nations-league";
   model.selected = null;
   model.section = "overview";
+  model.playoffTier = "A";
   render();
 }
 function add(s: N.NationsSeason) {
@@ -60,6 +61,7 @@ function add(s: N.NationsSeason) {
   model.records.push(row);
   model.selected = s.seasonId;
   model.section = "overview";
+  model.playoffTier = "A";
   model.round = 0;
   if (!persist())
     toast("Chưa lưu được trên thiết bị. Hãy xuất file để giữ mùa mới.");
@@ -170,6 +172,7 @@ export function openNations(id: string) {
   if (!model.records.some((r) => r.season_id === id)) return;
   model.selected = id;
   model.section = "overview";
+  model.playoffTier = "A";
   model.round = 0;
   store.tab = "nations-league";
   render();
@@ -219,17 +222,27 @@ export function drawNations() {
     render();
   });
 }
-export function simulateNationsStage(stage: string) {
+export function setNationsPlayoffTier(tier: string) {
+  if (!N.tiers.includes(tier as N.Tier)) return;
+  model.playoffTier = tier as N.Tier;
+  model.section = "playoff";
+  render();
+}
+export function simulateNationsStage(arg: string) {
+  const [tier, stage] = arg.includes(":") ? arg.split(":") : ["A", arg];
   run(() =>
     mutate((s) => {
-      if (!N.nationsPlayOrder.includes(stage as N.NationsStage))
-        throw Error("Vòng không hợp lệ.");
-      const next = N.nationsPlayOrder.find((k) =>
-        s.playoff?.[k].some((m) => !m.sets),
+      if (!N.tiers.includes(tier as N.Tier))
+        throw Error("Division không hợp lệ.");
+      const b = N.nationsBracket(s, tier as N.Tier);
+      const next = N.nationsOrder(tier as N.Tier).find((k) =>
+        b?.[k].some((m) => !m.sets),
       );
-      if (stage !== next)
-        throw Error("Cần hoàn tất vòng trước, tranh hạng ba trước chung kết.");
-      s.playoff![next].filter((m) => !m.sets).forEach(simulate);
+      if (!b || !next || stage !== next)
+        throw Error(
+          "Cần hoàn tất vòng trước; Division A tranh hạng ba trước chung kết.",
+        );
+      b[next].filter((m) => !m.sets).forEach(simulate);
       N.advanceNations(s);
     }),
   );
@@ -531,7 +544,7 @@ export function renderNations() {
             : model.section === "overview"
               ? view.overviewHtml(s)
               : model.section === "rules"
-                ? view.rulesHtml()
+                ? view.rulesHtml(true, s)
                 : view.groupsHtml(s);
       }
       $("content").innerHTML =

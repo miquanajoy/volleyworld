@@ -23,4 +23,7 @@ export interface NationsSeason {
   roster: TeamId[];
   divisions: Record<Tier, NationsDivision>;
   playoff: NationsBracket | null;
+  /** Absent on seasons created before promotion playoffs were introduced. */
+  playoffFormat?: "all-divisions-v1";
+  divisionPlayoffs?: Record<"B" | "C" | "D", NationsBracket | null>;
 }

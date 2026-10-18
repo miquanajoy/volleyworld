@@ -46,6 +46,7 @@ const actions: Record<string, Action> = {
   "Nations.simRound": () => Nations.simulateNationsRound(),
   "Nations.simMatch": (e) => Nations.simulateNationsMatch(arg(e)),
   "Nations.draw": () => Nations.drawNations(),
+  "Nations.playoffTier": (e) => Nations.setNationsPlayoffTier(arg(e)),
   "Nations.stage": (e) => Nations.simulateNationsStage(arg(e)),
   "Nations.finish": () => Nations.finishNations(),
   "Nations.edit": (e) => Nations.editNationsMatch(arg(e)),

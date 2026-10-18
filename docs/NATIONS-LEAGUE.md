@@ -4,20 +4,20 @@ Implemented as a third independent mode on main. It inherits existing match card
 
 ## Fixed format
 
-| Division | Teams | Groups | Group format                    | Outcome                                                         |
-| -------- | ----- | ------ | ------------------------------- | --------------------------------------------------------------- |
-| A        | 16    | 4 × 4  | Double round robin, 6 matchdays | Top two/group enter an eight-team playoff; last/group relegated |
-| B        | 16    | 4 × 4  | Double round robin, 6 matchdays | Winner/group promoted; last/group relegated                     |
-| C        | 16    | 4 × 4  | Double round robin, 6 matchdays | Winner/group promoted; last/group relegated                     |
-| D        | 16    | 4 × 4  | Double round robin, 6 matchdays | Winner/group promoted                                           |
+| Division | Teams | Groups | Group format                    | Outcome                                                          |
+| -------- | ----- | ------ | ------------------------------- | ---------------------------------------------------------------- |
+| A        | 16    | 4 × 4  | Double round robin, 6 matchdays | Top two/group enter an eight-team playoff; last/group relegated  |
+| B        | 16    | 4 × 4  | Double round robin, 6 matchdays | Top two/group playoff; QF winners promoted; last/group relegated |
+| C        | 16    | 4 × 4  | Double round robin, 6 matchdays | Top two/group playoff; QF winners promoted; last/group relegated |
+| D        | 16    | 4 × 4  | Double round robin, 6 matchdays | Top two/group playoff; QF winners promoted                       |
 
-Each matchday comprises 32 matches across all 16 groups. A season has 192 group matches and eight playoff matches, including bronze: **200**. Matchday selection cannot advance beyond the first incomplete shared round. Standings, form and qualification certificates use the selected round cutoff. Group results lock after the playoff draw.
+Each matchday comprises 32 matches across all 16 groups. New seasons have 192 group matches and 29 playoff matches: **221** (8 in A, 7 each in B/C/D). Existing seasons retain their original **200**-match format. Matchday selection cannot advance beyond the first incomplete shared round. Standings, form and qualification certificates use the selected round cutoff. Group results lock after the playoff draw.
 
 All matches are BO5. Sets 1–4 to 25, fifth to 15, win by two. Tables use wins, set difference, point difference, head-to-head and a saved random tiebreak order. Early berth/relegation certificates reuse the bounded conservative solver: an uncertain result stays undecided.
 
 The first roster uses proportional Hamilton allocation from the existing 100-team catalog: CEV 25, AVC 15, NORCECA 12, CAVB 8, CSV 4. Each region supplies its highest-ranked teams. First-season divisions are consecutive world-rank blocks of 16. Each division has four rank-based pots; every group gets one team/pot. The 64 participants remain fixed within a campaign.
 
-The Division A quarterfinal draw pairs group winners against runners-up from other groups. Quarterfinal pairs are shuffled into four fixed slots; Q1/Q2 feed S1, Q3/Q4 feed S2. Semifinal losers play bronze before the final. Individual final simulation/editing is blocked until bronze has a result.
+Each Division’s quarterfinal draw pairs group winners against runners-up from other groups. Quarterfinal pairs are shuffled into four fixed slots; Q1/Q2 feed S1, Q3/Q4 feed S2. Only Division A semifinal losers play bronze before the final; B/C/D have no bronze match. Division A final simulation/editing is blocked until bronze has a result.
 
 ## Linked seasons and history
 
@@ -41,10 +41,38 @@ The database independently validates the fixed roster, pots, groups, double fixt
 
 ## Validation
 
-- `tests/features/nations-league.cjs`: 125 complete seasons across 25 five-season chains; quotas, calendar, 200-match totals, playoff seeding, promotion/relegation, malformed-state rejection, exhaustive winner-assignment samples for early certificates and concurrent-branch export.
+- `tests/features/nations-league.cjs`: 125 complete seasons across 25 five-season chains; quotas, calendar, legacy 200-match / new 221-match totals, playoff seeding, promotion/relegation, malformed-state rejection, exhaustive winner-assignment samples for early certificates and concurrent-branch export.
 - `tests/features/nations-ui.cjs`: real delegated DOM actions, shared-round progression, set editor, historical tables, forms, team history, bracket, medal order, immutable summary, continuation, independent campaigns, import and reload.
 - `tests/features/nations-continuation.cjs`: delegated footer/campaign actions, inherited membership, exact 24-team transfer display, prior-season immutability, active-season management, existing-successor reuse, explicit independent roots and metadata-only parent history.
 - `tests/features/nations-cloud.cjs`: owner/guest isolation, offline retry, CAS, parent-first writes, duplicate next-cycle races, explicit conflict resolution, imported chains, number collisions and stale account responses.
 - `tests/integration/build.cjs`: actual production Vite ESM and Supabase SDK; finish a Nations League season, create its successor, manual-save and verify both existing mode saves remain unchanged.
 - SQL integration: `node scripts/build-test.cjs`, then `node scripts/nations-sql-fixtures.cjs > /tmp/nations-tests.sql`. Execute the resulting SQL on the test connection; all synthetic users and progress roll back. Covers JS/SQL transition parity, malformed scores/fixtures/bracket, CAS, completed immutability, duplicate cycle, derived metadata and cross-account RLS.
 - Run `npm run check`, `npm run format:check` and `git diff --check` before publication. The frozen main fixtures and original baseline stylesheet remain untouched.
+
+## Promotion playoffs (new seasons)
+
+Every Division now sends its top two teams per group to an eight-team playoff.
+The quarterfinal pairs a group winner with a runner-up from another group; subsequent
+rounds follow the drawn bracket. In B, C and D, each quarterfinal winner earns a
+promotion place immediately, independent of the semifinal and final results. All
+seven playoff matches still take place, without a third-place match. Division A
+keeps its eight-match playoff including bronze before the final.
+
+The season has 221 matches (192 + 8 + 7 + 7 + 7). All four finals and the A bronze
+match must finish before creating a successor. Relegation remains group-last from
+A/B/C. Lower-division semifinal losers share places 3–4 within their division;
+quarterfinal losers share 5–8. Promotion is derived from quarterfinal winners,
+not final rank or group victory.
+
+`playoffFormat: "all-divisions-v1"` and `divisionPlayoffs` identify the new format.
+Existing seasons without these fields retain their original 200-match format,
+qualification rules and completed data. A new successor always adopts the new
+format while inheriting the previous season's actual promotion/relegation result.
+The database validates both formats and derives the `total_matches` metadata;
+changing an existing season's format is rejected. Exports preserve both formats.
+
+Validation includes 125 mixed-format seasons, forced runner-up quarterfinal
+upsets, immediate promotion and unchanged berths after semifinal/final losses,
+no B/C/D bronze, fixed-route and cross-division result-order rejection, old-to-new
+continuation, UI stage controls, cloud account/conflict tests and rollback SQL
+checks for 220/221 active/completed boundaries and legacy 200-match metadata.

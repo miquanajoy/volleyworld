@@ -83,13 +83,25 @@ export function freshNationsSeason(
       ]),
     ) as NationsSeason["divisions"],
     playoff: null,
+    playoffFormat: "all-divisions-v1",
+    divisionPlayoffs: { B: null, C: null, D: null },
   };
 }
+export const nationsAllPlayoffs = (s: NationsSeason) =>
+  s.playoffFormat === "all-divisions-v1";
+export const nationsTotalMatches = (s: NationsSeason) =>
+  nationsAllPlayoffs(s) ? 221 : 200;
+export const nationsBracket = (s: NationsSeason, tier: Tier = "A") =>
+  tier === "A" ? s.playoff : s.divisionPlayoffs?.[tier] || null;
+export const nationsOrder = (tier: Tier) =>
+  nationsPlayOrder.filter((k) => tier === "A" || k !== "bronze");
 export const nationsGroups = (s: NationsSeason) =>
   tiers.flatMap((t) => s.divisions[t].groups);
 export const nationsMatches = (s: NationsSeason): Match[] => [
   ...nationsGroups(s).flatMap((g) => g.rounds.flat()),
-  ...nationsStages.flatMap((k) => s.playoff?.[k] || []),
+  ...tiers.flatMap((t) =>
+    nationsStages.flatMap((k) => nationsBracket(s, t)?.[k] || []),
+  ),
 ];
 export const nationsRoundMatches = (s: NationsSeason, r: number) =>
   nationsGroups(s).flatMap((g) => g.rounds[r] || []);
@@ -102,7 +114,9 @@ export const nationsGroupsDone = (s: NationsSeason) =>
 export const nationsComplete = (s: NationsSeason) =>
   nationsGroupsDone(s) &&
   !!s.playoff?.final[0]?.sets &&
-  !!s.playoff?.bronze[0]?.sets;
+  !!s.playoff?.bronze[0]?.sets &&
+  (!nationsAllPlayoffs(s) ||
+    tiers.slice(1).every((t) => !!nationsBracket(s, t)?.final[0]?.sets));
 export function nationsMovements(s: NationsSeason) {
   return Object.fromEntries(
     tiers.map((t) => [
@@ -111,7 +125,11 @@ export function nationsMovements(s: NationsSeason) {
         up:
           t === "A"
             ? []
-            : s.divisions[t].groups.map((g) => fullStandings(g)[0].id),
+            : nationsAllPlayoffs(s)
+              ? (nationsBracket(s, t)?.qf || [])
+                  .filter((m) => m.sets)
+                  .map((m) => winner(m)!)
+              : s.divisions[t].groups.map((g) => fullStandings(g)[0].id),
         down:
           t === "D"
             ? []
@@ -124,6 +142,8 @@ export function nextDivisions(s: NationsSeason): Record<Tier, TeamId[]> {
   if (!nationsGroupsDone(s))
     throw Error("Cần hoàn tất vòng bảng để chốt lên/xuống hạng.");
   const changes = nationsMovements(s);
+  if (tiers.slice(1).some((t) => changes[t].up.length !== 4))
+    throw Error("Cần hoàn tất tứ kết B, C, D để chốt suất thăng hạng.");
   return Object.fromEntries(
     tiers.map((t, i) => [
       t,
@@ -137,15 +157,19 @@ export function nextDivisions(s: NationsSeason): Record<Tier, TeamId[]> {
     ]),
   ) as Record<Tier, TeamId[]>;
 }
-export function nationsBerths(g: ReturnType<typeof fullLeague>, tier: Tier) {
-  const top = groupBerths(g, tier === "A" ? 2 : 1),
+export function nationsBerths(
+  g: ReturnType<typeof fullLeague>,
+  tier: Tier,
+  allDivisions = false,
+) {
+  const top = groupBerths(g, tier === "A" || allDivisions ? 2 : 1),
     bottom = groupBerths(g, 3);
   return Object.fromEntries(
     g.teamIds.map((id) => [
       id,
       {
-        playoff: tier === "A" && top[id].qualified,
-        up: tier !== "A" && top[id].qualified,
+        playoff: (tier === "A" || allDivisions) && top[id].qualified,
+        up: tier !== "A" && !allDivisions && top[id].qualified,
         down: tier !== "D" && bottom[id].eliminated,
       },
     ]),
@@ -154,12 +178,21 @@ export function nationsBerths(g: ReturnType<typeof fullLeague>, tier: Tier) {
 export function drawNationsPlayoff(s: NationsSeason) {
   if (s.playoff || !nationsGroupsDone(s))
     throw Error("Hoàn tất cả 6 lượt trước khi bốc thăm playoff.");
-  const tables = s.divisions.A.groups.map(fullStandings),
+  s.playoff = drawDivisionPlayoff(s, "A");
+  if (nationsAllPlayoffs(s))
+    s.divisionPlayoffs = {
+      B: drawDivisionPlayoff(s, "B"),
+      C: drawDivisionPlayoff(s, "C"),
+      D: drawDivisionPlayoff(s, "D"),
+    };
+}
+function drawDivisionPlayoff(s: NationsSeason, tier: Tier) {
+  const tables = s.divisions[tier].groups.map(fullStandings),
     leaders = shuffle(tables.map((t) => t[0].id)),
     runners = shuffle(tables.map((t) => t[1].id)),
     pairs: [TeamId, TeamId][] = [];
   const group = (id: TeamId) =>
-    s.divisions.A.groups.findIndex((g) => g.teamIds.includes(id));
+    s.divisions[tier].groups.findIndex((g) => g.teamIds.includes(id));
   function place(i: number): boolean {
     if (i === 4) return true;
     for (const id of runners) {
@@ -172,15 +205,23 @@ export function drawNationsPlayoff(s: NationsSeason) {
     return false;
   }
   if (!place(0)) throw Error("Không thể bốc thăm tứ kết hợp lệ.");
-  s.playoff = {
-    qf: shuffle(pairs).map(([a, b], i) => ({ id: `NQ${i}`, a, b, sets: null })),
+  return {
+    qf: shuffle(pairs).map(([a, b], i) => ({
+      id: `N${tier === "A" ? "" : tier}Q${i}`,
+      a,
+      b,
+      sets: null,
+    })),
     sf: [],
     final: [],
     bronze: [],
   };
 }
 export function advanceNations(s: NationsSeason) {
-  const b = s.playoff;
+  for (const tier of tiers) advanceDivision(s, tier);
+}
+function advanceDivision(s: NationsSeason, tier: Tier) {
+  const b = nationsBracket(s, tier);
   if (!b) return;
   for (const [from, to, prefix] of [
     ["qf", "sf", "NS"],
@@ -190,12 +231,12 @@ export function advanceNations(s: NationsSeason) {
       continue;
     for (let i = 0; i < b[from].length; i += 2)
       b[to].push({
-        id: `${prefix}${i / 2}`,
+        id: `${tier === "A" ? prefix : "N" + tier + prefix.slice(1)}${i / 2}`,
         a: winner(b[from][i])!,
         b: winner(b[from][i + 1])!,
         sets: null,
       });
-    if (from === "sf")
+    if (from === "sf" && tier === "A")
       b.bronze = [
         { id: "NB0", a: loser(b.sf[0])!, b: loser(b.sf[1])!, sets: null },
       ];
@@ -214,11 +255,14 @@ export function nationsMatchLocked(s: NationsSeason, m: Match) {
       !!s.playoff ||
       g.rounds.findIndex((row) => row.includes(m)) > nationsCurrentRound(s)
     );
-  const b = s.playoff;
+  const tier = tiers.find((t) =>
+    nationsStages.some((k) => nationsBracket(s, t)?.[k].includes(m)),
+  );
+  const b = tier && nationsBracket(s, tier);
   if (!b) return true;
   if (b.qf.includes(m)) return !!b.sf.length;
   if (b.sf.includes(m)) return !!b.final.length;
-  if (b.final.includes(m)) return !b.bronze[0]?.sets;
+  if (b.final.includes(m)) return tier === "A" && !b.bronze[0]?.sets;
   return false;
 }
 export function recordNationsScore(
@@ -244,11 +288,14 @@ export function simulateNationsRound(s: NationsSeason, r: number) {
 export function finishNations(s: NationsSeason) {
   for (let r = 0; r < 6; r++) simulateNationsRoundIfOpen(s, r);
   if (!s.playoff) drawNationsPlayoff(s);
-  for (const k of nationsPlayOrder) {
-    s.playoff![k].filter((m) => !m.sets).forEach(simulate);
-    advanceNations(s);
-    stampNations(s);
-  }
+  for (const tier of tiers)
+    for (const k of nationsOrder(tier)) {
+      nationsBracket(s, tier)
+        ?.[k].filter((m) => !m.sets)
+        .forEach(simulate);
+      advanceNations(s);
+      stampNations(s);
+    }
 }
 function simulateNationsRoundIfOpen(s: NationsSeason, r: number) {
   if (!s.playoff) simulateNationsRound(s, r);
@@ -275,6 +322,7 @@ export function nationsPlacements(s: NationsSeason): Record<
 > {
   if (!nationsComplete(s)) return {};
   const out: ReturnType<typeof nationsPlacements> = {};
+  const movements = nationsMovements(s);
   tiers.forEach((tier, ti) =>
     s.divisions[tier].groups.forEach((g, group) =>
       fullStandings(g).forEach((t, i) => {
@@ -285,7 +333,7 @@ export function nationsPlacements(s: NationsSeason): Record<
           group,
           rank: i + 1,
           movement:
-            tier !== "A" && i === 0
+            tier !== "A" && movements[tier].up.includes(t.id)
               ? `Lên ${tiers[ti - 1]}`
               : tier !== "D" && i === 3
                 ? `Xuống ${tiers[ti + 1]}`
@@ -304,6 +352,19 @@ export function nationsPlacements(s: NationsSeason): Record<
     out[id].from = i + 1;
     out[id].to = i + 1;
   });
+  if (nationsAllPlayoffs(s))
+    tiers.slice(1).forEach((tier) => {
+      const b = nationsBracket(s, tier)!,
+        base = tiers.indexOf(tier) * 16;
+      const place = (id: TeamId, from: number, to = from) => {
+        out[id].from = base + from;
+        out[id].to = base + to;
+      };
+      b.qf.forEach((m) => place(loser(m)!, 5, 8));
+      b.sf.forEach((m) => place(loser(m)!, 3, 4));
+      place(winner(b.final[0])!, 1);
+      place(loser(b.final[0])!, 2);
+    });
   return out;
 }
 export function nationsStandingsAcross(s: NationsSeason, tier: Tier) {

@@ -104,6 +104,32 @@ const assert = require("node:assert/strict"),
   assert(d.querySelector('[data-place="3"]').textContent.includes("HẠNG BA"));
   click('[data-action="Nations.stage"][data-arg="final"]');
   assert.equal(n.selected().played, 200);
+  assert(!N.nationsComplete(n.selected().snapshot));
+  for (const tier of ["B", "C", "D"]) {
+    click(`[data-action="Nations.playoffTier"][data-arg="${tier}"]`);
+    assert.equal(d.querySelectorAll(".full-tree-match").length, 7);
+    assert.equal(d.querySelectorAll(".tree-bronze").length, 0);
+    assert.equal(d.querySelectorAll("[data-promoted-team]").length, 0);
+    click(`[data-action="Nations.stage"][data-arg="${tier}:qf"]`);
+    assert.equal(d.querySelectorAll("[data-promoted-team]").length, 4);
+    const promoted = [...d.querySelectorAll("[data-promoted-team]")].map(
+      (e) => e.dataset.promotedTeam,
+    );
+    const lowerFinal = n.selected().snapshot.divisionPlayoffs[tier].final;
+    assert.equal(lowerFinal.length, 0);
+    n.simulateNationsStage(`${tier}:final`);
+    assert.equal(n.selected().snapshot.divisionPlayoffs[tier].final.length, 0);
+    click(`[data-action="Nations.stage"][data-arg="${tier}:sf"]`);
+    click(`[data-action="Nations.stage"][data-arg="${tier}:final"]`);
+    assert.deepEqual(
+      [...d.querySelectorAll("[data-promoted-team]")].map(
+        (e) => e.dataset.promotedTeam,
+      ),
+      promoted,
+    );
+    assert(d.querySelector(`[data-division-champion="${tier}"]`));
+  }
+  assert.equal(n.selected().played, 221);
   assert(N.nationsComplete(n.selected().snapshot));
   const firstState = JSON.stringify(n.selected().snapshot);
   n.simulateNationsMatch(m.id);
@@ -155,6 +181,43 @@ const assert = require("node:assert/strict"),
   assert.equal(reload.w.__nations.nationsModel.records.length, 5);
   assert(reload.w.document.querySelector('[data-action="Nations.open"]'));
   reload.close();
+  const legacy = N.freshNationsSeason();
+  delete legacy.playoffFormat;
+  delete legacy.divisionPlayoffs;
+  N.finishNations(legacy);
+  const oldRow = {
+    season_id: legacy.seasonId,
+    season_number: legacy.seasonNumber,
+    created_at: legacy.createdAt,
+    campaign_id: legacy.campaignId,
+    cycle_number: 1,
+    previous_id: null,
+    status: "completed",
+    played: 200,
+    podium: N.nationsPodium(legacy),
+    revision: 0,
+    snapshot: legacy,
+    dirty: true,
+  };
+  const oldUi = ui("new", 833, {
+    "volleyworld-nations-guest": JSON.stringify([oldRow]),
+  });
+  const oldN = oldUi.w.__nations;
+  oldN.enterNations();
+  oldN.openNations(legacy.seasonId);
+  oldN.sectionNations("rules");
+  assert(oldUi.w.document.body.textContent.includes("200 trận"));
+  oldN.sectionNations("playoff");
+  assert.equal(
+    oldUi.w.document.querySelectorAll('[data-action="Nations.playoffTier"]')
+      .length,
+    0,
+  );
+  assert.equal(oldUi.w.document.querySelectorAll(".full-tree-match").length, 8);
+  await oldN.nextNationsSeason();
+  assert.equal(oldN.selected().total_matches, 221);
+  assert(N.validNationsTransition(legacy, oldN.selected().snapshot));
+  oldUi.close();
   console.log(
     "PASS Nations League UI: mode isolation, 16-group shared matchdays, set editor, history snapshots/form/rank, 8-slot connected bracket, stale dialog guard, bronze-first podium, completed summary, promotion continuation, independent chains, import and reload",
   );

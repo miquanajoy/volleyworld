@@ -28,6 +28,7 @@ function service(uid) {
         async range(a, b) {
           if (offline) return { error: { message: "offline" } };
           assert.equal(filters.user_id, uid);
+          assert(columns.includes("total_matches"));
           const rows = [...(remote.get(uid)?.values() || [])]
             .sort((a, b) => a.state.seasonNumber - b.state.seasonNumber)
             .slice(a, b + 1);
@@ -102,6 +103,7 @@ function meta(r) {
     season_number: r.state.seasonNumber,
     created_at: r.state.createdAt,
     status: N.nationsComplete(r.state) ? "completed" : "active",
+    total_matches: N.nationsTotalMatches(r.state),
     played: N.nationsMatches(r.state).filter((m) => m.sets).length,
     podium: N.nationsPodium(r.state),
     revision: r.revision,

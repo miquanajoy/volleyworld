@@ -2,6 +2,7 @@ import { get } from "../../data/teams";
 import * as N from "../../domain/nations-league/index";
 import type { ArchiveRecord } from "../shared/season-cloud";
 export interface NationsRecord extends ArchiveRecord<N.NationsSeason> {
+  total_matches?: 200 | 221;
   campaign_id: string;
   cycle_number: number;
   previous_id: string | null;
@@ -14,6 +15,7 @@ export const nationsModel = {
   selected: null as string | null,
   section: "overview",
   round: 0,
+  playoffTier: "A" as N.Tier,
   loading: false,
   error: "",
   honourTeam: "POL",
@@ -28,6 +30,7 @@ export function recordOf(s: N.NationsSeason, revision = 0): NationsRecord {
     cycle_number: s.cycleNumber,
     previous_id: s.previousSeasonId,
     status: N.nationsComplete(s) ? "completed" : "active",
+    total_matches: N.nationsTotalMatches(s),
     played: N.nationsMatches(s).filter((m) => m.sets).length,
     podium: N.nationsPodium(s),
     revision,
@@ -55,7 +58,8 @@ export function validRecord(value: unknown): value is NationsRecord {
       ["active", "completed"].includes(r.status) &&
       Number.isSafeInteger(r.played) &&
       r.played >= 0 &&
-      r.played <= 200 &&
+      r.played <= (r.total_matches || 221) &&
+      (r.total_matches === undefined || [200, 221].includes(r.total_matches)) &&
       Number.isSafeInteger(r.revision) &&
       r.revision >= 0 &&
       Array.isArray(r.podium) &&
@@ -64,6 +68,8 @@ export function validRecord(value: unknown): value is NationsRecord {
       (r.dirty === undefined || typeof r.dirty === "boolean") &&
       (!r.snapshot ||
         (N.validNationsSeason(r.snapshot) &&
+          (r.total_matches === undefined ||
+            r.total_matches === N.nationsTotalMatches(r.snapshot)) &&
           r.snapshot.seasonId === r.season_id &&
           r.snapshot.seasonNumber === r.season_number &&
           r.snapshot.campaignId === r.campaign_id &&

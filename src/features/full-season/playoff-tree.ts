@@ -45,7 +45,13 @@ export function connectedPlayoffTree(
   },
   readonly: boolean,
   renderTeam: TeamMarkup,
-  options: { start?: "r16" | "qf"; prefix?: string; label?: string } = {},
+  options: {
+    start?: "r16" | "qf";
+    prefix?: string;
+    label?: string;
+    bronze?: boolean;
+    stagePrefix?: string;
+  } = {},
 ) {
   const prefix = options.prefix || "Full",
     first = options.start || "r16",
@@ -62,7 +68,7 @@ export function connectedPlayoffTree(
     ][],
     advance = (m: Match | undefined, fallback: string) =>
       m?.sets ? winner(m)! : fallback;
-  return `<p class="tree-scroll-hint">Đọc từ trái sang phải · ${readonly ? "bấm vào trận để xem kết quả" : "bấm vào trận để xem, mô phỏng hoặc nhập điểm"} · cuộn ngang trên màn hình nhỏ.</p><div class="full-bracket full-playoff-tree ${first === "qf" ? "nations-playoff-tree" : ""}" tabindex="0" role="region" aria-label="${options.label || "Sơ đồ playoff thế giới, có thể cuộn ngang"}"><div class="playoff-tree-head">${stages.map(([k, label, n]) => `<div><span><b>${label}</b><small>${n} trận${k === "final" ? " + tranh hạng ba" : ""}</small></span>${!readonly && k !== "final" && b[k]?.some((m) => !m.sets) ? `<button data-action="${prefix}.stage" data-arg="${k}" aria-label="Mô phỏng ${label.toLowerCase()}">Chạy vòng</button>` : ""}</div>`).join("")}</div><div class="playoff-tree">${stages
+  return `<p class="tree-scroll-hint">Đọc từ trái sang phải · ${readonly ? "bấm vào trận để xem kết quả" : "bấm vào trận để xem, mô phỏng hoặc nhập điểm"} · cuộn ngang trên màn hình nhỏ.</p><div class="full-bracket full-playoff-tree ${first === "qf" ? "nations-playoff-tree" : ""}" tabindex="0" role="region" aria-label="${options.label || "Sơ đồ playoff thế giới, có thể cuộn ngang"}"><div class="playoff-tree-head">${stages.map(([k, label, n]) => `<div><span><b>${label}</b><small>${n} trận${k === "final" && options.bronze !== false ? " + tranh hạng ba" : ""}</small></span>${!readonly && k !== "final" && b[k]?.some((m) => !m.sets) ? `<button data-action="${prefix}.stage" data-arg="${options.stagePrefix || ""}${k}" aria-label="Mô phỏng ${label.toLowerCase()}">Chạy vòng</button>` : ""}</div>`).join("")}</div><div class="playoff-tree">${stages
     .map(
       ([key, label, n], stage) =>
         `<section class="tree-stage" ${key !== "final" ? `data-world-stage="${key}"` : ""} aria-label="${label}">${Array.from(
@@ -80,7 +86,7 @@ export function connectedPlayoffTree(
                 advance(b.qf[i * 2 + 1], `Thắng Q${i * 2 + 2}`),
               ];
             if (key === "final")
-              return `<div class="tree-node tree-medal-stack full-bracket-medals" style="grid-row:1 / span ${rows}"><section class="tree-final-slot has-prev" data-world-stage="final">${slot(b.final[0], "F · Chung kết", renderTeam, prefix, [advance(b.sf[0], "Thắng S1"), advance(b.sf[1], "Thắng S2")])}</section><section class="tree-bronze" data-world-stage="bronze"><h3>🥉 Tranh hạng ba</h3>${slot(b.bronze[0], "B · Tranh hạng ba", renderTeam, prefix, [b.sf[0]?.sets ? loser(b.sf[0])! : "Thua S1", b.sf[1]?.sets ? loser(b.sf[1])! : "Thua S2"])}</section></div>`;
+              return `<div class="tree-node tree-medal-stack full-bracket-medals" style="grid-row:1 / span ${rows}"><section class="tree-final-slot has-prev" data-world-stage="final">${slot(b.final[0], "F · Chung kết", renderTeam, prefix, [advance(b.sf[0], "Thắng S1"), advance(b.sf[1], "Thắng S2")])}</section>${options.bronze === false ? "" : `<section class="tree-bronze" data-world-stage="bronze"><h3>🥉 Tranh hạng ba</h3>${slot(b.bronze[0], "B · Tranh hạng ba", renderTeam, prefix, [b.sf[0]?.sets ? loser(b.sf[0])! : "Thua S1", b.sf[1]?.sets ? loser(b.sf[1])! : "Thua S2"])}</section>`}</div>`;
             const matchLabel =
               key === "r16"
                 ? `R${i + 1} · Nhánh ${"ABCD"[Math.floor(i / 2)]}`

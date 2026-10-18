@@ -254,7 +254,7 @@ const fs = require("node:fs"),
   click('[data-action="Nations.next"]');
   click('[data-action="Nations.finish"]');
   let nations = JSON.parse(w.localStorage.getItem("volleyworld-nations-guest"));
-  assert.equal(nations[0].played, 200);
+  assert.equal(nations[0].played, 221);
   assert.equal(nations[0].status, "completed");
   click('[data-action="Nations.section"][data-arg="overview"]');
   assert.equal(

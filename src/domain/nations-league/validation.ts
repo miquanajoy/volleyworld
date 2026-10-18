@@ -8,6 +8,8 @@ import {
   nationsGroupsDone,
   nationsComplete,
   nextDivisions,
+  nationsAllPlayoffs,
+  nationsBracket,
 } from "./index";
 const identity = (x: unknown): x is string =>
   typeof x === "string" && /^[a-zA-Z0-9-]{1,100}$/.test(x);
@@ -135,65 +137,89 @@ export function validNationsSeason(value: unknown): value is NationsSeason {
       }
     }
     if (!same(all, roster)) return false;
-    if (s.playoff === null) return true;
+    const extended = nationsAllPlayoffs(s);
+    if (s.playoffFormat !== undefined && !extended) return false;
     if (
-      !s.playoff ||
-      !nationsGroupsDone(s) ||
-      Object.keys(s.playoff).sort().join() !== [...nationsStages].sort().join()
+      extended
+        ? !s.divisionPlayoffs ||
+          Object.keys(s.divisionPlayoffs).sort().join() !== "B,C,D"
+        : s.divisionPlayoffs !== undefined
     )
       return false;
-    const b = s.playoff,
-      tables = s.divisions.A.groups.map(fullStandings),
-      leaders = tables.map((t) => t[0].id),
-      runners = tables.map((t) => t[1].id),
-      eligible = [...leaders, ...runners],
-      groupOf = (id: TeamId) =>
-        s.divisions.A.groups.findIndex((g) => g.teamIds.includes(id));
-    if (
-      !Array.isArray(b.qf) ||
-      b.qf.length !== 4 ||
-      !same(
-        b.qf.flatMap((m) => [m.a, m.b]),
-        eligible,
-      )
-    )
-      return false;
-    for (const [i, m] of b.qf.entries())
+    if (s.playoff === null)
+      return (
+        !extended ||
+        tiers
+          .slice(1)
+          .every((t) => s.divisionPlayoffs![t as "B" | "C" | "D"] === null)
+      );
+    for (const tier of extended ? tiers : (["A"] as const)) {
+      const bracket = nationsBracket(s, tier);
+      if (!bracket) return false;
       if (
-        !check(m, eligible, `NQ${i}`) ||
-        !leaders.includes(m.a) ||
-        !runners.includes(m.b) ||
-        groupOf(m.a) === groupOf(m.b)
+        !bracket ||
+        !nationsGroupsDone(s) ||
+        Object.keys(bracket).sort().join() !== [...nationsStages].sort().join()
       )
         return false;
-    for (const [from, to, prefix] of [
-      ["qf", "sf", "NS"],
-      ["sf", "final", "NF"],
-    ] as const) {
-      const ready = !!b[from].length && b[from].every((m) => m.sets);
+      const b = bracket,
+        tables = s.divisions[tier].groups.map(fullStandings),
+        leaders = tables.map((t) => t[0].id),
+        runners = tables.map((t) => t[1].id),
+        eligible = [...leaders, ...runners],
+        groupOf = (id: TeamId) =>
+          s.divisions[tier].groups.findIndex((g) => g.teamIds.includes(id));
       if (
-        !Array.isArray(b[to]) ||
-        b[to].length !== (ready ? b[from].length / 2 : 0)
+        !Array.isArray(b.qf) ||
+        b.qf.length !== 4 ||
+        !same(
+          b.qf.flatMap((m) => [m.a, m.b]),
+          eligible,
+        )
       )
         return false;
-      for (const [i, m] of b[to].entries())
+      for (const [i, m] of b.qf.entries())
         if (
-          !check(m, eligible, `${prefix}${i}`) ||
-          m.a !== winner(b[from][i * 2]) ||
-          m.b !== winner(b[from][i * 2 + 1])
+          !check(m, eligible, `N${tier === "A" ? "" : tier}Q${i}`) ||
+          !leaders.includes(m.a) ||
+          !runners.includes(m.b) ||
+          groupOf(m.a) === groupOf(m.b)
         )
           return false;
+      for (const [from, to, prefix] of [
+        ["qf", "sf", "NS"],
+        ["sf", "final", "NF"],
+      ] as const) {
+        const ready = !!b[from].length && b[from].every((m) => m.sets);
+        if (
+          !Array.isArray(b[to]) ||
+          b[to].length !== (ready ? b[from].length / 2 : 0)
+        )
+          return false;
+        for (const [i, m] of b[to].entries())
+          if (
+            !check(
+              m,
+              eligible,
+              `${tier === "A" ? prefix : "N" + tier + prefix.slice(1)}${i}`,
+            ) ||
+            m.a !== winner(b[from][i * 2]) ||
+            m.b !== winner(b[from][i * 2 + 1])
+          )
+            return false;
+      }
+      const bronzeReady =
+        tier === "A" && b.sf.length === 2 && b.sf.every((m) => m.sets);
+      if (!Array.isArray(b.bronze) || b.bronze.length !== (bronzeReady ? 1 : 0))
+        return false;
+      if (
+        bronzeReady &&
+        (!check(b.bronze[0], eligible, "NB0") ||
+          b.bronze[0].a !== loser(b.sf[0]) ||
+          b.bronze[0].b !== loser(b.sf[1]))
+      )
+        return false;
     }
-    const bronzeReady = b.sf.length === 2 && b.sf.every((m) => m.sets);
-    if (!Array.isArray(b.bronze) || b.bronze.length !== (bronzeReady ? 1 : 0))
-      return false;
-    if (
-      bronzeReady &&
-      (!check(b.bronze[0], eligible, "NB0") ||
-        b.bronze[0].a !== loser(b.sf[0]) ||
-        b.bronze[0].b !== loser(b.sf[1]))
-    )
-      return false;
     return true;
   } catch {
     return false;

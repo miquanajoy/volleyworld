@@ -8,6 +8,10 @@ for (let chain = 0; chain < 25; chain++) {
   let prev;
   for (let cycle = 1; cycle <= 5; cycle++) {
     const s = N.freshNationsSeason(chain * 5 + cycle, prev);
+    if (chain % 5 === 0) {
+      delete s.playoffFormat;
+      delete s.divisionPlayoffs;
+    }
     assert(N.validNationsSeason(s));
     assert.equal(s.cycleNumber, cycle);
     assert.equal(s.roster.length, 64);
@@ -52,7 +56,7 @@ for (let chain = 0; chain < 25; chain++) {
     N.finishNations(s);
     assert(N.nationsComplete(s));
     assert(N.validNationsSeason(s));
-    assert.equal(N.nationsMatches(s).length, 200);
+    assert.equal(N.nationsMatches(s).length, N.nationsTotalMatches(s));
     assert.equal(N.nationsPodium(s).length, 3);
     assert.equal(Object.keys(N.nationsPlacements(s)).length, 64);
     const moves = N.nationsMovements(s);
@@ -103,7 +107,7 @@ for (let i = 0; i < 20; i++) {
   for (let r = 0; r < 4; r++) N.simulateNationsRound(s, r);
   for (const tier of N.tiers)
     for (const g of s.divisions[tier].groups) {
-      const cert = N.nationsBerths(g, tier),
+      const cert = N.nationsBerths(g, tier, true),
         rest = g.rounds.flat().filter((m) => !m.sets);
       for (let mask = 0; mask < 1 << rest.length; mask++) {
         const c = copy(g),
@@ -125,7 +129,7 @@ for (let i = 0; i < 20; i++) {
     }
 }
 console.log(
-  `PASS Nations League engine: ${count} seasons, 64-team quotas, 16 seeded double round robins, synchronized matchdays, 200 matches, playoff routes, 4-up/4-down transitions, strict malformed-state rejection and exhaustive early-berth samples`,
+  `PASS Nations League engine: ${count} seasons, 64-team quotas, 16 seeded double round robins, synchronized matchdays, legacy 200 / new 221 matches, playoff routes, 4-up/4-down transitions, strict malformed-state rejection and exhaustive early-berth samples`,
 );
 // Concurrent alternative next seasons remain recoverable as two complete chains.
 const parent = N.freshNationsSeason();
@@ -144,3 +148,112 @@ for (const child of exported.filter((s) => s.cycleNumber === 2))
     ),
   );
 assert.throws(() => N.nationsExportSeasons([c1]));
+
+// Promotions are quarterfinal wins, independent of group placing or later losses.
+const promotionSeason = N.freshNationsSeason();
+for (let r = 0; r < 6; r++) N.simulateNationsRound(promotionSeason, r);
+assert.throws(() => N.nextDivisions(promotionSeason));
+for (const tier of ["B", "C", "D"]) {
+  const b = N.nationsBerths(
+    promotionSeason.divisions[tier].groups[0],
+    tier,
+    true,
+  );
+  assert.equal(Object.values(b).filter((x) => x.playoff).length, 2);
+  assert(Object.values(b).every((x) => !x.up));
+  assert.equal(N.nationsMovements(promotionSeason)[tier].up.length, 0);
+}
+N.drawNationsPlayoff(promotionSeason);
+for (const tier of ["B", "C", "D"]) {
+  const b = N.nationsBracket(promotionSeason, tier);
+  assert.equal(b.qf.length, 4);
+  for (const [i, m] of b.qf.entries()) {
+    const groups = promotionSeason.divisions[tier].groups;
+    assert.notEqual(
+      groups.findIndex((g) => g.teamIds.includes(m.a)),
+      groups.findIndex((g) => g.teamIds.includes(m.b)),
+    );
+    // Every runner-up upsets a group winner.
+    N.recordNationsScore(promotionSeason, m.id, [
+      [20, 25],
+      [20, 25],
+      [20, 25],
+    ]);
+    assert.equal(N.nationsMovements(promotionSeason)[tier].up.length, i + 1);
+    assert(N.nationsMovements(promotionSeason)[tier].up.includes(m.b));
+    assert(N.validNationsSeason(promotionSeason));
+  }
+  const promoted = [...N.nationsMovements(promotionSeason)[tier].up];
+  for (const m of b.sf)
+    N.recordNationsScore(promotionSeason, m.id, [
+      [25, 20],
+      [25, 20],
+      [25, 20],
+    ]);
+  N.recordNationsScore(promotionSeason, b.final[0].id, [
+    [25, 20],
+    [25, 20],
+    [25, 20],
+  ]);
+  assert.deepEqual(N.nationsMovements(promotionSeason)[tier].up, promoted);
+  assert.equal(b.bronze.length, 0);
+  assert(N.nationsMatchLocked(promotionSeason, b.qf[0]));
+}
+assert(!N.nationsComplete(promotionSeason));
+N.finishNations(promotionSeason);
+assert(N.validNationsSeason(promotionSeason));
+assert.equal(N.nationsMatches(promotionSeason).length, 221);
+for (const tier of ["B", "C", "D"]) {
+  const b = N.nationsBracket(promotionSeason, tier),
+    base = N.tiers.indexOf(tier) * 16;
+  const p = N.nationsPlacements(promotionSeason);
+  assert.equal(p[V.winner(b.final[0])].from, base + 1);
+  assert.equal(p[V.loser(b.final[0])].from, base + 2);
+  for (const m of b.sf) {
+    assert.deepEqual(
+      [p[V.loser(m)].from, p[V.loser(m)].to],
+      [base + 3, base + 4],
+    );
+    assert.match(p[V.loser(m)].movement, /Lên/);
+  }
+  for (const m of b.qf) assert.equal(p[V.loser(m)].movement, "Giữ hạng");
+}
+for (const change of [
+  (s) => {
+    s.playoffFormat = "unknown";
+  },
+  (s) => {
+    delete s.divisionPlayoffs;
+  },
+  (s) => {
+    s.divisionPlayoffs.B = null;
+  },
+  (s) => {
+    s.divisionPlayoffs.B.bronze = [s.playoff.bronze[0]];
+  },
+  (s) => {
+    s.divisionPlayoffs.B.qf[0].resultOrder = s.playoff.qf[0].resultOrder;
+  },
+  (s) => {
+    s.divisionPlayoffs.B.sf[0].a = s.divisionPlayoffs.B.qf[0].a;
+  },
+  (s) => {
+    s.divisionPlayoffs.B.qf[0].id = "NQ0";
+  },
+]) {
+  const bad = copy(promotionSeason);
+  change(bad);
+  assert(!N.validNationsSeason(bad));
+}
+const old = N.freshNationsSeason();
+delete old.playoffFormat;
+delete old.divisionPlayoffs;
+N.finishNations(old);
+assert(N.validNationsSeason(old));
+assert.equal(N.nationsMatches(old).length, 200);
+const modernChild = N.freshNationsSeason(2, old);
+assert(N.nationsAllPlayoffs(modernChild));
+assert(N.validNationsTransition(old, modernChild));
+console.log(
+  "PASS promotion playoffs: immediate QF berths, runner-up upsets, fixed routes, no bronze B/C/D, finals required, stable promotions, final rank bands, malformed state rejection, legacy-to-new continuation",
+);
