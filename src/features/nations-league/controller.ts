@@ -224,9 +224,8 @@ export function showNationsMatch(id: string) {
   if (!s || !m) return;
   dialogContext = { scope: model.scope, row, snapshot: s, id };
   const locked = view.readonly() || N.nationsMatchLocked(s, m);
-  $("playoffMatchTitle").textContent = "Chi tiết trận Nations League";
-  $("playoffMatchBody").innerHTML =
-    `<h3>${team(m.a)} – ${team(m.b)}</h3><p>${m.sets ? "Kết quả " + score(m).join("–") : "Chưa thi đấu"}</p>${m.sets ? m.sets.map(([a, b], i) => `<p>Set ${i + 1}: <b>${a}–${b}</b></p>`).join("") : ""}<div class="actions">${locked ? '<span class="badge">CHỈ XEM · KẾT QUẢ ĐÃ KHÓA</span>' : `${!m.sets ? '<button class="primary" data-action="Nations.dialogSim">Mô phỏng trận</button>' : ""}<button data-action="Nations.dialogEdit">${m.sets ? "Sửa điểm" : "Nhập điểm"}</button>`}</div>`;
+  $("playoffMatchTitle").textContent = "Chi tiết trận đấu";
+  $("playoffMatchBody").innerHTML = view.matchDetailHtml(s, m, locked);
   $("playoffMatchDialog").showModal();
 }
 export function actNationsDialog(edit = false) {

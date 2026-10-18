@@ -11,7 +11,7 @@ import {
 import { seasonTeam, seasonMatchCard } from "../../components/season-match";
 import { medalPodiumHtml } from "../../components/podium";
 import { team } from "../../components/team";
-import { winner, loser } from "../../domain/match/scoring";
+import { score, winner, loser } from "../../domain/match/scoring";
 import type { Match } from "../../domain/types";
 import { regionOrder } from "../../domain/full-season/types";
 import { get, regionTeams } from "../../data/teams";
@@ -213,4 +213,22 @@ export function rulesHtml(open = true) {
           .join("")}</section>`,
     )
     .join("")}</div></details>`;
+}
+
+export function matchDetailHtml(s: N.NationsSeason, m: Match, locked: boolean) {
+  const group = N.nationsGroups(s).find((g) => g.rounds.flat().includes(m)),
+    tier = N.tiers.find((t) =>
+      s.divisions[t].groups.some((g) => g.teamIds.includes(m.a)),
+    ),
+    stage = N.nationsStages.find((k) => s.playoff?.[k].includes(m)),
+    label =
+      group && tier
+        ? `Division ${tier} · Bảng ${s.divisions[tier].groups.indexOf(group) + 1} · Vòng ${group.rounds.findIndex((r) => r.includes(m)) + 1}`
+        : stage
+          ? `Division A · ${stageNames[stage]}`
+          : "Nations League",
+    result = score(m),
+    win = winner(m),
+    waitingBronze = s.playoff?.final.includes(m) && !s.playoff.bronze[0]?.sets;
+  return `<section class="nations-match-detail"><div class="nations-match-meta"><div><span class="eyebrow">NATIONS LEAGUE · MÙA ${s.cycleNumber}</span><p>${label}</p></div><span class="nations-match-status ${m.sets ? "is-complete" : ""}">${m.sets ? "✓ Đã thi đấu" : "Chưa thi đấu"}</span></div><div class="nations-match-scoreboard">${[m.a, m.b].map((id, i) => `${i ? `<div class="nations-match-score" aria-label="${m.sets ? "Tỉ số set " + result.join("–") : "Trận chưa thi đấu"}"><strong>${m.sets ? `${result[0]}<span>–</span>${result[1]}` : "VS"}</strong><small>${m.sets ? "TỈ SỐ SET" : "BEST OF 5"}</small></div>` : ""}<div class="nations-match-team ${win === id ? "is-winner" : ""}">${seasonTeam(id, N.nationsMatches(s))}${win ? `<span class="nations-match-outcome">${win === id ? "Đội thắng" : "Đội thua"}</span>` : ""}</div>`).join("")}</div>${m.sets ? `<div class="nations-match-sets table-wrap"><table aria-label="Điểm từng set"><thead><tr><th>ĐỘI TUYỂN</th>${m.sets.map((_, i) => `<th>SET ${i + 1}</th>`).join("")}</tr></thead><tbody>${[m.a, m.b].map((id, i) => `<tr><th scope="row">${team(id)}</th>${m.sets!.map((pair) => `<td class="${pair[i] > pair[1 - i] ? "set-winner" : ""}">${pair[i]}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : '<p class="nations-match-help">Mô phỏng hoặc nhập điểm để bắt đầu trận đấu.</p>'}${locked ? `<p class="nations-match-lock" role="status">${waitingBronze ? "Hoàn tất trận tranh hạng ba để mở chung kết." : selected()?.status === "completed" ? "Mùa giải đã hoàn tất · Chỉ xem kết quả" : m.sets ? "Kết quả đã khóa · Chỉ xem" : "Trận đấu chưa mở"}</p>` : `<div class="nations-match-actions">${!m.sets ? '<button class="primary" data-action="Nations.dialogSim"><span aria-hidden="true">▶</span> Mô phỏng trận</button>' : ""}<button ${m.sets ? 'class="primary"' : ""} data-action="Nations.dialogEdit">${m.sets ? "Chỉnh sửa điểm" : "Nhập điểm thủ công"}</button></div>`}</section>`;
 }
