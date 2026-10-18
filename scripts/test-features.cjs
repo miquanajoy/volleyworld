@@ -14,6 +14,7 @@ for (const file of [
   "full-season",
   "full-season-groups",
   "full-playoff-tree",
+  "full-world-matchdays",
   "full-season-cloud",
 ]) {
   const r = spawnSync(process.execPath, ["tests/features/" + file + ".cjs"], {

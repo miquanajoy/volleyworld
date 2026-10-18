@@ -150,3 +150,11 @@ Triển khai trực tiếp trên `main`. Các mục mô tả league chung và 1.
 - Save mới có `regionalFormat: "groups-v1"`; save không có marker giữ nguyên thể thức cũ. Không tự chuyển lịch hoặc sửa mùa đang chơi/đã hoàn tất. Người chơi tạo mùa Full Season mới để dùng thể thức này.
 - Mỗi trận chỉ lưu một lần trong `regions[r].rounds`; `groups` chỉ lưu danh sách đội. Trận tranh suất lưu riêng ở `decider`; tổng trận, thống kê phong độ, nhập/xuất và cloud đều tính cả trận này.
 - Kiểm thử: `tests/features/full-season-groups.cjs`; giữ bộ legacy Full Season; `supabase/tests/full_season_groups.sql` được sinh bằng `node scripts/full-season-groups-sql.cjs` sau khi build test engine. Toàn bộ ghi dữ liệu kiểm thử SQL được rollback.
+
+## 12. Lượt đấu chung vòng bảng thế giới
+
+- Cả sáu bảng thi đấu theo lượt: 12 trận vòng 1 → 12 trận vòng 2 → 12 trận vòng 3. Nút chạy vòng từ tổng quan hoặc một bảng đều xử lý các trận chưa đấu của cả sáu bảng trong lượt đang chọn.
+- Chỉ mở lượt kế tiếp khi toàn bộ lượt trước đã hoàn tất. Không nhập/mô phỏng trận thuộc lượt tương lai. Nút mô phỏng hết mùa vẫn là thao tác toàn mùa riêng biệt.
+- Tổng quan hiển thị lịch 12 trận của lượt và BXH sáu bảng tới lượt đang xem. Thanh chọn nhanh A–F và nút trở về tất cả bảng giữ nguyên lượt khi chuyển bảng. Khu vực chia bảng cũng có thanh chọn nhanh và nút về tổng quan khu vực.
+- Có thể quay lại các lượt trước; BXH và cuộc đua hạng ba không tính kết quả tương lai. Save cũ có tiến độ lệch bảng giữ nguyên mọi điểm đã nhập, tiếp tục từ lượt chung chưa hoàn tất, không mô phỏng lại trận đã có kết quả.
+- Thay đổi áp dụng cả mùa đang chơi, không cần migration hoặc tạo lại mùa. Kiểm thử: `tests/features/full-world-matchdays.cjs`.

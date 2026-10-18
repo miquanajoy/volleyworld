@@ -14,6 +14,7 @@ import {
   drawWorld,
   drawWorldPlayoff,
   worldComplete,
+  worldCurrentRound,
 } from "./world";
 export * from "./types";
 export * from "./league";
@@ -67,8 +68,13 @@ export function fullMatchLocked(s: FullSeason, m: Match) {
     if (g.decider === m) return !!s.world;
     if (leagueMatches(g).includes(m)) return !!s.world || !!g.decider;
   }
-  if (s.world?.groups.some((g) => leagueMatches(g).includes(m)))
-    return !!s.world.bracket;
+  const worldGroup = s.world?.groups.find((g) => leagueMatches(g).includes(m));
+  if (worldGroup && s.world)
+    return (
+      !!s.world.bracket ||
+      worldGroup.rounds.findIndex((row) => row.includes(m)) >
+        worldCurrentRound(s.world)
+    );
   const b = s.world?.bracket;
   if (!b) return false;
   if (b.r16.includes(m)) return !!b.qf.length;

@@ -83,7 +83,7 @@ export function regionHtml(s: FullSeason, r: Region, readonly: boolean) {
   const complete = F.regionalDone(g),
     qualified = complete ? F.regionQualifiers(g, r) : [],
     direct = F.groupDirectSlots[r];
-  return `<div class="section-head"><div><h3>${names[r]} · Vòng bảng</h3><p class="sub">${F.regionalDescription(s, r)} · chia nhóm hạt giống theo BXH thế giới.</p></div></div>
+  return `${groupNavigation(s)}<div class="section-head"><div><h3>${names[r]} · Vòng bảng</h3><p class="sub">${F.regionalDescription(s, r)} · chia nhóm hạt giống theo BXH thế giới.</p></div></div>
   <div class="full-groups">${g.groups
     .map((_, i) => {
       const group = F.regionalGroup(g, i),
@@ -102,9 +102,41 @@ export function regionHtml(s: FullSeason, r: Region, readonly: boolean) {
     )}</div>${g.decider !== undefined ? `<section class="panel full-regional-decider"><h3>Tranh suất thế giới cuối · BO5</h3><p class="sub">Hai đội hạng ${direct + 1} gặp nhau sau khi tất cả trận vòng bảng khu vực hoàn tất. Kết quả vòng bảng khóa khi trận này được tạo.</p>${g.decider ? fullCard(s, g.decider, readonly) : "<p>Chờ hoàn tất cả hai bảng.</p>"}</section>` : ""}
   <details class="panel full-pots"><summary>Nhóm hạt giống đã bốc thăm</summary><div class="full-groups">${g.pots!.map((p, i) => `<section><h4>Nhóm ${i + 1}</h4>${p.map((id) => `<p>${team(id)}</p>`).join("")}</section>`).join("")}</div></details>`;
 }
+export function groupNavigation(s: FullSeason) {
+  const region = F.regionOrder.find(
+      (r) =>
+        s.regions[r].groups &&
+        (fullModel.section === r || fullModel.section.startsWith(`${r}G`)),
+    ),
+    world = fullModel.section === "world" || fullModel.section.startsWith("WG"),
+    parent = world ? "world" : region;
+  if (!parent) return "";
+  const count = world ? 6 : s.regions[region!].groups!.length;
+  return `<nav class="full-group-nav" aria-label="Chọn nhanh bảng đấu"><button data-action="Full.section" data-arg="${parent}" aria-current="${fullModel.section === parent ? "page" : "false"}">← ${world ? "Tất cả 6 bảng" : "Tổng quan khu vực"}</button>${Array.from(
+    { length: count },
+    (_, i) => {
+      const key = world ? `WG${i}` : `${region}G${i}`;
+      return `<button data-action="Full.section" data-arg="${key}" aria-current="${fullModel.section === key ? "page" : "false"}">Bảng ${"ABCDEF"[i]}</button>`;
+    },
+  ).join("")}</nav>`;
+}
+export function worldRoundsToolbar(s: FullSeason, readonly: boolean) {
+  const w = s.world!,
+    round = Math.min(fullModel.round, F.worldCurrentRound(w)),
+    matches = F.worldRoundMatches(w, round),
+    count = matches.filter((m) => m.sets).length,
+    done = count === matches.length;
+  return `<section class="panel full-world-round-controls" data-world-round="${round}"><div><span class="eyebrow">LƯỢT ĐẤU CHUNG · 6 BẢNG</span><h3>Vòng ${round + 1} / 3</h3><p class="sub">${count}/${matches.length} trận hoàn tất · chỉ qua vòng mới khi cả 6 bảng đã xong.</p></div><div class="controls"><label>Chọn vòng <select data-action="Full.round" data-trigger="change" aria-label="Chọn vòng chung của 6 bảng thế giới">${[0, 1, 2].map((r) => `<option value="${r}" ${r === round ? "selected" : ""} ${r > F.worldCurrentRound(w) ? "disabled" : ""}>Vòng ${r + 1}${F.worldRoundMatches(w, r).every((m) => m.sets) ? " ✓" : ""}</option>`).join("")}</select></label>${readonly ? (w.bracket ? '<button data-action="Full.section" data-arg="playoff">Xem playoff →</button>' : '<span class="badge">CHỈ XEM</span>') : done ? (round < 2 ? '<button class="primary" data-action="Full.next">Qua vòng tiếp theo →</button>' : '<button class="primary" data-action="Full.drawPlayoff">Bốc thăm playoff 16 đội →</button>') : `<button class="primary" data-action="Full.simRound">Chạy vòng ${round + 1} · cả 6 bảng</button>`}</div></section>`;
+}
 export function worldHtml(s: FullSeason) {
-  const w = s.world;
-  if (!w) return overviewHtml(s);
+  const actual = s.world;
+  if (!actual) return overviewHtml(s);
+  const round = Math.min(fullModel.round, F.worldCurrentRound(actual)),
+    w = F.worldAtRound(actual, round),
+    readonly =
+      selectedFull()?.status === "completed" ||
+      selectedFull()?.phase === "conflict" ||
+      !!actual.bracket;
   const all = w.groups.every(F.fullLeagueDone),
     qualified = all
       ? F.worldEntrants(w)
@@ -112,10 +144,10 @@ export function worldHtml(s: FullSeason) {
           const berths = F.groupBerths(g, 2);
           return g.teamIds.filter((id) => berths[id].qualified);
         });
-  return `<div class="section-head"><div><h3>Vòng bảng thế giới</h3><p class="sub">6 bảng × 4 đội · mỗi nhóm hạt giống một đội/bảng · tối đa 2 đội cùng khu vực.</p></div>${w.bracket ? '<button class="primary" data-action="Full.section" data-arg="playoff">Xem playoff →</button>' : `<button class="primary" data-action="Full.drawPlayoff" ${all ? "" : "disabled"}>Bốc thăm playoff 16 đội</button>`}</div><div class="full-groups">${w.groups
+  return `<div class="section-head"><div><h3>Vòng bảng thế giới</h3><p class="sub">6 bảng × 4 đội · mỗi nhóm hạt giống một đội/bảng · tối đa 2 đội cùng khu vực.</p></div>${w.bracket ? '<button class="primary" data-action="Full.section" data-arg="playoff">Xem playoff →</button>' : `<button class="primary" data-action="Full.drawPlayoff" ${all ? "" : "disabled"}>Bốc thăm playoff 16 đội</button>`}</div>${groupNavigation(s)}${worldRoundsToolbar(s, readonly)}<div class="full-groups full-world-matchday">${w.groups
     .map(
       (g, i) =>
-        `<section class="panel full-group"><div class="section-head"><h3>Bảng ${"ABCDEF"[i]}</h3><span class="badge">${F.leagueMatches(g).filter((m) => m.sets).length}/6 trận</span></div>${F.fullStandings(
+        `<section class="panel full-group"><div class="section-head"><h3>Bảng ${"ABCDEF"[i]}</h3><span class="badge">Vòng ${round + 1} · ${g.rounds[round].filter((m) => m.sets).length}/2 trận</span></div>${F.fullStandings(
           g,
         )
           .map(
@@ -124,7 +156,7 @@ export function worldHtml(s: FullSeason) {
           )
           .join(
             "",
-          )}<button data-action="Full.section" data-arg="WG${i}">Lịch & BXH bảng →</button></section>`,
+          )}<div class="full-world-round-fixtures">${actual.groups[i].rounds[round].map((m) => fullCard(s, m, readonly)).join("")}</div><button data-action="Full.section" data-arg="WG${i}">Xem riêng bảng & BXH →</button></section>`,
     )
     .join(
       "",
@@ -159,7 +191,7 @@ export function leagueHtml(
     bye = g.teamIds.filter(
       (id) => !matches.some((m) => m.a === id || m.b === id),
     );
-  return `<div class="section-head"><div><h3>${label}</h3><p class="sub">${g.teamIds.length} đội · ${g.rounds.length} vòng · ${slots ? `Top ${slots} giành vé${contender ? ` · hạng ${slots + 1} tranh suất cuối` : ""}` : "Hai đội đầu bảng và xét đội hạng ba"}</p></div><div class="controls"><select data-action="Full.round" data-trigger="change" aria-label="Chọn vòng Full Season">${g.rounds.map((r, i) => `<option value="${i}" ${i === round ? "selected" : ""}>Vòng ${i + 1}${r.every((m) => m.sets) ? " ✓" : ""}</option>`).join("")}</select>${locked ? '<span class="badge">CHỈ XEM · KẾT QUẢ ĐÃ KHÓA</span>' : `${done ? `<button class="primary" data-action="Full.next">${round === g.rounds.length - 1 ? (region && s.regions[region].groups ? "Về khu vực →" : "Về tổng quan") : "Qua vòng tiếp theo →"}</button>` : `<button class="primary" data-action="Full.simRound">Chạy vòng ${round + 1}</button>`}<button data-action="Full.simLeague" ${F.fullLeagueDone(g) ? "disabled" : ""}>Chạy hết league này</button>`}</div></div>${bye.length ? `<div class="notice">Nghỉ vòng ${round + 1}: ${bye.map((id) => team(id)).join("")}. Không tính trận thắng/thua.</div>` : ""}<div class="grid">${matches.map((m) => fullCard(s, m, locked)).join("")}</div><details class="panel full-league-table" open><summary>BXH ${label}</summary>${fullStandingsTable(g, slots, round, contender)}</details>`;
+  return `${groupNavigation(s)}${region ? "" : worldRoundsToolbar(s, locked)}<div class="section-head"><div><h3>${label}</h3><p class="sub">${g.teamIds.length} đội · ${g.rounds.length} vòng · ${slots ? `Top ${slots} giành vé${contender ? ` · hạng ${slots + 1} tranh suất cuối` : ""}` : "Hai đội đầu bảng và xét đội hạng ba"}</p></div><div class="controls">${region ? `<select data-action="Full.round" data-trigger="change" aria-label="Chọn vòng Full Season">${g.rounds.map((r, i) => `<option value="${i}" ${i === round ? "selected" : ""}>Vòng ${i + 1}${r.every((m) => m.sets) ? " ✓" : ""}</option>`).join("")}</select>${locked ? '<span class="badge">CHỈ XEM · KẾT QUẢ ĐÃ KHÓA</span>' : `${done ? `<button class="primary" data-action="Full.next">${round === g.rounds.length - 1 ? (region && s.regions[region].groups ? "Về khu vực →" : "Về tổng quan") : "Qua vòng tiếp theo →"}</button>` : `<button class="primary" data-action="Full.simRound">Chạy vòng ${round + 1}</button>`}<button data-action="Full.simLeague" ${F.fullLeagueDone(g) ? "disabled" : ""}>Chạy hết league này</button>`}` : ""}</div></div>${bye.length ? `<div class="notice">Nghỉ vòng ${round + 1}: ${bye.map((id) => team(id)).join("")}. Không tính trận thắng/thua.</div>` : ""}<div class="grid">${matches.map((m) => fullCard(s, m, locked)).join("")}</div><details class="panel full-league-table" open><summary>BXH ${label}</summary>${fullStandingsTable(g, slots, round, contender)}</details>`;
 }
 export const stageNames: Record<WorldStage, string> = {
   r16: "Vòng 16 đội",

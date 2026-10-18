@@ -126,7 +126,15 @@ export function sectionFull(section: string) {
     !s.world
   )
     return;
+  const previous = fullModel.section;
   fullModel.section = section;
+  if (s.world && (section === "world" || section.startsWith("WG"))) {
+    if (!(previous === "world" || previous.startsWith("WG")))
+      fullModel.round = F.worldCurrentRound(s.world);
+    fullModel.round = Math.min(fullModel.round, F.worldCurrentRound(s.world));
+    getPorts().commands.render();
+    return;
+  }
   const league = source(s);
   const unfinished =
     league?.rounds.findIndex((r) => r.some((m) => !m.sets)) ?? -1;
@@ -141,6 +149,16 @@ export function setFullRound(value: string) {
   const s = selectedFull()?.snapshot,
     g = s && source(s),
     r = Number(value);
+  if (
+    s?.world &&
+    (fullModel.section === "world" || fullModel.section.startsWith("WG"))
+  ) {
+    if (!Number.isInteger(r) || r < 0 || r > F.worldCurrentRound(s.world))
+      return;
+    fullModel.round = r;
+    getPorts().commands.render();
+    return;
+  }
   if (!g || !Number.isInteger(r) || r < 0 || r >= g.rounds.length) return;
   fullModel.round = r;
   getPorts().commands.render();
@@ -148,6 +166,17 @@ export function setFullRound(value: string) {
 export function nextFullRound() {
   const s = selectedFull()?.snapshot,
     g = s && source(s);
+  if (
+    s?.world &&
+    (fullModel.section === "world" || fullModel.section.startsWith("WG"))
+  ) {
+    if (!F.worldRoundMatches(s.world, fullModel.round).every((m) => m.sets))
+      return;
+    if (fullModel.round < 2) fullModel.round++;
+    else fullModel.section = "world";
+    getPorts().commands.render();
+    return;
+  }
   if (!g || !g.rounds[fullModel.round]?.every((m) => m.sets)) return;
   if (fullModel.round < g.rounds.length - 1) fullModel.round++;
   else
@@ -170,8 +199,31 @@ export function simulateFullMatch(id: string) {
 }
 export function simulateFullRound(all = false) {
   run(() => {
-    if (all && !confirm("Mô phỏng các trận chưa đấu của league này?")) return;
+    const isWorld =
+      fullModel.section === "world" || fullModel.section.startsWith("WG");
+    if (
+      all &&
+      !confirm(
+        isWorld
+          ? "Mô phỏng hết cả 3 vòng của 6 bảng thế giới?"
+          : "Mô phỏng các trận chưa đấu của league này?",
+      )
+    )
+      return;
     mutate((s) => {
+      if (isWorld && s.world) {
+        if (s.world.bracket)
+          throw Error("Vòng bảng đã khóa sau khi tạo playoff.");
+        if (fullModel.round > F.worldCurrentRound(s.world))
+          throw Error("Cần hoàn tất vòng hiện tại của cả 6 bảng.");
+        const rounds = all ? [0, 1, 2] : [fullModel.round];
+        for (const r of rounds)
+          F.worldRoundMatches(s.world, r)
+            .filter((m) => !m.sets)
+            .forEach(simulate);
+        if (all) fullModel.round = 2;
+        return;
+      }
       const g = source(s);
       if (!g) throw Error("Chưa chọn giải.");
       const matches = all ? F.leagueMatches(g) : g.rounds[fullModel.round];
@@ -186,7 +238,11 @@ export function drawFullWorld() {
   run(() => mutate(F.drawWorld));
 }
 export function drawFullPlayoff() {
-  run(() => mutate(F.drawWorldPlayoff));
+  run(() => {
+    mutate(F.drawWorldPlayoff);
+    fullModel.section = "playoff";
+    getPorts().commands.render();
+  });
 }
 export function simulateFullStage(stage: string) {
   run(() =>
@@ -509,6 +565,11 @@ function renderFullContent() {
         .finally(() => loading.delete(key));
     }
   } else {
+    if (
+      s.world &&
+      (fullModel.section === "world" || fullModel.section.startsWith("WG"))
+    )
+      fullModel.round = Math.min(fullModel.round, F.worldCurrentRound(s.world));
     html += view.selectedHeader(s);
     const g = source(s),
       region = F.regionOrder.find(

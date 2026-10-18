@@ -1,4 +1,5 @@
 import { get } from "../../data/teams";
+import { leagueRoundSnapshot } from "../league/round-standings";
 import { loser, winner } from "../match/scoring";
 import { shuffle } from "../shared/random";
 import type { TeamId } from "../types";
@@ -15,6 +16,18 @@ import {
   type WorldStage,
 } from "./types";
 import { regionalDone, regionQualifiers } from "./regional";
+/** Global matchdays: every group completes a round before the next opens. */
+export function worldRoundMatches(w: WorldCup, round: number) {
+  return w.groups.flatMap((g) => g.rounds[round] || []);
+}
+export function worldCurrentRound(w: WorldCup) {
+  return (
+    [0, 1, 2].find((r) => worldRoundMatches(w, r).some((m) => !m.sets)) ?? 2
+  );
+}
+export function worldAtRound(w: WorldCup, round: number): WorldCup {
+  return { ...w, groups: w.groups.map((g) => leagueRoundSnapshot(g, round)) };
+}
 export function regionalQualifiers(s: FullSeason): TeamId[] {
   if (!regionOrder.every((r) => regionalDone(s.regions[r])))
     throw Error("Cần hoàn tất cả 5 giải khu vực.");

@@ -1177,3 +1177,60 @@
 .full-playoff-tree .full-bracket-medals {
   display: block;
 }
+
+.full-group-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+.full-group-nav button[aria-current="page"] {
+  background: var(--green);
+  border-color: var(--green);
+  color: white;
+}
+.full-world-round-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.full-world-round-controls h3 {
+  margin: 8px 0;
+}
+.full-world-round-controls .sub {
+  margin-bottom: 0;
+}
+.full-world-round-controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.full-world-round-fixtures {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+.full-world-matchday > .full-group {
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .full-world-round-controls {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .full-world-round-controls .controls {
+    width: 100%;
+  }
+  .full-group-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .full-group-nav button {
+    flex-shrink: 0;
+  }
+}
