@@ -2393,3 +2393,87 @@
     padding: 14px;
   }
 }
+
+/* Regional and intercontinental qualification brackets share match controls. */
+.qualification-tree {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding: 18px;
+  margin: 18px 0 28px;
+  background: #f1f5ec;
+  border: 1px solid #dfe6d8;
+  border-radius: 12px;
+  align-items: flex-start;
+}
+.qualification-round {
+  display: grid;
+  gap: 14px;
+  flex: 0 0 300px;
+  min-width: 0;
+}
+.qualification-round > .section-head {
+  min-height: 50px;
+  margin: 0;
+}
+.qualification-round h4 {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+.qualification-round .section-head button {
+  padding: 7px 9px;
+  font-size: 10px;
+}
+.qualification-tree .full-match {
+  margin: 0;
+}
+.qualification-byes {
+  padding: 14px;
+  background: #fff;
+  border: 1px dashed #cbd8bf;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.qualification-byes summary {
+  cursor: pointer;
+  color: var(--green);
+  font-weight: 600;
+}
+.qualification-byes p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.qualification-byes .team {
+  font-size: 12px;
+}
+.qualification-winner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 18px 20px;
+  border-color: #b8cfa7;
+  background: #f1f7e9;
+}
+.qualification-winner > span:first-child {
+  color: var(--green);
+  font-size: 10px;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+.qualification-seed-note {
+  line-height: 1.7;
+}
+.qualification-branch {
+  margin-top: 30px;
+}
+@media (max-width: 600px) {
+  .qualification-tree {
+    padding: 12px;
+    gap: 12px;
+  }
+  .qualification-round {
+    flex-basis: 280px;
+  }
+}

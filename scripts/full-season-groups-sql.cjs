@@ -2,7 +2,7 @@
 // node scripts/build-test.cjs && node scripts/full-season-groups-sql.cjs > /tmp/full-season-groups.sql
 const fs = require("node:fs"),
   F = require("../.test-build/full-engine.js");
-const fresh = F.freshFullSeason(),
+const fresh = F.freshFullSeason(1, "groups"),
   pending = structuredClone(fresh);
 F.regionOrder.forEach((r) => F.simulateLeague(pending.regions[r]));
 F.advanceRegions(pending);

@@ -1,6 +1,6 @@
 const fs = require("node:fs"),
   F = require("../.test-build/full-engine.js");
-const fresh = F.freshFullSeason(),
+const fresh = F.freshFullSeason(1, "legacy"),
   complete = structuredClone(fresh);
 F.finishFullSeason(complete);
 const quote = (s) => JSON.stringify(s).replaceAll("'", "''");

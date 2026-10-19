@@ -1,5 +1,7 @@
 # Full Season implementation
 
+New seasons now use [World Cup qualification v2](WORLD-CUP-QUALIFICATION-V2.md): 6–7-team groups, regional playoffs and three intercontinental Play-in branches, 366 matches total. The original format below documents preserved legacy seasons.
+
 Branch: `feature/full-season-mode`. The approved plan remains in [FULL-SEASON-PLAN.md](FULL-SEASON-PLAN.md). This change does not merge into main.
 
 ## Play flow

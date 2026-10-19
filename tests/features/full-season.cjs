@@ -137,7 +137,7 @@ for (let i = 0; i < 40; i++) {
   );
   assert.equal(d.querySelectorAll(".full-finals-table tbody tr").length, 24);
   rows = JSON.parse(t.w.localStorage.getItem("volleyworld-full-guest"));
-  assert.equal(rows[0].played, 543);
+  assert.equal(rows[0].played, 366);
   assert.equal(rows[0].status, "completed");
   click('[data-action="Full.section"][data-arg="playoff"]');
   assert.equal(d.querySelectorAll('[data-action="Full.simMatch"]').length, 0);

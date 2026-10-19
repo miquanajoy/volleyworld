@@ -1,3 +1,8 @@
+import {
+  advanceQualification,
+  qualificationGroups,
+  qualifierWinner,
+} from "./qualification";
 import { regionTeams } from "../../data/teams";
 import { solve } from "../league/qualification/index";
 import { winner } from "../match/scoring";
@@ -25,10 +30,14 @@ export const groupDirectSlots: Record<Region, number> = {
   CAVB: 1,
   CSV: 3,
 };
-export function freshRegion(r: Region): RegionalLeague {
+export function freshRegion(r: Region, qualification = false): RegionalLeague {
   const ids = regionTeams(r).map((t) => t.id),
-    count = regionalGroupCount[r];
-  if (count === 1) return fullLeague(ids, r);
+    count = qualification ? qualificationGroups[r] : regionalGroupCount[r];
+  if (count === 1)
+    return {
+      ...fullLeague(ids, r),
+      ...(qualification ? { directSlots: 2 as const } : {}),
+    };
   const groups: TeamId[][] = Array.from({ length: count }, () => []),
     pots = Array.from({ length: Math.ceil(ids.length / count) }, (_, i) =>
       ids.slice(i * count, (i + 1) * count),
@@ -44,7 +53,11 @@ export function freshRegion(r: Region): RegionalLeague {
       { length: Math.max(...leagues.map((g) => g.rounds.length)) },
       (_, i) => leagues.flatMap((g) => g.rounds[i] || []),
     ),
-    ...(["AVC", "CAVB"].includes(r) ? { decider: null } : {}),
+    ...(qualification
+      ? { directSlots: 1 as const, playoff: null }
+      : ["AVC", "CAVB"].includes(r)
+        ? { decider: null }
+        : {}),
   };
 }
 export function regionalGroup(g: RegionalLeague, index: number): FullLeague {
@@ -60,25 +73,34 @@ export function regionalGroup(g: RegionalLeague, index: number): FullLeague {
   };
 }
 export function regionalDone(g: RegionalLeague) {
-  return fullLeagueDone(g) && (g.decider === undefined || !!g.decider?.sets);
+  return (
+    fullLeagueDone(g) &&
+    (g.decider === undefined || !!g.decider?.sets) &&
+    (g.playoff === undefined || !!qualifierWinner(g.playoff))
+  );
 }
 export function regionQualifiers(g: RegionalLeague, r: Region): TeamId[] {
   if (!regionalDone(g))
     throw Error("Cần hoàn tất bảng và trận tranh suất khu vực.");
   if (!g.groups)
     return fullStandings(g)
-      .slice(0, worldSlots[r])
+      .slice(0, g.directSlots || worldSlots[r])
       .map((t) => t.id);
   return [
     ...g.groups.flatMap((_, i) =>
       fullStandings(regionalGroup(g, i))
-        .slice(0, groupDirectSlots[r])
+        .slice(0, g.directSlots || groupDirectSlots[r])
         .map((t) => t.id),
     ),
     ...(g.decider?.sets ? [winner(g.decider)!] : []),
+    ...(qualifierWinner(g.playoff) ? [qualifierWinner(g.playoff)!] : []),
   ];
 }
 export function advanceRegions(s: FullSeason) {
+  if (s.regionalFormat === "qualification-v2") {
+    advanceQualification(s);
+    return;
+  }
   for (const r of regionOrder) {
     const g = s.regions[r];
     if (g.decider !== null || !g.groups || !fullLeagueDone(g)) continue;
@@ -89,26 +111,33 @@ export function advanceRegions(s: FullSeason) {
   }
 }
 export const fullTotalMatches = (s: FullSeason) =>
-  regionOrder.reduce(
-    (n, r) =>
-      n +
-      s.regions[r].rounds.flat().length +
-      (s.regions[r].groups && ["AVC", "CAVB"].includes(r) ? 1 : 0),
-    52,
-  );
+  s.regionalFormat === "qualification-v2"
+    ? 366
+    : regionOrder.reduce(
+        (n, r) =>
+          n +
+          s.regions[r].rounds.flat().length +
+          (s.regions[r].groups && ["AVC", "CAVB"].includes(r) ? 1 : 0),
+        52,
+      );
 export function regionalDescription(s: FullSeason, r: Region) {
   const g = s.regions[r];
   return g.groups
-    ? `${g.groups.map((ids) => ids.length).join(" + ")} đội · top ${groupDirectSlots[r]} mỗi bảng${g.decider !== undefined ? " + 1 suất tranh BO5" : ""}`
-    : `Vòng tròn ${g.teamIds.length} đội · top ${worldSlots[r]}`;
+    ? `${g.groups.map((ids) => ids.length).join(" + ")} đội · top ${g.directSlots || groupDirectSlots[r]} mỗi bảng${g.playoff !== undefined ? " đi thẳng · hạng 2–3 dự playoff khu vực" : ""}${g.decider !== undefined ? " + 1 suất tranh BO5" : ""}`
+    : `Vòng tròn ${g.teamIds.length} đội · top ${g.directSlots || worldSlots[r]}${g.directSlots ? " đi thẳng · hạng 3 dự Play-in" : ""}`;
 }
 /** Conservative certificates: ties may still go either way until the final table.
  * A bounded solver may delay an announcement; it never declares an unproven berth.
  */
-export function groupBerths(g: FullLeague, direct: number, decider = false) {
+export function groupBerths(
+  g: FullLeague,
+  direct: number,
+  decider = false,
+  contenderSlots = direct + 1,
+) {
   const rows = fullStandings(g),
     remaining = g.rounds.flat().filter((m) => !m.sets),
-    cutoffs = decider ? [direct, direct + 1] : [direct];
+    cutoffs = decider ? [direct, contenderSlots] : [direct];
   const certificates = remaining.length
     ? solve(rows, remaining, cutoffs, 96)
     : null;
@@ -122,11 +151,11 @@ export function groupBerths(g: FullLeague, direct: number, decider = false) {
         contender:
           decider &&
           (certificates
-            ? certificates[t.id][direct + 1].clinched
-            : i <= direct),
+            ? certificates[t.id][contenderSlots].clinched
+            : i < contenderSlots),
         eliminated: certificates
-          ? certificates[t.id][decider ? direct + 1 : direct].excluded
-          : i >= direct + (decider ? 1 : 0),
+          ? certificates[t.id][decider ? contenderSlots : direct].excluded
+          : i >= (decider ? contenderSlots : direct),
       },
     ]),
   );

@@ -13,6 +13,7 @@ for (const file of [
   "simulation-v2",
   "full-season",
   "full-season-groups",
+  "world-qualification",
   "full-playoff-tree",
   "full-world-matchdays",
   "full-season-cloud",

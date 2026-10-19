@@ -12,7 +12,13 @@ export interface FullLeague {
   rounds: Match[][];
   tie: TeamId[];
 }
+export interface QualifierBracket {
+  seeds: TeamId[];
+  rounds: Match[][];
+}
 export interface RegionalLeague extends FullLeague {
+  directSlots?: 1 | 2;
+  playoff?: QualifierBracket | null;
   /** Rosters only: each fixture is stored once in the shared round calendar. */
   groups?: TeamId[][];
   pots?: TeamId[][];
@@ -34,7 +40,8 @@ export interface FullSeason {
   seasonId: string;
   seasonNumber: number;
   createdAt: string;
-  regionalFormat?: "groups-v1";
+  regionalFormat?: "groups-v1" | "qualification-v2";
+  intercontinental?: { pots: TeamId[][]; branches: QualifierBracket[] } | null;
   regions: Record<Region, RegionalLeague>;
   world: WorldCup | null;
 }

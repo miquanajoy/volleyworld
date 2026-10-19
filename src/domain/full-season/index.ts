@@ -20,10 +20,18 @@ export * from "./types";
 export * from "./league";
 export * from "./world";
 export * from "./regional";
+import {
+  newQualification,
+  qualifierMatches,
+  advanceQualification,
+  drawIntercontinental,
+  intercontinentalDone,
+} from "./qualification";
+export * from "./qualification";
 import { freshRegion, advanceRegions } from "./regional";
 export function freshFullSeason(
   number = 1,
-  format: "groups" | "legacy" = "groups",
+  format: "qualification" | "groups" | "legacy" = "qualification",
 ): FullSeason {
   return {
     version: 1,
@@ -31,12 +39,16 @@ export function freshFullSeason(
     seasonId: crypto.randomUUID(),
     seasonNumber: number,
     createdAt: new Date().toISOString(),
-    ...(format === "groups" ? { regionalFormat: "groups-v1" as const } : {}),
+    ...(format === "qualification"
+      ? { regionalFormat: "qualification-v2" as const, intercontinental: null }
+      : format === "groups"
+        ? { regionalFormat: "groups-v1" as const }
+        : {}),
     regions: Object.fromEntries(
       regionOrder.map((r) => [
         r,
-        format === "groups"
-          ? freshRegion(r)
+        format !== "legacy"
+          ? freshRegion(r, format === "qualification")
           : fullLeague(
               regionTeams(r).map((t) => t.id),
               r,
@@ -51,7 +63,9 @@ export function fullMatches(s: FullSeason): Match[] {
     ...regionOrder.flatMap((r) => [
       ...leagueMatches(s.regions[r]),
       ...(s.regions[r].decider ? [s.regions[r].decider!] : []),
+      ...qualifierMatches(s.regions[r].playoff),
     ]),
+    ...(s.intercontinental?.branches.flatMap(qualifierMatches) || []),
     ...(s.world?.groups.flatMap(leagueMatches) || []),
     ...worldStages.flatMap((k) => s.world?.bracket?.[k] || []),
   ];
@@ -66,8 +80,20 @@ export function fullMatchLocked(s: FullSeason, m: Match) {
   for (const r of regionOrder) {
     const g = s.regions[r];
     if (g.decider === m) return !!s.world;
-    if (leagueMatches(g).includes(m)) return !!s.world || !!g.decider;
+    if (leagueMatches(g).includes(m))
+      return !!s.world || !!g.decider || !!g.playoff || !!s.intercontinental;
+    if (g.playoff && qualifierMatches(g.playoff).includes(m)) {
+      const i = g.playoff.rounds.findIndex((row) => row.includes(m));
+      return (
+        !!s.world || !!s.intercontinental || !!g.playoff.rounds[i + 1]?.length
+      );
+    }
   }
+  for (const b of s.intercontinental?.branches || [])
+    if (qualifierMatches(b).includes(m)) {
+      const i = b.rounds.findIndex((row) => row.includes(m));
+      return !!s.world || !!b.rounds[i + 1]?.length;
+    }
   const worldGroup = s.world?.groups.find((g) => leagueMatches(g).includes(m));
   if (worldGroup && s.world)
     return (
@@ -94,10 +120,30 @@ export function recordFullScore(s: FullSeason, id: string, sets: SetScore[]) {
 export function finishFullSeason(s: FullSeason) {
   regionOrder.forEach((r) => simulateLeague(s.regions[r]));
   advanceRegions(s);
+  if (newQualification(s)) stampFull(s);
   regionOrder.forEach((r) => {
     const m = s.regions[r].decider;
     if (m && !m.sets) simulate(m);
   });
+  if (newQualification(s)) {
+    for (const r of regionOrder) {
+      const b = s.regions[r].playoff;
+      if (!b) continue;
+      for (const round of b.rounds) {
+        round.filter((m) => !m.sets).forEach(simulate);
+        advanceQualification(s);
+        stampFull(s);
+      }
+    }
+    if (!s.intercontinental) drawIntercontinental(s);
+    for (const b of s.intercontinental!.branches)
+      for (const round of b.rounds) {
+        round.filter((m) => !m.sets).forEach(simulate);
+        advanceQualification(s);
+        stampFull(s);
+      }
+    if (!intercontinentalDone(s)) throw Error("Chưa hoàn tất Play-in.");
+  }
   if (!s.world) drawWorld(s);
   s.world!.groups.forEach((g) => simulateLeague(g));
   if (!s.world!.bracket) drawWorldPlayoff(s);

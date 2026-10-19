@@ -1,3 +1,12 @@
+import {
+  newQualification,
+  qualificationGroups,
+  qualifierPlayers,
+  regionalPlayoffSeeds,
+  intercontinentalPool,
+  intercontinentalDone,
+} from "./qualification";
+import type { QualifierBracket } from "./types";
 import { regionTeams } from "../../data/teams";
 import { validate, winner, loser } from "../match/scoring";
 import type { Match, TeamId } from "../types";
@@ -97,12 +106,56 @@ export function validFullSeason(input: unknown): input is FullSeason {
       }
       return pairs.size === (n * (n - 1)) / 2;
     }
-    if (s.regionalFormat !== undefined && s.regionalFormat !== "groups-v1")
+    function knockout(b: QualifierBracket, expected: TeamId[], prefix: string) {
+      if (
+        !b ||
+        Object.keys(b).sort().join() !== "rounds,seeds" ||
+        !Array.isArray(b.seeds) ||
+        b.seeds.join() !== expected.join() ||
+        !Array.isArray(b.rounds) ||
+        b.rounds.length !== Math.ceil(Math.log2(expected.length))
+      )
+        return false;
+      for (let r = 0; r < b.rounds.length; r++) {
+        const players = qualifierPlayers(b, r),
+          pairs: { a: TeamId; b: TeamId; id: string }[] = [];
+        if (players)
+          for (let i = 0; i < players.length; i += 2)
+            if (players[i] && players[i + 1])
+              pairs.push({
+                a: players[i]!,
+                b: players[i + 1]!,
+                id: `${prefix}K${r}-${i / 2}`,
+              });
+        if (!Array.isArray(b.rounds[r]) || b.rounds[r].length !== pairs.length)
+          return false;
+        for (const [i, m] of b.rounds[r].entries())
+          if (
+            !check(m, expected, pairs[i].id) ||
+            m.a !== pairs[i].a ||
+            m.b !== pairs[i].b
+          )
+            return false;
+      }
+      return true;
+    }
+    const modern = newQualification(s);
+    if (
+      s.regionalFormat !== undefined &&
+      s.regionalFormat !== "groups-v1" &&
+      !modern
+    )
       return false;
     for (const r of regionOrder) {
       const g = s.regions[r],
         ids = regionTeams(r).map((t) => t.id);
-      if (s.regionalFormat !== "groups-v1" || r === "CSV") {
+      if ((s.regionalFormat !== "groups-v1" && !modern) || r === "CSV") {
+        if (
+          modern
+            ? g.directSlots !== 2 || g.playoff !== undefined
+            : g.directSlots !== undefined || g.playoff !== undefined
+        )
+          return false;
         if (
           g.groups !== undefined ||
           g.pots !== undefined ||
@@ -112,7 +165,13 @@ export function validFullSeason(input: unknown): input is FullSeason {
           return false;
         continue;
       }
-      const count = regionalGroupCount[r];
+      const count = modern ? qualificationGroups[r] : regionalGroupCount[r];
+      if (
+        modern
+          ? g.directSlots !== 1
+          : g.directSlots !== undefined || g.playoff !== undefined
+      )
+        return false;
       if (
         !Array.isArray(g.groups) ||
         g.groups.length !== count ||
@@ -164,6 +223,16 @@ export function validFullSeason(input: unknown): input is FullSeason {
       for (let i = 0; i < count; i++)
         if (!league(regionalGroup(g, i), g.groups[i], `${r}G${i}`))
           return false;
+      if (modern) {
+        if (g.decider !== undefined) return false;
+        if (
+          fullLeagueDone(g)
+            ? !g.playoff || !knockout(g.playoff, regionalPlayoffSeeds(g), r)
+            : g.playoff !== null
+        )
+          return false;
+        continue;
+      }
       const hasDecider = r === "AVC" || r === "CAVB";
       if (!hasDecider) {
         if (g.decider !== undefined) return false;
@@ -186,6 +255,42 @@ export function validFullSeason(input: unknown): input is FullSeason {
         }
       }
     }
+    if (modern) {
+      if (s.intercontinental !== null) {
+        const b = s.intercontinental;
+        if (
+          !b ||
+          Object.keys(b).sort().join() !== "branches,pots" ||
+          !Array.isArray(b.pots) ||
+          b.pots.length !== 9 ||
+          !Array.isArray(b.branches) ||
+          b.branches.length !== 3
+        )
+          return false;
+        const pool = intercontinentalPool(s);
+        for (let i = 0; i < 9; i++)
+          if (
+            !Array.isArray(b.pots[i]) ||
+            b.pots[i].join() !== pool.slice(i * 3, i * 3 + 3).join()
+          )
+            return false;
+        if (
+          !sameSet(
+            b.branches.flatMap((x) => x.seeds),
+            pool,
+          )
+        )
+          return false;
+        for (const [i, branch] of b.branches.entries())
+          if (
+            branch.seeds.length !== 9 ||
+            branch.seeds.some((id, j) => !b.pots[j].includes(id)) ||
+            !knockout(branch, branch.seeds, `IC${i}`)
+          )
+            return false;
+      }
+      if (s.world !== null && !intercontinentalDone(s)) return false;
+    } else if (s.intercontinental !== undefined) return false;
     if (s.world === null) return true;
     if (!regionOrder.every((r) => regionalDone(s.regions[r]))) return false;
     const w = s.world,

@@ -1,3 +1,4 @@
+import { newQualification, qualificationEntrants } from "./qualification";
 import { get } from "../../data/teams";
 import { leagueRoundSnapshot } from "../league/round-standings";
 import { loser, winner } from "../match/scoring";
@@ -29,6 +30,7 @@ export function worldAtRound(w: WorldCup, round: number): WorldCup {
   return { ...w, groups: w.groups.map((g) => leagueRoundSnapshot(g, round)) };
 }
 export function regionalQualifiers(s: FullSeason): TeamId[] {
+  if (newQualification(s)) return qualificationEntrants(s);
   if (!regionOrder.every((r) => regionalDone(s.regions[r])))
     throw Error("Cần hoàn tất cả 5 giải khu vực.");
   return regionOrder.flatMap((r) => regionQualifiers(s.regions[r], r));

@@ -8,7 +8,7 @@ const score = [
   [25, 18],
 ];
 for (let n = 0; n < 24; n++) {
-  const s = F.freshFullSeason(n + 1);
+  const s = F.freshFullSeason(n + 1, "groups");
   assert(F.validFullSeason(s));
   assert.equal(F.fullTotalMatches(s), 543);
   assert.equal(F.fullMatches(s).length, 489);
@@ -113,7 +113,7 @@ for (let n = 0; n < 24; n++) {
 }
 // A certificate is valid before remaining matches finish, survives JSON reload,
 // and cannot leak into an earlier scheduled round.
-const early = F.freshFullSeason(),
+const early = F.freshFullSeason(1, "groups"),
   group = F.regionalGroup(early.regions.CEV, 0),
   id = group.teamIds[0];
 for (const m of group.rounds.flat().filter((m) => m.a === id || m.b === id))
@@ -128,7 +128,7 @@ assert.deepEqual(
   berths,
 );
 assert(!F.groupBerths(V.leagueRoundSnapshot(group, 0), 3)[id].qualified);
-const none = F.freshFullSeason();
+const none = F.freshFullSeason(1, "groups");
 assert(
   !Object.values(
     F.groupBerths(F.regionalGroup(none.regions.AVC, 0), 2, true),
@@ -161,7 +161,11 @@ const t = ui("new", 937),
     e.click();
   };
 click('[data-action="Full.enter"]');
-click('[data-action="Full.create"]');
+const old = F.freshFullSeason(1, "groups"),
+  api = t.w.__full;
+api.fullModel.records.push({ ...api.recordOf(old), dirty: true });
+api.persistFull();
+api.openFull(old.seasonId);
 click('[data-action="Full.section"][data-arg="AVC"]');
 assert.equal(d.querySelectorAll(".full-regional-standing").length, 24);
 assert(

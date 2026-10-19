@@ -231,7 +231,7 @@ const fs = require("node:fs"),
   assert(w.document.querySelector('[data-action="Full.drawWorld"]').disabled);
   click('[data-action="Full.finish"]');
   const full = JSON.parse(w.localStorage.getItem("volleyworld-full-guest"))[0];
-  assert.equal(full.played, 543);
+  assert.equal(full.played, 366);
   assert.equal(full.status, "completed");
   assert.equal(
     w.document.querySelectorAll(".full-season-summary .medal-card").length,
