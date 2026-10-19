@@ -1798,3 +1798,200 @@
     gap: 12px;
   }
 }
+
+/* Compact promotion slots and division honours on the Nations playoff page. */
+.nations-promotion-panel {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+.nations-promotion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.nations-promotion-header .eyebrow {
+  color: var(--green);
+  font-size: 10px;
+  letter-spacing: 1.1px;
+}
+.nations-promotion-header h3 {
+  margin: 5px 0 0;
+  font-size: 17px;
+  line-height: 1.35;
+}
+.nations-promotion-count {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.nations-promotion-count b {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.nations-promotion-count b span {
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 500;
+}
+.nations-promotion-count small {
+  font-size: 10px;
+  color: var(--muted);
+}
+.nations-promotion-count.is-complete b {
+  color: var(--green);
+}
+.nations-promotion-slots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.nations-promotion-slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 15px 12px;
+  border: 1px solid #dce8d6;
+  border-radius: 10px;
+  background: #f5f8f1;
+}
+.nations-promotion-slot.is-pending {
+  border-style: dashed;
+  border-color: #dde1d7;
+  background: #fafbf8;
+}
+.nations-promotion-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e5efdd;
+  color: var(--green);
+  font-size: 18px;
+  font-weight: 700;
+}
+.is-pending .nations-promotion-icon {
+  background: #edf0e8;
+  color: var(--muted);
+}
+.nations-promotion-info {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.nations-promotion-info .team,
+.nations-division-award .team {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 13px;
+}
+.nations-promotion-info .flag,
+.nations-division-award .flag {
+  flex-shrink: 0;
+  font-size: 17px;
+}
+.nations-promotion-info .team-name,
+.nations-division-award .team-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.nations-promotion-info small {
+  color: var(--green);
+  font-size: 10px;
+  line-height: 1.4;
+}
+.nations-promotion-waiting {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.is-pending .nations-promotion-info small {
+  color: var(--muted);
+}
+.nations-promotion-check {
+  color: var(--green);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.nations-division-awards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e8ebe2;
+}
+.nations-division-award {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid #eee3c2;
+  background: #fcf8ec;
+  min-width: 0;
+}
+.nations-division-award.is-runnerup {
+  border-color: #e1e5e8;
+  background: #f5f6f7;
+}
+.nations-award-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  height: 38px;
+  font-size: 25px;
+}
+.nations-division-award > div {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+}
+.nations-award-label {
+  color: #887132;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+}
+.is-runnerup .nations-award-label {
+  color: #69757c;
+}
+.nations-promotion-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+@media (max-width: 1050px) {
+  .nations-promotion-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .nations-promotion-panel {
+    padding: 16px;
+    gap: 14px;
+  }
+  .nations-promotion-slots,
+  .nations-division-awards {
+    grid-template-columns: 1fr;
+  }
+  .nations-promotion-header h3 {
+    font-size: 15px;
+  }
+  .nations-promotion-slot {
+    padding: 12px;
+  }
+}
