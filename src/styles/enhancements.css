@@ -1995,3 +1995,187 @@
     padding: 12px;
   }
 }
+
+/* World Cup history: balanced cards, podium rows and an anchored resume action. */
+.full-history-heading {
+  margin: 26px 0 16px;
+}
+.full-history-heading h3 {
+  margin: 0 0 6px;
+  font-size: 19px;
+}
+.full-history-heading .sub {
+  margin: 0;
+}
+.world-cup-season-card {
+  min-height: 355px;
+  padding: 22px;
+  gap: 18px;
+  overflow: hidden;
+  background: white;
+}
+.world-cup-season-card.current-season {
+  background: linear-gradient(145deg, #fff 35%, #f1f6ea);
+  border-color: #abc49a;
+}
+.world-cup-season-card .season-card-top {
+  gap: 8px;
+}
+.world-cup-season-card .eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.3px;
+}
+.full-history-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  font-size: 10px;
+  line-height: 1.2;
+  color: #61715d;
+  background: #f0f3ed;
+}
+.full-history-status.is-active {
+  background: #e6efd9;
+  color: var(--green);
+  font-weight: 700;
+}
+.full-history-status.is-active > span {
+  font-size: 7px;
+}
+.full-history-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.world-cup-season-card .full-history-title h3 {
+  margin: 0 0 5px;
+  font-size: 26px;
+  letter-spacing: -0.7px;
+}
+.full-history-title p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.full-history-emblem {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  background: #f8f3e7;
+  font-size: 24px;
+}
+.current-season .full-history-emblem {
+  background: #e9f0df;
+}
+.world-cup-season-card .full-history-medals {
+  gap: 6px;
+}
+.world-cup-season-card .full-history-medal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: #f7f8f5;
+  color: var(--ink);
+}
+.world-cup-season-card .full-history-medal.place-1 {
+  border-color: #eee4c9;
+  background: #fcf8ec;
+}
+.world-cup-season-card .full-history-medal > .full-history-medal-icon {
+  flex: 0 0 20px;
+  font-size: 16px;
+}
+.world-cup-season-card .full-history-medal .team {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  font-size: 12px;
+}
+.world-cup-season-card .full-history-medal small {
+  flex-shrink: 0;
+  color: #71806b;
+  font-size: 9px;
+}
+.world-cup-season-card .full-history-medal.place-1 small {
+  color: #907331;
+}
+.full-history-progress {
+  display: grid;
+  gap: 10px;
+  padding: 16px 14px;
+  border: 1px solid #dfe8d5;
+  border-radius: 9px;
+  background: #f5f8ef;
+}
+.full-history-progress > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 600;
+}
+.full-history-progress .progress {
+  height: 6px;
+  margin: 0;
+}
+.full-history-progress p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.full-history-footer {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 2px;
+}
+.full-history-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.full-history-meta > span:first-child {
+  font-variant-numeric: tabular-nums;
+}
+.full-history-meta .is-pending {
+  color: #946c2e;
+}
+.full-history-footer > button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 12px;
+}
+.full-history-footer > button > span:last-child {
+  font-size: 17px;
+  line-height: 1;
+}
+@media (max-width: 600px) {
+  .world-cup-season-card {
+    min-height: 325px;
+    padding: 20px;
+    gap: 16px;
+  }
+}

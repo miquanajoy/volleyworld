@@ -22,7 +22,7 @@ import type {
 import type { Match, Region } from "../../domain/types";
 import { team } from "../../components/team";
 import { esc, names } from "../../shared/dom";
-import { fullModel, selectedFull } from "./model";
+import { fullModel, selectedFull, type FullRecord } from "./model";
 export function fullTeam(id: string, s: FullSeason, source?: FullLeague) {
   const rank = source
     ? F.fullStandings(source).findIndex((t) => t.id === id) + 1
@@ -61,7 +61,30 @@ export function fullStandingsTable(
     .join("")}</tbody></table></div>`;
 }
 export function libraryHtml() {
-  return `<div class="section-head"><div><span class="eyebrow">WORLD CUP · 100 QUỐC GIA</span><h2>VolleyWorld Cup</h2><p class="sub">Từ vòng loại khu vực đến ngôi vô địch thế giới. Một mùa. Sáu giải đấu.</p><p class="sub">Vòng bảng khu vực → 24 đại diện → 6 bảng thế giới → playoff 16 đội.</p></div><div class="controls"><button data-action="navigate" data-arg="home">← World League</button><button class="primary" data-action="Full.create">Bắt đầu World Cup mới</button></div></div><div class="full-format-grid">${F.regionOrder.map((r) => `<div class="panel full-region-summary"><span class="eyebrow">${names[r]}</span><strong>${regionTeams(r).length} đội</strong><span>${F.worldSlots[r]} suất dự thế giới</span></div>`).join("")}</div><div class="full-library-toolbar"><button data-action="Full.export">Xuất tất cả World Cup</button><button data-action="Full.import">Nhập World Cup</button><button data-action="Full.honours">Thành tích World Cup</button><button data-action="Full.sync">Đồng bộ lịch sử</button></div>${fullModel.records.length ? `<div class="season-grid">${fullModel.records.map((r) => `<article class="panel season-card"><div class="season-card-top"><span class="eyebrow">WORLD CUP ${r.season_number}</span><span class="badge">${r.status === "completed" ? "Đã hoàn tất" : "Đang diễn ra"}</span></div><h3>Mùa ${r.season_number}</h3><p class="sub">${r.played} / ${r.snapshot ? F.fullTotalMatches(r.snapshot).toLocaleString("vi-VN") : "—"} trận · ${r.dirty ? "Có tiến trình trên thiết bị" : "Đã lưu"}</p>${r.podium.length ? `<div class="season-medals">${r.podium.map((id, i) => `<div>${["🥇", "🥈", "🥉"][i]} ${team(id)}</div>`).join("")}</div>` : ""}<button class="primary" data-action="Full.open" data-arg="${r.season_id}">${r.status === "completed" ? "Xem tổng kết" : "Tiếp tục giải đấu"} →</button></article>`).join("")}</div>` : '<div class="panel full-empty"><h3>Sẵn sàng cho một mùa bóng chuyền trọn vẹn?</h3><p>Chia bảng có hạt giống tại châu Âu, châu Á, châu Phi và Bắc, Trung Mỹ & Caribe. Nam Mỹ đánh vòng tròn. Châu Á và châu Phi có một trận BO5 tranh suất cuối; số đội và số suất cố định.</p><p>Giải thế giới chỉ mở khi cả 5 giải khu vực hoàn tất.</p></div>'}`;
+  return `<div class="section-head"><div><span class="eyebrow">WORLD CUP · 100 QUỐC GIA</span><h2>VolleyWorld Cup</h2><p class="sub">Từ vòng loại khu vực đến ngôi vô địch thế giới. Một mùa. Sáu giải đấu.</p><p class="sub">Vòng bảng khu vực → 24 đại diện → 6 bảng thế giới → playoff 16 đội.</p></div><div class="controls"><button data-action="navigate" data-arg="home">← World League</button><button class="primary" data-action="Full.create">Bắt đầu World Cup mới</button></div></div><div class="full-format-grid">${F.regionOrder.map((r) => `<div class="panel full-region-summary"><span class="eyebrow">${names[r]}</span><strong>${regionTeams(r).length} đội</strong><span>${F.worldSlots[r]} suất dự thế giới</span></div>`).join("")}</div><div class="full-library-toolbar"><button data-action="Full.export">Xuất tất cả World Cup</button><button data-action="Full.import">Nhập World Cup</button><button data-action="Full.honours">Thành tích World Cup</button><button data-action="Full.sync">Đồng bộ lịch sử</button></div>${fullModel.records.length ? `<div class="section-head full-history-heading"><div><h3>Các mùa World Cup</h3><p class="sub">${fullModel.records.length} mùa giải · ${fullModel.records.filter((r) => r.status === "completed").length} đã hoàn tất · ${fullModel.records.filter((r) => r.status !== "completed").length} đang diễn ra</p></div></div><div class="season-grid world-cup-season-grid">${fullModel.records.map(fullSeasonCardHtml).join("")}</div>` : '<div class="panel full-empty"><h3>Sẵn sàng cho một mùa bóng chuyền trọn vẹn?</h3><p>Chia bảng có hạt giống tại châu Âu, châu Á, châu Phi và Bắc, Trung Mỹ & Caribe. Nam Mỹ đánh vòng tròn. Châu Á và châu Phi có một trận BO5 tranh suất cuối; số đội và số suất cố định.</p><p>Giải thế giới chỉ mở khi cả 5 giải khu vực hoàn tất.</p></div>'}`;
+}
+function fullSeasonCardHtml(r: FullRecord) {
+  const complete = r.status === "completed",
+    total = r.snapshot
+      ? F.fullTotalMatches(r.snapshot)
+      : complete
+        ? r.played
+        : null,
+    progress = total ? Math.min(100, Math.max(0, (r.played / total) * 100)) : 0,
+    saveLabel =
+      r.phase === "conflict"
+        ? "Cần chọn bản lưu"
+        : r.dirty
+          ? "Tiến trình trên thiết bị"
+          : "Đã lưu tiến trình",
+    stage = r.snapshot
+      ? r.snapshot.world?.bracket
+        ? "Playoff thế giới"
+        : r.snapshot.world
+          ? "Vòng bảng thế giới"
+          : "Vòng loại khu vực"
+      : "Giải đấu đang diễn ra";
+  return `<article class="panel season-card world-cup-season-card ${complete ? "is-completed" : "current-season"}" data-world-cup-season="${esc(r.season_id)}"><div class="season-card-top"><span class="eyebrow">WORLD CUP · ${String(r.season_number).padStart(2, "0")}</span><span class="full-history-status ${complete ? "is-completed" : "is-active"}"><span aria-hidden="true">${complete ? "✓" : "●"}</span>${complete ? "Hoàn tất" : "Đang diễn ra"}</span></div><div class="full-history-title"><div><h3>Mùa ${r.season_number}</h3><p>${complete ? "Hành trình đã khép lại" : "Hành trình chinh phục thế giới"}</p></div><span class="full-history-emblem" aria-hidden="true">${complete ? "🏆" : "🏐"}</span></div>${complete ? `<div class="season-medals full-history-medals" aria-label="Top 3 mùa ${r.season_number}">${r.podium.map((id, i) => `<div class="full-history-medal place-${i + 1}" title="${esc(get(id).name)}"><span class="full-history-medal-icon" aria-hidden="true">${["🥇", "🥈", "🥉"][i]}</span>${team(id)}<small>${["Vô địch", "Á quân", "Hạng ba"][i]}</small></div>`).join("")}</div>` : `<div class="full-history-progress"><div><span>${stage}</span>${total ? `<b>${Math.round(progress)}%</b>` : ""}</div>${total ? `<div class="progress" role="progressbar" aria-label="Tiến độ mùa ${r.season_number}" aria-valuenow="${r.played}" aria-valuemin="0" aria-valuemax="${total}"><i style="width:${progress}%"></i></div>` : ""}<p>Vượt qua vòng loại khu vực, tiến tới sân khấu thế giới.</p></div>`}<div class="full-history-footer"><div class="full-history-meta"><span>${r.played.toLocaleString("vi-VN")}${total !== null ? ` / ${total.toLocaleString("vi-VN")}` : ""} trận</span><span class="${r.dirty || r.phase === "conflict" ? "is-pending" : ""}">${saveLabel}</span></div><button class="${complete ? "" : "primary"}" data-action="Full.open" data-arg="${esc(r.season_id)}"><span>${complete ? "Xem tổng kết" : "Tiếp tục giải đấu"}</span><span aria-hidden="true">→</span></button></div></article>`;
 }
 export function overviewHtml(s: FullSeason) {
   const done = F.regionOrder.filter((r) => F.regionalDone(s.regions[r])).length;
