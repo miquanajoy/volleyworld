@@ -88,20 +88,19 @@ function fullSeasonCardHtml(r: FullRecord) {
 }
 export function overviewHtml(s: FullSeason) {
   const done = F.regionOrder.filter((r) => F.regionalDone(s.regions[r])).length;
-  return `<div class="full-format-grid">${F.regionOrder
-    .map((r) => {
-      const g = s.regions[r],
-        played = F.leagueMatches(g).filter((m) => m.sets).length,
-        total =
-          F.leagueMatches(g).length +
-          (g.groups && ["AVC", "CAVB"].includes(r) ? 1 : 0),
-        complete = F.regionalDone(g),
-        count = played + (g.decider?.sets ? 1 : 0);
-      return `<section class="panel full-region-summary"><span class="eyebrow">${names[r]}</span><strong>${g.teamIds.length} đội · ${F.worldSlots[r]} suất</strong><p class="sub">${count}/${total} trận · ${complete ? "Đã hoàn tất" : "League phase"}</p><div class="progress"><i style="width:${(count / total) * 100}%"></i></div>${g.groups ? `<p class="sub">${F.regionalDescription(s, r)}</p>` : complete ? `<p>🏆 ${team(F.fullStandings(g)[0].id)}</p>` : ""}<button data-action="Full.section" data-arg="${r}">${complete ? "Xem kết quả" : "Thi đấu khu vực"} →</button></section>`;
-    })
-    .join(
-      "",
-    )}</div><section class="panel full-world-gate"><div><span class="eyebrow">WORLD CHAMPIONSHIP · 24 ĐỘI</span><h3>${s.world ? "Giải thế giới" : "Hoàn tất khu vực để mở giải thế giới"}</h3><p class="sub">${done}/5 giải khu vực hoàn tất. Cần hoàn tất mọi trận, kể cả khi các vé đã được xác định sớm.</p></div>${s.world ? '<button class="primary" data-action="Full.section" data-arg="world">Vào giải thế giới →</button>' : `<button class="primary" data-action="Full.drawWorld" ${done < 5 ? "disabled" : ""}>Bốc thăm & bắt đầu thế giới</button>`}</section>${F.worldComplete(s) ? summaryHtml(s) : ""}`;
+  return `<div class="full-format-grid full-regional-overview">${F.regionOrder.map((r) => regionalOverviewCardHtml(s, r)).join("")}</div><section class="panel full-world-gate"><div><span class="eyebrow">WORLD CHAMPIONSHIP · 24 ĐỘI</span><h3>${s.world ? "Giải thế giới" : "Hoàn tất khu vực để mở giải thế giới"}</h3><p class="sub">${done}/5 giải khu vực hoàn tất. Cần hoàn tất mọi trận, kể cả khi các vé đã được xác định sớm.</p></div>${s.world ? '<button class="primary" data-action="Full.section" data-arg="world">Vào giải thế giới →</button>' : `<button class="primary" data-action="Full.drawWorld" ${done < 5 ? "disabled" : ""}>Bốc thăm & bắt đầu thế giới</button>`}</section>${F.worldComplete(s) ? summaryHtml(s) : ""}`;
+}
+function regionalOverviewCardHtml(s: FullSeason, r: Region) {
+  const g = s.regions[r],
+    complete = F.regionalDone(g),
+    total =
+      F.leagueMatches(g).length +
+      (g.groups && ["AVC", "CAVB"].includes(r) ? 1 : 0),
+    played =
+      F.leagueMatches(g).filter((m) => m.sets).length +
+      (g.decider?.sets ? 1 : 0),
+    qualified = complete ? F.regionQualifiers(g, r) : [];
+  return `<section class="panel full-region-summary full-regional-card ${complete ? "is-completed" : ""}" data-overview-region="${r}"><div class="full-regional-card-header"><span class="eyebrow">${names[r]}</span><span class="full-regional-state ${complete ? "is-completed" : ""}">${complete ? "✓ Hoàn tất" : played ? "Đang thi đấu" : "Chưa bắt đầu"}</span></div><div class="full-regional-card-title"><strong>${complete ? `${qualified.length} đội giành vé` : `${g.teamIds.length} đội`}</strong><span>${complete ? "WORLD CUP" : `${F.worldSlots[r]} suất World Cup`}</span></div>${complete ? `<ul class="full-regional-qualified ${qualified.length > 5 ? "is-large" : ""}" aria-label="Các đội ${names[r]} giành vé World Cup">${qualified.map((id) => `<li data-world-qualifier="${id}" title="${esc(get(id).name)}">${team(id)}<span aria-label="Đã giành vé">✓</span></li>`).join("")}</ul>` : `<div class="full-regional-progress"><div><span>Tiến độ khu vực</span><b>${played}<span> / ${total} trận</span></b></div><div class="progress" role="progressbar" aria-label="Tiến độ ${names[r]}" aria-valuenow="${played}" aria-valuemin="0" aria-valuemax="${total}"><i style="width:${total ? (played / total) * 100 : 0}%"></i></div><p>${g.groups ? F.regionalDescription(s, r) : `Vòng tròn một lượt · top ${F.worldSlots[r]} giành vé thế giới`}</p></div>`}<button data-action="Full.section" data-arg="${r}"><span>${complete ? "Xem kết quả" : "Thi đấu khu vực"}</span><span aria-hidden="true">→</span></button></section>`;
 }
 export function regionHtml(s: FullSeason, r: Region, readonly: boolean) {
   const g = s.regions[r];
@@ -138,13 +137,13 @@ export function groupNavigation(s: FullSeason) {
     parent = world ? "world" : region;
   if (!parent) return "";
   const count = world ? 6 : s.regions[region!].groups!.length;
-  return `<nav class="full-group-nav" aria-label="Chọn nhanh bảng đấu"><button data-action="Full.section" data-arg="${parent}" aria-current="${fullModel.section === parent ? "page" : "false"}">← ${world ? "Tất cả 6 bảng" : "Tổng quan khu vực"}</button>${Array.from(
+  return `<section class="panel full-group-switcher" aria-label="Điều hướng bảng đấu"><span class="full-group-switcher-label">BẢNG ĐẤU</span><nav class="full-group-nav" aria-label="Chọn nhanh bảng đấu"><button data-action="Full.section" data-arg="${parent}" aria-current="${fullModel.section === parent ? "page" : "false"}">← ${world ? "Tất cả 6 bảng" : "Tổng quan khu vực"}</button>${Array.from(
     { length: count },
     (_, i) => {
       const key = world ? `WG${i}` : `${region}G${i}`;
       return `<button data-action="Full.section" data-arg="${key}" aria-current="${fullModel.section === key ? "page" : "false"}">Bảng ${"ABCDEF"[i]}</button>`;
     },
-  ).join("")}</nav>`;
+  ).join("")}</nav></section>`;
 }
 export function worldRoundsToolbar(s: FullSeason, readonly: boolean) {
   const w = s.world!,
