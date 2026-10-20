@@ -58,6 +58,24 @@ for (const format of ["groups", "legacy"]) {
   d.querySelector(".full-bracket").scrollLeft = 490;
   click('.full-tree-match[data-action="Full.match"]');
   assert(d.getElementById("playoffMatchDialog").open);
+  assert.equal(
+    d.querySelectorAll(".full-match-scoreboard .full-match-team").length,
+    2,
+  );
+  assert.equal(
+    d.querySelectorAll(".full-match-scoreboard .form-dot").length,
+    10,
+  );
+  assert.equal(d.querySelector(".full-match-score strong").textContent, "VS");
+  assert(
+    d.querySelector(".full-match-meta").textContent.includes("Vòng 16 đội"),
+  );
+  assert(!d.querySelector(".full-match-sets"));
+  assert.equal(
+    t.w.localStorage.getItem("volleyworld-full-guest"),
+    original,
+    "Opening detail must not change saved progress",
+  );
   assert(d.querySelector('[data-action="Full.dialogSim"]'));
   assert(d.querySelector('[data-action="Full.dialogEdit"]'));
   click('[data-action="Full.dialogSim"]');
@@ -73,6 +91,21 @@ for (const format of ["groups", "legacy"]) {
       .firstElementChild.textContent.includes(V.get(winner).name),
   );
   click('.full-tree-match[data-action="Full.match"]');
+  const played = current.world.bracket.r16[0];
+  assert.equal(
+    d.querySelector(".full-match-score strong").textContent,
+    V.score(played).join("–"),
+  );
+  assert.equal(d.querySelectorAll(".full-match-team.is-winner").length, 1);
+  assert.equal(
+    d.querySelectorAll(".full-match-sets tbody td").length,
+    played.sets.length * 2,
+  );
+  assert.equal(
+    d.querySelectorAll(".full-match-sets .set-winner").length,
+    played.sets.length,
+  );
+  assert(!d.querySelector('[data-action="Full.dialogSim"]'));
   click('[data-action="Full.dialogEdit"]');
   assert(!d.getElementById("playoffMatchDialog").open);
   assert(d.getElementById("editor").open);
@@ -113,6 +146,8 @@ for (const format of ["groups", "legacy"]) {
   click('.full-tree-match[data-action="Full.match"]');
   assert(!d.querySelector('[data-action="Full.dialogSim"]'));
   assert(!d.querySelector('[data-action="Full.dialogEdit"]'));
+  assert(d.querySelector(".full-match-lock").textContent.includes("Chỉ xem"));
+  assert(d.querySelector(".full-match-sets"));
   assert.equal(t.w.localStorage.getItem("volleyworld-full-guest"), finished);
   t.close();
 }

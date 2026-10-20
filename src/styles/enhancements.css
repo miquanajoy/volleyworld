@@ -1388,43 +1388,48 @@
   }
 }
 
-/* A balanced match detail panel; other modes retain their existing dialogs. */
-#playoffMatchDialog:has(.nations-match-detail) {
+/* Shared match-detail layout for World Cup and Nations League. */
+#playoffMatchDialog:has(:is(.nations-match-detail, .full-match-detail)) {
   width: min(660px, calc(100vw - 32px));
   padding: 24px;
 }
-#playoffMatchDialog:has(.nations-match-detail) > .section-head {
+#playoffMatchDialog:has(:is(.nations-match-detail, .full-match-detail))
+  > .section-head {
   margin-bottom: 20px;
   gap: 16px;
 }
-#playoffMatchDialog:has(.nations-match-detail) > .section-head h2 {
+#playoffMatchDialog:has(:is(.nations-match-detail, .full-match-detail))
+  > .section-head
+  h2 {
   margin: 0;
   font-size: 22px;
 }
-#playoffMatchDialog:has(.nations-match-detail) > .section-head button {
+#playoffMatchDialog:has(:is(.nations-match-detail, .full-match-detail))
+  > .section-head
+  button {
   width: 40px;
   height: 40px;
   padding: 0;
   flex-shrink: 0;
 }
-.nations-match-meta {
+:is(.nations-match-meta, .full-match-meta) {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 20px;
 }
-.nations-match-meta .eyebrow {
+:is(.nations-match-meta, .full-match-meta) .eyebrow {
   font-size: 10px;
   letter-spacing: 1.2px;
   color: var(--green);
 }
-.nations-match-meta p {
+:is(.nations-match-meta, .full-match-meta) p {
   margin: 6px 0 0;
   font-size: 12px;
   color: var(--muted);
 }
-.nations-match-status {
+:is(.nations-match-status, .full-match-status) {
   flex-shrink: 0;
   padding: 7px 10px;
   border-radius: 20px;
@@ -1433,17 +1438,17 @@
   font-size: 11px;
   font-weight: 600;
 }
-.nations-match-status.is-complete {
+:is(.nations-match-status, .full-match-status).is-complete {
   color: var(--green);
   background: #e8f1e6;
 }
-.nations-match-scoreboard {
+:is(.nations-match-scoreboard, .full-match-scoreboard) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 100px minmax(0, 1fr);
   align-items: stretch;
   gap: 12px;
 }
-.nations-match-team {
+:is(.nations-match-team, .full-match-team) {
   min-width: 0;
   background: #f5f7f2;
   border: 1px solid var(--line);
@@ -1451,27 +1456,27 @@
   padding: 22px 12px;
   text-align: center;
 }
-.nations-match-team.is-winner {
+:is(.nations-match-team, .full-match-team).is-winner {
   background: #edf5e9;
   border-color: #a4b99c;
 }
-.nations-match-team .full-team-line {
+:is(.nations-match-team, .full-match-team) .full-team-line {
   display: flex;
   flex-direction: column;
   gap: 14px;
   width: 100%;
 }
-.nations-match-team .team {
+:is(.nations-match-team, .full-match-team) .team {
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 100%;
 }
-.nations-match-team .flag {
+:is(.nations-match-team, .full-match-team) .flag {
   font-size: 34px;
   line-height: 1.2;
 }
-.nations-match-team .team-name {
+:is(.nations-match-team, .full-match-team) .team-name {
   max-width: 100%;
   font-size: 17px;
   font-weight: 700;
@@ -1479,28 +1484,29 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.nations-match-team .form-strip {
+:is(.nations-match-team, .full-match-team) .form-strip {
   margin: 0;
   justify-content: center;
 }
-.nations-match-outcome {
+:is(.nations-match-outcome, .full-match-outcome) {
   display: block;
   margin-top: 12px;
   font-size: 11px;
   color: var(--muted);
 }
-.nations-match-team.is-winner .nations-match-outcome {
+:is(.nations-match-team, .full-match-team).is-winner
+  :is(.nations-match-outcome, .full-match-outcome) {
   color: var(--green);
   font-weight: 700;
 }
-.nations-match-score {
+:is(.nations-match-score, .full-match-score) {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
 }
-.nations-match-score strong {
+:is(.nations-match-score, .full-match-score) strong {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1509,74 +1515,74 @@
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
-.nations-match-score strong span {
+:is(.nations-match-score, .full-match-score) strong span {
   font-size: 20px;
   color: #99a69b;
 }
-.nations-match-score small {
+:is(.nations-match-score, .full-match-score) small {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1px;
   color: var(--muted);
   white-space: nowrap;
 }
-.nations-match-help {
+:is(.nations-match-help, .full-match-help) {
   margin: 18px 0 0;
   text-align: center;
   font-size: 12px;
   line-height: 1.6;
   color: var(--muted);
 }
-.nations-match-sets {
+:is(.nations-match-sets, .full-match-sets) {
   margin-top: 20px;
   border: 1px solid var(--line);
   border-radius: 10px;
 }
-.nations-match-sets table {
+:is(.nations-match-sets, .full-match-sets) table {
   width: 100%;
   min-width: 380px;
 }
-.nations-match-sets th,
-.nations-match-sets td {
+:is(.nations-match-sets, .full-match-sets) th,
+:is(.nations-match-sets, .full-match-sets) td {
   padding: 12px 10px;
   text-align: center;
 }
-.nations-match-sets th:first-child {
+:is(.nations-match-sets, .full-match-sets) th:first-child {
   text-align: left;
 }
-.nations-match-sets thead th {
+:is(.nations-match-sets, .full-match-sets) thead th {
   font-size: 10px;
   background: #f5f7f2;
 }
-.nations-match-sets tbody th .team {
+:is(.nations-match-sets, .full-match-sets) tbody th .team {
   font-size: 12px;
   white-space: nowrap;
 }
-.nations-match-sets tbody tr:last-child > * {
+:is(.nations-match-sets, .full-match-sets) tbody tr:last-child > * {
   border-bottom: 0;
 }
-.nations-match-sets .set-winner {
+:is(.nations-match-sets, .full-match-sets) .set-winner {
   background: #f1f6ec;
   color: var(--green);
   font-weight: 800;
 }
-.nations-match-actions {
+:is(.nations-match-actions, .full-match-actions) {
   display: flex;
   gap: 12px;
   margin-top: 24px;
   padding-top: 20px;
   border-top: 1px solid var(--line);
 }
-.nations-match-actions button {
+:is(.nations-match-actions, .full-match-actions) button {
   flex: 1;
   min-height: 46px;
   padding: 12px 16px;
 }
-.nations-match-actions button span {
+:is(.nations-match-actions, .full-match-actions) button span {
   margin-right: 6px;
   font-size: 11px;
 }
-.nations-match-lock {
+:is(.nations-match-lock, .full-match-lock) {
   margin: 22px 0 0;
   padding: 12px 16px;
   border-radius: 8px;
@@ -1587,38 +1593,40 @@
   line-height: 1.6;
 }
 @media (max-width: 560px) {
-  #playoffMatchDialog:has(.nations-match-detail) {
+  #playoffMatchDialog:has(:is(.nations-match-detail, .full-match-detail)) {
     padding: 18px;
   }
-  #playoffMatchDialog:has(.nations-match-detail) > .section-head h2 {
+  #playoffMatchDialog:has(:is(.nations-match-detail, .full-match-detail))
+    > .section-head
+    h2 {
     font-size: 19px;
   }
-  .nations-match-meta {
+  :is(.nations-match-meta, .full-match-meta) {
     align-items: flex-start;
     gap: 10px;
   }
-  .nations-match-scoreboard {
+  :is(.nations-match-scoreboard, .full-match-scoreboard) {
     grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1fr);
     gap: 8px;
   }
-  .nations-match-team {
+  :is(.nations-match-team, .full-match-team) {
     padding: 18px 8px;
   }
-  .nations-match-team .team-name {
+  :is(.nations-match-team, .full-match-team) .team-name {
     font-size: 14px;
   }
-  .nations-match-team .flag {
+  :is(.nations-match-team, .full-match-team) .flag {
     font-size: 28px;
   }
-  .nations-match-score strong {
+  :is(.nations-match-score, .full-match-score) strong {
     gap: 6px;
     font-size: 26px;
   }
-  .nations-match-score small {
+  :is(.nations-match-score, .full-match-score) small {
     font-size: 8px;
     letter-spacing: 0;
   }
-  .nations-match-actions {
+  :is(.nations-match-actions, .full-match-actions) {
     flex-direction: column;
   }
 }

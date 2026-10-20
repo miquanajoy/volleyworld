@@ -174,6 +174,10 @@ assert.equal(
 );
 const firstPreliminary = european.rounds[0][0];
 click(`[data-action="Full.match"][data-arg="${firstPreliminary.id}"]`);
+assert(
+  d.querySelector(".full-match-meta").textContent.includes("Playoff khu vực"),
+);
+assert(d.querySelector(".full-match-meta").textContent.includes("Sơ loại"));
 click('[data-action="Full.dialogSim"]');
 const updatedBracket = api.selectedFull().snapshot.regions.CEV.playoff;
 assert.equal(

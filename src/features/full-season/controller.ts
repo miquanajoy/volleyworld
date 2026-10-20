@@ -32,6 +32,7 @@ import {
   saveFullNow,
 } from "./cloud";
 import * as view from "./views";
+import { fullMatchDetailHtml } from "./match-detail";
 import {
   intercontinentalHtml,
   regionalPlayoffHtml,
@@ -359,8 +360,23 @@ export function showFullMatch(id: string) {
     id,
   };
   $("playoffMatchTitle").textContent = "Chi tiết trận World Cup";
-  $("playoffMatchBody").innerHTML =
-    `<h3>${team(m.a)} – ${team(m.b)}</h3><p>${m.sets ? `Kết quả ${score(m).join("–")}` : "Chưa thi đấu"}</p>${m.sets ? m.sets.map(([a, b], i) => `<p>Set ${i + 1}: <b>${a}–${b}</b></p>`).join("") : ""}<div class="actions">${locked ? '<span class="badge">CHỈ XEM · KẾT QUẢ ĐÃ KHÓA</span>' : `${!m.sets ? `<button class="primary" data-action="Full.dialogSim">Mô phỏng trận</button>` : ""}<button data-action="Full.dialogEdit">${m.sets ? "Sửa điểm" : "Nhập điểm"}</button>`}</div>`;
+  const lockMessage =
+    selectedFull()!.status === "completed"
+      ? "Mùa giải đã hoàn tất · Chỉ xem kết quả"
+      : selectedFull()!.phase === "conflict"
+        ? "Tiến trình cần xử lý xung đột · Chỉ xem"
+        : s.world?.bracket?.final.includes(m) &&
+            !s.world.bracket.bronze[0]?.sets
+          ? "Hoàn tất trận tranh hạng ba để mở chung kết."
+          : m.sets
+            ? "Kết quả đã khóa · Chỉ xem"
+            : "Trận đấu chưa mở";
+  $("playoffMatchBody").innerHTML = fullMatchDetailHtml(
+    s,
+    m,
+    locked,
+    lockMessage,
+  );
   $("playoffMatchDialog").showModal();
 }
 export function showFullTeam(id: string, round?: number) {
