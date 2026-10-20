@@ -2394,27 +2394,27 @@
   }
 }
 
-/* Regional and intercontinental qualification brackets share match controls. */
+/* Connected qualification routes include teams who receive a bye. */
 .qualification-tree {
   display: flex;
-  gap: 18px;
+  gap: 44px;
   overflow-x: auto;
-  padding: 18px;
+  padding: 20px;
   margin: 18px 0 28px;
   background: #f1f5ec;
   border: 1px solid #dfe6d8;
   border-radius: 12px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 .qualification-round {
-  display: grid;
-  gap: 14px;
-  flex: 0 0 300px;
+  flex: 0 0 330px;
   min-width: 0;
 }
 .qualification-round > .section-head {
-  min-height: 50px;
-  margin: 0;
+  height: 58px;
+  margin: 0 0 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #d6e0cf;
 }
 .qualification-round h4 {
   margin: 6px 0 0;
@@ -2424,28 +2424,72 @@
   padding: 7px 9px;
   font-size: 10px;
 }
-.qualification-tree .full-match {
-  margin: 0;
+.qualification-nodes {
+  display: grid;
 }
-.qualification-byes {
-  padding: 14px;
-  background: #fff;
-  border: 1px dashed #cbd8bf;
-  border-radius: 8px;
-  font-size: 12px;
-}
-.qualification-byes summary {
-  cursor: pointer;
-  color: var(--green);
-  font-weight: 600;
-}
-.qualification-byes p {
+.qualification-node {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  min-width: 0;
 }
-.qualification-byes .team {
-  font-size: 12px;
+.qualification-node.has-outgoing::after,
+.qualification-node.has-incoming::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  border-top: 1px solid #9eaf94;
+}
+.qualification-node.has-outgoing::after {
+  right: -22px;
+}
+.qualification-node.has-incoming::before {
+  left: -22px;
+}
+.qualification-node.joins-next > .bracket-match::after {
+  content: "";
+  position: absolute;
+  left: calc(100% + 22px);
+  top: 50%;
+  height: var(--qualification-join);
+  border-left: 1px solid #9eaf94;
+  pointer-events: none;
+}
+.qualification-tree .full-tree-match {
+  height: 110px;
+  padding: 10px;
+}
+.qualification-tree div.full-tree-match {
+  background: #fafcf7;
+}
+.qualification-team {
+  display: grid;
+  grid-template-columns: 29px minmax(0, 1fr);
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+.qualification-seed {
+  font-size: 9px;
+  font-weight: 700;
+  color: #647657;
+  white-space: nowrap;
+}
+.qualification-team[data-bye] .qualification-seed {
+  color: var(--green);
+}
+.qualification-tree .full-tree-side .full-team-line {
+  grid-template-columns: minmax(0, 1fr) 58px;
+  gap: 4px;
+}
+.qualification-tree .full-tree-side .form-dot {
+  width: 10px;
+  height: 14px;
+  font-size: 7px;
+}
+.qualification-tree .full-tree-side .team {
+  font-size: 11px;
 }
 .qualification-winner {
   display: flex;
@@ -2471,9 +2515,9 @@
 @media (max-width: 600px) {
   .qualification-tree {
     padding: 12px;
-    gap: 12px;
+    gap: 44px;
   }
   .qualification-round {
-    flex-basis: 280px;
+    flex-basis: 320px;
   }
 }

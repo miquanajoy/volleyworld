@@ -3,51 +3,11 @@ import type { Region } from "../../domain/types";
 import { get } from "../../data/teams";
 import { names } from "../../shared/dom";
 import { team } from "../../components/team";
-import { fullCard } from "./views";
 import { selectedFull } from "./model";
+import { qualifierTreeHtml } from "./qualification-tree";
 const readonly = () =>
   selectedFull()?.status === "completed" ||
   selectedFull()?.phase === "conflict";
-export function qualifierTreeHtml(
-  s: F.FullSeason,
-  b: F.QualifierBracket,
-  prefix: string,
-) {
-  const win = F.qualifierWinner(b),
-    next = b.rounds.findIndex((row) => row.some((m) => !m.sets)),
-    bye =
-      b.seeds.length === 12
-        ? 4
-        : b.seeds.length === 9
-          ? 7
-          : b.seeds.length === 6
-            ? 2
-            : 0;
-  return `${win ? `<section class="panel qualification-winner"><span>✓ GIÀNH VÉ WORLD CUP</span>${team(win)}</section>` : ""}<p class="sub qualification-seed-note">${b.seeds.length} đội · BO5 · nhánh cố định${bye ? ` · ${bye} hạt giống đầu được miễn vòng sơ loại` : ""}. Seed: hạng bảng → tỷ lệ thắng → HS set/trận → HS điểm/trận → BXH thế giới.</p><div class="full-bracket qualification-tree" role="region" tabindex="0" aria-label="Nhánh tranh vé World Cup có thể cuộn ngang">${b.rounds
-    .map((row, i) => {
-      const nominal = 2 ** (b.rounds.length - i),
-        label =
-          i === 0 && b.seeds.length !== nominal
-            ? "Sơ loại"
-            : nominal === 8
-              ? "Tứ kết"
-              : nominal === 4
-                ? "Bán kết"
-                : "Tranh vé World Cup";
-      return `<section class="qualification-round"><div class="section-head"><div><span class="eyebrow">VÒNG ${i + 1}</span><h4>${label}</h4></div>${!readonly() && i === next ? `<button data-action="Full.qualifierStage" data-arg="${prefix}">Chạy vòng</button>` : ""}</div>${row.length ? row.map((m) => fullCard(s, m, readonly())).join("") : '<div class="placeholder">Chờ kết quả vòng trước</div>'}${
-        i === 0 && bye
-          ? `<details class="qualification-byes"><summary>${bye} đội được miễn sơ loại</summary>${b.seeds
-              .slice(0, bye)
-              .map(
-                (id, j) =>
-                  `<p><span class="badge">S${j + 1}</span>${team(id)}</p>`,
-              )
-              .join("")}</details>`
-          : ""
-      }</section>`;
-    })
-    .join("")}</div>`;
-}
 export function regionalPlayoffHtml(s: F.FullSeason, r: Region) {
   const g = s.regions[r],
     b = g.playoff;

@@ -144,9 +144,54 @@ for (let i = 0; i < 6; i++) {
   click('[data-action="Full.simLeague"]');
 }
 assert(api.selectedFull().snapshot.regions.CEV.playoff);
+const beforeRender = JSON.stringify(
+  api.selectedFull().snapshot.regions.CEV.playoff,
+);
 click('[data-action="Full.section"][data-arg="CEVP"]');
 assert(d.querySelector(".qualification-tree"));
-click('[data-action="Full.edit"]');
+const european = api.selectedFull().snapshot.regions.CEV.playoff;
+const quarterTeams = [
+  ...d.querySelectorAll(".qualification-round:nth-child(2) [data-team]"),
+].map((e) => e.dataset.team);
+assert.deepEqual(
+  quarterTeams,
+  [0, 3, 1, 2].map((i) => european.seeds[i]),
+);
+assert.equal(d.querySelectorAll(".qualification-team[data-bye]").length, 4);
+assert.equal(
+  d.querySelectorAll(".qualification-tree [data-qualification-match]").length,
+  11,
+);
+assert.equal(
+  d.querySelectorAll(".qualification-tree button[data-qualification-match]")
+    .length,
+  4,
+);
+assert.equal(
+  JSON.stringify(european),
+  beforeRender,
+  "Rendering must not create results or future matches",
+);
+const firstPreliminary = european.rounds[0][0];
+click(`[data-action="Full.match"][data-arg="${firstPreliminary.id}"]`);
+click('[data-action="Full.dialogSim"]');
+const updatedBracket = api.selectedFull().snapshot.regions.CEV.playoff;
+assert.equal(
+  updatedBracket.rounds[1].length,
+  0,
+  "Other preliminary matches are still pending",
+);
+const played = updatedBracket.rounds[0][0];
+const qualified =
+  played.sets.filter(([a, b]) => a > b).length === 3 ? played.a : played.b;
+assert(
+  d.querySelector(
+    `[data-qualification-match="CEVK1-0"] [data-team="${qualified}"]`,
+  ),
+  "A known winner appears before the whole round finishes",
+);
+click('.qualification-tree [data-action="Full.match"]');
+click('[data-action="Full.dialogEdit"]');
 assert(d.getElementById("editor").open);
 d.getElementById("editor").close();
 for (let i = 0; i < 4; i++)
@@ -171,7 +216,33 @@ api.persistFull();
 click('[data-action="Full.section"][data-arg="intercontinental"]');
 click('[data-action="Full.drawIntercontinental"]');
 assert.equal(d.querySelectorAll(".qualification-branch").length, 3);
-assert.equal(d.querySelectorAll(".qualification-byes").length, 3);
+assert.equal(d.querySelectorAll(".qualification-team[data-bye]").length, 21);
+assert.equal(
+  d.querySelectorAll(".qualification-tree [data-qualification-match]").length,
+  24,
+);
+for (let branch = 0; branch < 3; branch++) {
+  const seeds =
+    api.selectedFull().snapshot.intercontinental.branches[branch].seeds;
+  const tree = d.querySelectorAll(".qualification-tree")[branch];
+  const known = [
+    ...tree.querySelectorAll(".qualification-round:nth-child(2) [data-team]"),
+  ].map((e) => e.dataset.team);
+  assert.deepEqual(
+    known,
+    [0, 3, 4, 1, 6, 2, 5].map((i) => seeds[i]),
+  );
+  assert.equal(
+    tree.querySelectorAll("button[data-qualification-match]").length,
+    1,
+    "Only the real preliminary match is actionable",
+  );
+  assert(
+    tree
+      .querySelector(`[data-qualification-match="IC${branch}K1-0"]`)
+      .textContent.includes("Thắng P1"),
+  );
+}
 for (let b = 0; b < 3; b++)
   for (let i = 0; i < 4; i++)
     click(`[data-action="Full.qualifierStage"][data-arg="IC${b}"]`);
