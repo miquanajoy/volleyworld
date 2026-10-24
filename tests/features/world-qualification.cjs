@@ -247,9 +247,55 @@ for (let branch = 0; branch < 3; branch++) {
       .textContent.includes("Thắng P1"),
   );
 }
-for (let b = 0; b < 3; b++)
-  for (let i = 0; i < 4; i++)
+// Each completed branch must update the winning team's home region immediately.
+// Unfinished branches must not contribute a speculative ticket.
+function assertRegionalTickets(completedBranches) {
+  const snapshot = api.selectedFull().snapshot;
+  const before = JSON.stringify(snapshot);
+  const won = snapshot.intercontinental.branches.flatMap((b) => {
+    const id = F.qualifierWinner(b);
+    return id ? [id] : [];
+  });
+  assert.equal(won.length, completedBranches);
+  click('[data-action="Full.section"][data-arg="overview"]');
+  const actual = [...d.querySelectorAll("[data-world-qualifier]")].map(
+    (e) => e.dataset.worldQualifier,
+  );
+  assert.equal(actual.length, 21 + completedBranches);
+  assert.equal(new Set(actual).size, actual.length);
+  for (const region of F.regionOrder) {
+    const expected = [
+      ...F.regionQualifiers(snapshot.regions[region], region),
+      ...won.filter((id) => V.get(id).region === region),
+    ];
+    const card = d.querySelector(`[data-overview-region="${region}"]`);
+    const ids = [...card.querySelectorAll("[data-world-qualifier]")].map(
+      (e) => e.dataset.worldQualifier,
+    );
+    assert.deepEqual(
+      ids.sort(),
+      expected.sort(),
+      `Actual World Cup tickets for ${region}`,
+    );
+    assert.equal(
+      card.querySelector(".full-regional-card-title strong").textContent,
+      `${expected.length} đội giành vé`,
+    );
+  }
+  assert.equal(
+    JSON.stringify(snapshot),
+    before,
+    "Overview must not change qualifications",
+  );
+  click('[data-action="Full.section"][data-arg="intercontinental"]');
+}
+assertRegionalTickets(0);
+for (let b = 0; b < 3; b++) {
+  for (let i = 0; i < 4; i++) {
     click(`[data-action="Full.qualifierStage"][data-arg="IC${b}"]`);
+    assertRegionalTickets(b + (i === 3 ? 1 : 0));
+  }
+}
 assert.equal(d.querySelectorAll(".qualification-winner").length, 3);
 click('[data-action="Full.drawWorld"]');
 assert(api.selectedFull().snapshot.world);
@@ -259,6 +305,18 @@ const reloaded = ui("new", 922, data);
 reloaded.w.__full.enterFull();
 reloaded.w.__full.openFull(id);
 assert(F.validFullSeason(reloaded.w.__full.selectedFull().snapshot));
+reloaded.w.document
+  .querySelector('[data-action="Full.section"][data-arg="overview"]')
+  .click();
+const savedSnapshot = reloaded.w.__full.selectedFull().snapshot;
+const roster = [...savedSnapshot.world.groups.flatMap((g) => g.teamIds)].sort();
+assert.deepEqual(
+  [...reloaded.w.document.querySelectorAll("[data-world-qualifier]")]
+    .map((e) => e.dataset.worldQualifier)
+    .sort(),
+  roster,
+  "Reloaded overview must show all 24 actual World Cup entrants",
+);
 reloaded.close();
 console.log(
   "PASS qualification v2: 40 full 366-match seasons, exact 17+4+3 qualification, 27-team pool, normalized seeds, 12/8/6/4 regional routes and byes, 9-team branches, 24 distinct entrants, score locks, malformed states, six-group UI, manual editor, stage buttons, gate and reload",

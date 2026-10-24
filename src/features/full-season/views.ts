@@ -109,7 +109,17 @@ function regionalOverviewCardHtml(s: FullSeason, r: Region) {
       F.leagueMatches(g).filter((m) => m.sets).length +
       (g.decider?.sets ? 1 : 0) +
       F.qualifierMatches(g.playoff).filter((m) => m.sets).length,
-    qualified = complete ? F.regionQualifiers(g, r) : [];
+    qualified = complete
+      ? [
+          ...new Set([
+            ...F.regionQualifiers(g, r),
+            ...(s.intercontinental?.branches.flatMap((b) => {
+              const id = F.qualifierWinner(b);
+              return id && get(id).region === r ? [id] : [];
+            }) || []),
+          ]),
+        ]
+      : [];
   return `<section class="panel full-region-summary full-regional-card ${complete ? "is-completed" : ""}" data-overview-region="${r}"><div class="full-regional-card-header"><span class="eyebrow">${names[r]}</span><span class="full-regional-state ${complete ? "is-completed" : ""}">${complete ? "✓ Hoàn tất" : played ? "Đang thi đấu" : "Chưa bắt đầu"}</span></div><div class="full-regional-card-title"><strong>${complete ? `${qualified.length} đội giành vé` : `${g.teamIds.length} đội`}</strong><span>${complete ? "WORLD CUP" : `${F.worldSlots[r]} suất World Cup`}</span></div>${complete ? `<ul class="full-regional-qualified ${qualified.length > 5 ? "is-large" : ""}" aria-label="Các đội ${names[r]} giành vé World Cup">${qualified.map((id) => `<li data-world-qualifier="${id}" title="${esc(get(id).name)}">${team(id)}<span aria-label="Đã giành vé">✓</span></li>`).join("")}</ul>` : `<div class="full-regional-progress"><div><span>Tiến độ khu vực</span><b>${played}<span> / ${total} trận</span></b></div><div class="progress" role="progressbar" aria-label="Tiến độ ${names[r]}" aria-valuenow="${played}" aria-valuemin="0" aria-valuemax="${total}"><i style="width:${total ? (played / total) * 100 : 0}%"></i></div><p>${g.groups ? F.regionalDescription(s, r) : `Vòng tròn một lượt · top ${g.directSlots || F.worldSlots[r]} giành vé thế giới${g.directSlots ? " · hạng 3 dự Play-in" : ""}`}</p></div>`}<button data-action="Full.section" data-arg="${r}"><span>${complete ? "Xem kết quả" : "Thi đấu khu vực"}</span><span aria-hidden="true">→</span></button></section>`;
 }
 export function regionHtml(s: FullSeason, r: Region, readonly: boolean) {
