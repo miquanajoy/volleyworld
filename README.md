@@ -1,10 +1,12 @@
 # VolleyWorld Simulator
 
-A Vietnamese-language men's volleyball simulator with three modes:
+A Vietnamese-language men's volleyball simulator with four modes:
 
 - **VolleyWorld League** (World League in menus): the original 32-team league, Play-in and playoff competition.
 - **VolleyWorld Cup** (World Cup in menus, previously Full Season): regional qualification followed by the 24-team world championship.
 - **VolleyWorld Nations League**: 64 fixed teams in four 16-team divisions, double round-robin groups, playoffs in every division and promotion/relegation across linked seasons. See [Nations League](docs/NATIONS-LEAGUE.md).
+
+- **VolleyWorld Challenger**: 32 fixed teams, five-round Swiss with three-win qualification / three-loss elimination, then a fixed 16-team playoff. Regional protection in round one and no Swiss rematches. See [Challenger](docs/CHALLENGER.md).
 
 The rename affects display text only. Existing storage keys, JSON formats, cloud tables and saved seasons retain their technical identifiers.
 

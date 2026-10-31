@@ -21,6 +21,9 @@ for (const file of [
   "nations-ui",
   "nations-continuation",
   "nations-cloud",
+  "challenger",
+  "challenger-ui",
+  "challenger-cloud",
 ]) {
   const r = spawnSync(process.execPath, ["tests/features/" + file + ".cjs"], {
     encoding: "utf8",

@@ -77,3 +77,12 @@ import * as nationsController from "../../src/features/nations-league/controller
 import { nationsCloud } from "../../src/features/nations-league/cloud";
 import * as nationsModel from "../../src/features/nations-league/model";
 target.__nations = { ...nationsController, ...nationsModel, nationsCloud };
+
+import * as challengerController from "../../src/features/challenger/controller";
+import * as challengerModel from "../../src/features/challenger/model";
+import { challengerCloud } from "../../src/features/challenger/cloud";
+target.__challenger = {
+  ...challengerController,
+  ...challengerModel,
+  challengerCloud,
+};

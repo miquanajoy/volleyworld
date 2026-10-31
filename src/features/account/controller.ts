@@ -1,3 +1,4 @@
+import { challengerCloud } from "../challenger/cloud";
 import { nationsCloud } from "../nations-league/cloud";
 import {
   switchFullAccount,
@@ -80,7 +81,7 @@ export function status(p: CloudPhase, message = "") {
     conflict: "⚠ Có tiến độ từ thiết bị khác",
     error: "⚠ Chưa đồng bộ · bản máy đã giữ",
   };
-  if (!["full-season", "nations-league"].includes(store.tab))
+  if (!["full-season", "nations-league", "challenger"].includes(store.tab))
     text("saved", labels[p] || labels.local);
   text("accountButton", accountState.user ? "☁ Tài khoản" : "☁ Đăng nhập");
   if (el("cloudDialog").open) draw();
@@ -212,6 +213,7 @@ export async function switchUser(next: User | null) {
   accountState.user = next;
   void switchFullAccount(accountState.client, next?.id || null);
   void nationsCloud.switchAccount(accountState.client, next?.id || null);
+  void challengerCloud.switchAccount(accountState.client, next?.id || null);
   if (!accountState.user) {
     let guest;
     try {
@@ -292,6 +294,7 @@ export async function syncNow() {
   await accountState.writer!.flush();
 }
 export async function manualSave(): Promise<ManualSaveResult> {
+  if (store.tab === "challenger") return challengerCloud.saveNow();
   if (store.tab === "nations-league") return nationsCloud.saveNow();
   if (store.tab === "full-season") return saveFullNow();
   if (accountState.manualBusy) return { status: "busy" };
@@ -456,7 +459,8 @@ export async function logout() {
     accountState.writer?.pending ||
     accountState.phase === "saving" ||
     fullCloudPending() ||
-    nationsCloud.pending()
+    nationsCloud.pending() ||
+    challengerCloud.pending()
   ) {
     if (
       !confirm(
@@ -542,12 +546,14 @@ export function initializeAccountEvents() {
       void retry();
       void reloadFullCloud();
       void nationsCloud.reload();
+      void challengerCloud.reload();
     }
   });
   window.addEventListener("focus", () => {
     void refresh();
     if (store.tab === "full-season") void reloadFullCloud();
     if (store.tab === "nations-league") void nationsCloud.reload();
+    if (store.tab === "challenger") void challengerCloud.reload();
   });
   window.addEventListener("beforeunload", (e) => {
     if (
@@ -555,7 +561,8 @@ export function initializeAccountEvents() {
       (accountState.writer?.pending ||
         accountState.writer?.running ||
         fullCloudPending() ||
-        nationsCloud.pending())
+        nationsCloud.pending() ||
+        challengerCloud.pending())
     ) {
       e.preventDefault();
       e.returnValue = "";

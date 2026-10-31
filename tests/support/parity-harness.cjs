@@ -134,6 +134,7 @@ function canonical(app, id = "body") {
     [
       "WORLD LEAGUE · WORLD CUP",
       "WORLD LEAGUE · WORLD CUP · NATIONS LEAGUE",
+      "WORLD LEAGUE · WORLD CUP · NATIONS LEAGUE · CHALLENGER",
     ].includes(edition?.textContent)
   )
     edition.textContent = "MEN’S WORLD CUP · SIMULATOR";
@@ -155,6 +156,7 @@ function canonical(app, id = "body") {
     copy.querySelectorAll(".notice > .badge + p").forEach((el) => el.remove());
   remove('[data-action="Full.enter"]');
   remove('[data-action="Nations.enter"]');
+  remove('[data-action="Challenger.enter"]');
   remove(".score-generator, .score-draft-status, .set-play, .set-clear");
   copy
     .querySelectorAll(".set-label")

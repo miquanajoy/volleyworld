@@ -93,6 +93,8 @@ const fs = require("node:fs"),
     "render",
     "__installAccount",
     "__full",
+    "__nations",
+    "__challenger",
   ])
     assert.equal(w[name], undefined, "production global leak " + name);
   const click = (selector) => {
@@ -273,6 +275,61 @@ const fs = require("node:fs"),
   await new Promise((r) => setTimeout(r, 10));
   assert(
     w.document.getElementById("toast").textContent.includes("Nations League"),
+  );
+  assert.equal(
+    w.localStorage.getItem("volleyworld-full-guest"),
+    fullBeforeNations,
+  );
+  assert.equal(w.localStorage.getItem("volleyworld-v1"), classicBeforeFull);
+  // Fourth mode: actual production actions, shared score editor, draw and cloud-save routing.
+  const nationsBeforeChallenger = w.localStorage.getItem(
+    "volleyworld-nations-guest",
+  );
+  click('[data-action="navigate"][data-arg="home"]');
+  click('[data-action="Challenger.enter"]');
+  click('[data-action="Challenger.create"]');
+  click('[data-action="Challenger.section"][data-arg="swiss"]');
+  assert.equal(w.document.querySelectorAll(".full-match").length, 16);
+  click('[data-action="Challenger.edit"]');
+  w.document.getElementById("generatedWinner").value = "0";
+  w.document.getElementById("generatedLosses").value = "0";
+  click('[data-action="generateScore"]');
+  w.document
+    .getElementById("scoreForm")
+    .dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
+  assert.equal(
+    JSON.parse(w.localStorage.getItem("volleyworld-challenger-guest"))[0]
+      .played,
+    1,
+  );
+  click('[data-action="Challenger.simRound"]');
+  click('[data-action="Challenger.next"]');
+  assert.equal(
+    JSON.parse(w.localStorage.getItem("volleyworld-challenger-guest"))[0]
+      .snapshot.rounds.length,
+    2,
+  );
+  click("#saveProgress");
+  await new Promise((r) => setTimeout(r, 10));
+  assert(w.document.getElementById("toast").textContent.includes("Challenger"));
+  click('[data-action="Challenger.finish"]');
+  const challenger = JSON.parse(
+    w.localStorage.getItem("volleyworld-challenger-guest"),
+  )[0];
+  assert.equal(challenger.played, 82);
+  assert.equal(challenger.status, "completed");
+  click('[data-action="Challenger.section"][data-arg="overview"]');
+  assert.equal(
+    w.document.querySelectorAll(".podium-grid .medal-card").length,
+    3,
+  );
+  assert.equal(
+    w.document.querySelectorAll(".swiss-standings tbody tr").length,
+    32,
+  );
+  assert.equal(
+    w.localStorage.getItem("volleyworld-nations-guest"),
+    nationsBeforeChallenger,
   );
   assert.equal(
     w.localStorage.getItem("volleyworld-full-guest"),

@@ -2711,3 +2711,216 @@
     flex-basis: 320px;
   }
 }
+
+/* Challenger keeps the shared match cards, editor and connected playoff tree. */
+.challenger-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 28px;
+  padding: 32px;
+  margin: 20px 0;
+  background: var(--green);
+  color: #fff;
+  border-radius: 16px;
+}
+.challenger-hero .eyebrow {
+  color: var(--lime);
+  font-size: 10px;
+  letter-spacing: 1.6px;
+}
+.challenger-hero h2 {
+  margin: 12px 0;
+  font-size: clamp(24px, 3vw, 36px);
+}
+.challenger-hero p {
+  color: #d1dfd1;
+  line-height: 1.8;
+  font-size: 14px;
+}
+.challenger-hero .primary {
+  background: var(--lime);
+  color: var(--green);
+  border-color: var(--lime);
+}
+.challenger-hero .actions > button:not(.primary) {
+  background: transparent;
+  border-color: #8da598;
+  color: white;
+}
+.challenger-hero-numbers {
+  flex: 0 0 230px;
+  text-align: center;
+}
+.challenger-hero-numbers strong {
+  display: block;
+  color: var(--lime);
+  font-size: 90px;
+  font-weight: 800;
+  letter-spacing: -5px;
+  line-height: 1.1;
+}
+.challenger-hero-numbers strong span {
+  font-size: 34px;
+  letter-spacing: -1px;
+}
+.challenger-hero-numbers small {
+  display: block;
+  color: #d1dfd1;
+  font-size: 9px;
+  letter-spacing: 1px;
+  margin-top: 12px;
+}
+.challenger-season-hero h2 {
+  font-size: 27px;
+}
+.swiss-round-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0;
+}
+.swiss-round-nav button {
+  padding: 10px 16px;
+  font-size: 12px;
+}
+.swiss-round-nav button[aria-pressed="true"] {
+  color: white;
+  background: var(--green);
+  border-color: var(--green);
+}
+.swiss-score-group {
+  margin: 28px 0;
+}
+.swiss-score-group > .section-head {
+  margin-bottom: 14px;
+}
+.swiss-score-group > .section-head h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.swiss-record {
+  padding: 5px 9px;
+  border-radius: 6px;
+  color: var(--green);
+  background: #edf2e8;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+}
+.swiss-eliminated {
+  color: #9f573d;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.swiss-standings .full-team-line {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) 78px;
+  align-items: center;
+  gap: 12px;
+}
+.swiss-standings .form-strip {
+  justify-self: end;
+}
+.swiss-standings th,
+.swiss-standings td {
+  white-space: nowrap;
+}
+.swiss-standings .team {
+  font-size: 12px;
+}
+.swiss-standings .form-dot {
+  width: 13px;
+  height: 17px;
+  font-size: 8px;
+}
+.swiss-qualified-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+.swiss-qualified-grid > .panel {
+  padding: 22px;
+  min-width: 0;
+}
+.swiss-team-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.swiss-team-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px;
+  background: #f3f6ee;
+  border-radius: 7px;
+}
+.swiss-team-list .team {
+  min-width: 0;
+  font-size: 12px;
+}
+.swiss-team-list .team-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.swiss-team-list b {
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.challenger-history-medals p {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 10px 0;
+}
+.challenger-rules {
+  margin: 20px 0;
+  padding: 20px;
+}
+.challenger-rules p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+@media (max-width: 850px) {
+  .swiss-team-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .challenger-hero-numbers {
+    flex-basis: 170px;
+  }
+}
+@media (max-width: 600px) {
+  .challenger-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 22px;
+    gap: 20px;
+  }
+  .challenger-hero-numbers {
+    flex-basis: auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    text-align: left;
+  }
+  .challenger-hero-numbers strong {
+    font-size: 58px;
+  }
+  .challenger-hero-numbers small {
+    line-height: 1.7;
+    margin: 0;
+    max-width: 140px;
+  }
+  .swiss-qualified-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .swiss-round-nav button {
+    padding: 9px 12px;
+  }
+}

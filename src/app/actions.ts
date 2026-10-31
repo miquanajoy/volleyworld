@@ -1,3 +1,5 @@
+import * as Challenger from "../features/challenger/controller";
+import { challengerCloud } from "../features/challenger/cloud";
 import * as Nations from "../features/nations-league/controller";
 import { nationsCloud } from "../features/nations-league/cloud";
 import * as Full from "../features/full-season/controller";
@@ -33,6 +35,35 @@ type Action = (element: HTMLElement) => unknown;
 const arg = (e: HTMLElement) => e.dataset.arg || "";
 /** Explicit command table: markup carries data, never executable JavaScript. */
 const actions: Record<string, Action> = {
+  "Challenger.enter": () => Challenger.enter(),
+  "Challenger.create": () => Challenger.create(),
+  "Challenger.open": (e) => Challenger.open(arg(e)),
+  "Challenger.section": (e) => Challenger.section(arg(e)),
+  "Challenger.round": (e) => Challenger.round(arg(e)),
+  "Challenger.next": () => Challenger.next(),
+  "Challenger.simRound": () => Challenger.simRound(),
+  "Challenger.simMatch": (e) => Challenger.simMatch(arg(e)),
+  "Challenger.draw": () => Challenger.draw(),
+  "Challenger.stage": (e) => Challenger.stage(arg(e)),
+  "Challenger.finish": () => Challenger.finish(),
+  "Challenger.edit": (e) => Challenger.edit(arg(e)),
+  "Challenger.match": (e) => Challenger.showMatch(arg(e)),
+  "Challenger.dialogSim": () => Challenger.actDialog(),
+  "Challenger.dialogEdit": () => Challenger.actDialog(true),
+  "Challenger.team": (e) =>
+    Challenger.showTeam(
+      arg(e),
+      e.dataset.arg1 === undefined ? undefined : Number(e.dataset.arg1),
+    ),
+  "Challenger.export": () => Challenger.exportSeasons(),
+  "Challenger.exportOne": () => Challenger.exportSeasons(true),
+  "Challenger.import": () => $("challengerImport").click(),
+  "Challenger.importFile": (e) =>
+    Challenger.importSeasons((e as HTMLInputElement).files?.[0]),
+  "Challenger.restore": () => Challenger.restore(),
+  "Challenger.sync": () => challengerCloud.reload(),
+  "Challenger.remote": () => challengerCloud.resolve(true),
+  "Challenger.local": () => challengerCloud.resolve(false),
   "Nations.enter": () => Nations.enterNations(),
   "Nations.library": () => Nations.enterNations(),
   "Nations.create": () => Nations.createNations(),
@@ -116,11 +147,13 @@ const actions: Record<string, Action> = {
   exportSave: () => exportSave(),
   importFile: () =>
     $(
-      store.tab === "nations-league"
-        ? "nationsImport"
-        : store.tab === "full-season"
-          ? "fullImport"
-          : "import",
+      store.tab === "challenger"
+        ? "challengerImport"
+        : store.tab === "nations-league"
+          ? "nationsImport"
+          : store.tab === "full-season"
+            ? "fullImport"
+            : "import",
     ).click(),
   closeDialog: (e) => ($(arg(e)) as HTMLDialogElement).close(),
   changeRound: (e) => {
@@ -160,11 +193,13 @@ const actions: Record<string, Action> = {
   "Seasons.start": () => getPorts().seasons.start(),
   "Seasons.customize": () => getPorts().seasons.customize(),
   "Seasons.requestNew": () =>
-    store.tab === "nations-league"
-      ? Nations.requestNationsSeason()
-      : store.tab === "full-season"
-        ? Full.createFull()
-        : getPorts().seasons.requestNew(),
+    store.tab === "challenger"
+      ? Challenger.create()
+      : store.tab === "nations-league"
+        ? Nations.requestNationsSeason()
+        : store.tab === "full-season"
+          ? Full.createFull()
+          : getPorts().seasons.requestNew(),
   "Seasons.view": (e) => getPorts().seasons.view(arg(e)),
   "Seasons.resolve": (e) =>
     getPorts().seasons.resolve(arg(e), e.dataset.arg1 === "true"),

@@ -6,6 +6,7 @@ import type {
 } from "../domain/types";
 
 export type AppTab =
+  | "challenger"
   | "full-season"
   | "nations-league"
   | "home"

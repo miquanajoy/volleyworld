@@ -1,4 +1,8 @@
 import {
+  renderChallenger,
+  exportSeasons as exportChallenger,
+} from "../features/challenger/controller";
+import {
   renderNations,
   exportNations,
 } from "../features/nations-league/controller";
@@ -52,12 +56,13 @@ export function render() {
     'footer [data-action="Seasons.requestNew"]',
   );
   if (footer) footer.textContent = "Mùa giải mới";
-  if (store.tab === "full-season" || store.tab === "nations-league") {
+  if (["full-season", "nations-league", "challenger"].includes(store.tab)) {
     $("homeHero").hidden = true;
     $("stats").hidden = true;
     $("nav").hidden = true;
     $("seasonBar").hidden = true;
-    if (store.tab === "nations-league") renderNations();
+    if (store.tab === "challenger") renderChallenger();
+    else if (store.tab === "nations-league") renderNations();
     else renderFull();
     return;
   }
@@ -127,6 +132,7 @@ export function render() {
   if (store.tab === "settings") getPorts().settings.render();
 }
 export async function exportSave() {
+  if (store.tab === "challenger") return exportChallenger();
   if (store.tab === "nations-league") return exportNations();
   if (store.tab === "full-season") return exportFull();
   try {
