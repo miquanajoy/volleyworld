@@ -2924,3 +2924,469 @@
     padding: 9px 12px;
   }
 }
+
+/* Challenger roster selection. */
+.challenger-roster-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px;
+  background: #edf3e6;
+  border: 1px solid #d7e3ca;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+.challenger-roster-summary strong {
+  color: var(--green);
+  font-size: 32px;
+}
+.challenger-roster-summary strong small {
+  margin-left: 8px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.challenger-roster-summary .is-incomplete {
+  color: #a96c32;
+}
+.challenger-roster-summary p {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+.challenger-region-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 20px 0;
+}
+.challenger-region-tabs button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  text-align: left;
+  min-width: 0;
+  font-size: 12px;
+}
+.challenger-region-tabs button[aria-pressed="true"] {
+  color: var(--green);
+  border-color: #9fb48e;
+  background: #edf3e6;
+}
+.challenger-region-tabs b {
+  font-size: 20px;
+}
+.challenger-region-tabs small {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.challenger-roster-catalog {
+  padding: 22px;
+}
+.challenger-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.challenger-roster-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  text-align: left;
+}
+.challenger-roster-option.is-selected {
+  color: var(--green);
+  background: #f0f6e9;
+  border-color: #adc49a;
+}
+.challenger-roster-option .team {
+  min-width: 0;
+  font-size: 12px;
+}
+.challenger-roster-option .team-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.challenger-roster-check {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 1px solid #d0dbc6;
+  border-radius: 5px;
+  font-size: 12px;
+}
+.challenger-roster-option.is-selected .challenger-roster-check {
+  background: var(--green);
+  color: white;
+  border-color: var(--green);
+}
+.challenger-roster-review {
+  padding: 18px;
+  margin: 20px 0;
+}
+.challenger-roster-review > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.challenger-roster-review button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+}
+.challenger-roster-review .team {
+  font-size: 11px;
+}
+.challenger-roster-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffffff5;
+  box-shadow: 0 -4px 20px #1b33210a;
+}
+.challenger-roster-footer p {
+  font-size: 12px;
+  color: var(--muted);
+}
+/* Swiss lattice: paths represent W/L transitions; future opponents stay undrawn. */
+.swiss-view-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 0 16px;
+  border-radius: 9px;
+  background: #e9eee2;
+}
+.swiss-view-switch button {
+  padding: 8px 14px;
+  font-size: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+}
+.swiss-view-switch button[aria-pressed="true"] {
+  color: var(--green);
+  background: white;
+  box-shadow: 0 1px 5px #17321f12;
+}
+.swiss-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin: 0 0 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.swiss-map-legend > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.swiss-map-legend i {
+  width: 18px;
+  border-top: 2px solid #7e9f68;
+}
+.swiss-map-legend .swiss-legend-loss {
+  border-color: #ba9f87;
+}
+.swiss-tree-scroll {
+  overflow-x: auto;
+  padding: 20px;
+  border: 1px solid #dce4d4;
+  border-radius: 14px;
+  background: #f1f5eb;
+  margin: 0 0 24px;
+}
+.swiss-map {
+  position: relative;
+}
+.swiss-map-head {
+  display: flex;
+  gap: 64px;
+  margin-bottom: 18px;
+}
+.swiss-map-head > div {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px 12px;
+  border-bottom: 1px solid #d4dfca;
+}
+.swiss-map-head .eyebrow {
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 1.2px;
+}
+.swiss-map-head b {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.swiss-map-body {
+  position: relative;
+}
+.swiss-map-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.swiss-map-lines path {
+  fill: none;
+  stroke-width: 1.5;
+}
+.swiss-flow-win {
+  stroke: #7e9f68;
+}
+.swiss-flow-loss {
+  stroke: #ba9f87;
+  stroke-dasharray: 4 3;
+}
+.swiss-map-node {
+  position: absolute;
+  overflow: hidden;
+  border: 1px solid #d7e1cf;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 3px 10px #1d382009;
+}
+.swiss-map-node.is-current {
+  border-color: #95ac80;
+  box-shadow: 0 0 0 2px #a9c18d25;
+}
+.swiss-map-node > header {
+  position: static;
+  z-index: auto;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-bottom: 1px solid #e5ebdf;
+  background: #f8faf5;
+}
+.swiss-map-node > header strong {
+  color: var(--green);
+  font-size: 25px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.swiss-map-node > header > span {
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+}
+.swiss-map-node > header > small {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 9px;
+  white-space: nowrap;
+}
+.swiss-map-fixtures {
+  display: grid;
+}
+.swiss-map-match {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 3px;
+  height: 40px;
+  min-height: 40px;
+  width: 100%;
+  padding: 0 6px;
+  border: 0;
+  border-bottom: 1px solid #edf1e9;
+  border-radius: 0;
+  background: white;
+  text-align: left;
+}
+.swiss-map-match:hover {
+  background: #f3f8ed;
+}
+.swiss-map-match > span {
+  min-width: 0;
+  padding: 4px 2px;
+  border-radius: 4px;
+}
+.swiss-map-match > b {
+  text-align: center;
+  font-size: 12px;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+.swiss-map-match .is-winner {
+  background: #eaf3df;
+  color: var(--green);
+}
+.swiss-map-match .is-loser {
+  opacity: 0.55;
+}
+.swiss-map-team {
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr);
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+.swiss-map-team > small {
+  font-size: 8px;
+  color: #87927d;
+  font-weight: 500;
+}
+.swiss-map-team .team {
+  gap: 4px;
+  min-width: 0;
+  font-size: 10px;
+}
+.swiss-map-team .flag {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.swiss-map-team .team-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.swiss-map-node > footer {
+  display: block;
+  height: 24px;
+  padding: 6px 10px;
+  margin: 0;
+  border: 0;
+  color: var(--muted);
+  background: #f8faf5;
+  font-size: 9px;
+  line-height: 12px;
+}
+.swiss-map-node.is-qualified {
+  border-color: #b0c895;
+  background: #f5faee;
+}
+.swiss-map-node.is-qualified > header {
+  background: #eaf3dd;
+}
+.swiss-map-node.is-qualified > header > span {
+  color: var(--green);
+}
+.swiss-map-node.is-eliminated {
+  border-color: #d7d5cb;
+  background: #f8f7f3;
+}
+.swiss-map-node.is-eliminated > header {
+  background: #eeece5;
+}
+.swiss-map-node.is-eliminated > header strong {
+  color: #8f806e;
+}
+.swiss-map-terminal {
+  padding: 6px 10px;
+}
+.swiss-map-terminal > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  height: 28px;
+  color: var(--green);
+}
+.swiss-map-terminal .swiss-map-team {
+  flex: 1;
+}
+.swiss-map-terminal .swiss-map-team .team {
+  font-size: 11px;
+}
+.swiss-map-terminal .swiss-map-empty {
+  font-size: 10px;
+  color: #9aa28f;
+  font-weight: 400;
+}
+.swiss-map-pending {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 52px);
+  padding: 10px;
+  gap: 6px;
+}
+.swiss-map-pending > p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.swiss-map-pending > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 6px;
+}
+.swiss-map-pending > div > span {
+  padding: 6px 2px;
+  min-width: 0;
+  height: 28px;
+  background: #f5f8f0;
+  border-radius: 3px;
+}
+.swiss-map-pending > small {
+  margin-top: auto;
+  color: #98a18d;
+  font-size: 10px;
+}
+@media (max-width: 850px) {
+  .challenger-roster-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .challenger-region-tabs {
+    display: flex;
+    overflow-x: auto;
+  }
+  .challenger-region-tabs button {
+    flex: 0 0 155px;
+  }
+}
+@media (max-width: 600px) {
+  .challenger-roster-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 18px;
+  }
+  .challenger-roster-catalog {
+    padding: 16px;
+  }
+  .challenger-roster-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px;
+  }
+  .challenger-roster-footer p {
+    margin: 0;
+  }
+  .swiss-tree-scroll {
+    padding: 12px;
+  }
+}
+@media (max-width: 380px) {
+  .challenger-roster-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

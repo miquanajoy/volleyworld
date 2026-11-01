@@ -11,8 +11,11 @@ begin
  assert not public.volleyworld_challenger_state_valid('{}'::jsonb),'missing schema rejected';
  select user_id into actor from public.volleyworld_full_seasons limit 1;
  assert actor is not null,'Need an existing owner for FK validation';
+ select coalesce(max(season_number),0) into n from public.volleyworld_challenger_seasons where user_id=actor;
+ select jsonb_agg(jsonb_set(value,'{state,seasonNumber}',to_jsonb(n+(value->'state'->>'seasonNumber')::int))) into fixtures from jsonb_array_elements(fixtures);
+
  perform set_config('request.jwt.claim.sub',actor::text,true);perform set_config('role','authenticated',true);
- for f in select * from jsonb_to_recordset(fixtures) as t(seq integer,key text,state jsonb,expected boolean) where expected order by seq loop
+ for f in select * from jsonb_to_recordset(fixtures) as t(seq integer,key text,state jsonb,expected boolean) where expected and seq<50 order by seq loop
   select revision into rev from public.save_volleyworld_challenger_season(f.state,rev);
   assert rev=f.seq+1,'CAS acknowledgement: '||f.key;
  end loop;
@@ -23,6 +26,15 @@ begin
  bad:=jsonb_set(s,'{tie}',(select jsonb_agg(value order by ord desc) from jsonb_array_elements(s->'tie') with ordinality t(value,ord)));
  assert public.volleyworld_challenger_state_valid(bad),'alternate valid completed snapshot';
  begin perform public.save_volleyworld_challenger_season(bad,rev);raise exception 'immutable overwritten';exception when raise_exception then if sqlerrm not like 'SAVE_CONFLICT%' then raise;end if;end;
+ select state into s from jsonb_to_recordset(fixtures) as t(key text,state jsonb) where key='custom-fresh';
+ select revision into rev from public.save_volleyworld_challenger_season(s,0);assert rev=1,'custom roster initial save';
+ select state into bad from jsonb_to_recordset(fixtures) as t(key text,state jsonb) where key='custom-edit';
+ select revision into rev from public.save_volleyworld_challenger_season(bad,1);assert rev=2,'unstarted roster may change';
+ select state into bad from jsonb_to_recordset(fixtures) as t(key text,state jsonb) where key='custom-started';
+ select revision into rev from public.save_volleyworld_challenger_season(bad,2);assert rev=3,'custom roster manual score';
+ begin perform public.save_volleyworld_challenger_season(s,3);raise exception 'started roster changed';exception when raise_exception then if sqlerrm<>'IMMUTABLE_CHALLENGER_ROSTER' then raise;end if;end;
+ select state into bad from jsonb_to_recordset(fixtures) as t(key text,state jsonb) where key='custom-complete';
+ select revision into rev from public.save_volleyworld_challenger_season(bad,3);assert rev=4,'custom roster complete save';
  perform set_config('request.jwt.claim.sub',other_actor::text,true);
  select count(*) into n from public.volleyworld_challenger_seasons;assert n=0,'cross-account SELECT denied';
  assert (select qual like '%auth.uid%' and with_check like '%auth.uid%' from pg_policies where schemaname='public' and tablename='volleyworld_challenger_seasons' and policyname='challenger_update_owner'),'UPDATE ownership checks';
@@ -33,4 +45,4 @@ begin
  raise exception 'CHALLENGER_TEST_ROLLBACK_OK';
  exception when raise_exception then if sqlerrm<>'CHALLENGER_TEST_ROLLBACK_OK' then raise;end if;end;
 end $$;
-select 'PASS Challenger SQL: 17 valid + 12 invalid JS parity fixtures, CAS on all phases, derived 82-match completion, immutable history, cross-account RLS and anonymous denial; rollback only' as verification;
+select 'PASS Challenger SQL: 21 valid + 12 invalid JS parity fixtures, custom rosters and started-roster lock, CAS on all phases, derived 82-match completion, immutable history, cross-account RLS and anonymous denial; rollback only' as verification;

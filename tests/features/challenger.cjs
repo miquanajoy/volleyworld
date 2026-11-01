@@ -177,3 +177,42 @@ Math.random = native;
 console.log(
   "PASS Challenger engine: 500 complete 82-match seasons; exact Swiss groups/berths, no rematches, perfect-matching recovery, OMW, seed bands, fixed routes, bronze-first locks, partial/manual completion, chronology and corrupt-state rejection",
 );
+// Diverse and extreme regional quotas across the full 100-team catalog.
+for (let trial = 0; trial < 80; trial++) {
+  const quotas = [
+    { CEV: 16, AVC: 6, NORCECA: 6, CAVB: 2, CSV: 2 },
+    { CEV: 2, AVC: 12, NORCECA: 12, CAVB: 4, CSV: 2 },
+    { CEV: 16, AVC: 2, NORCECA: 2, CAVB: 6, CSV: 6 },
+    { CEV: 8, AVC: 8, NORCECA: 8, CAVB: 6, CSV: 2 },
+  ][trial % 4];
+  const ids = Object.entries(quotas).flatMap(([region, n]) =>
+    V.shuffle(V.catalog.filter((t) => t.region === region))
+      .slice(0, n)
+      .map((t) => t.id),
+  );
+  assert(C.validChallengerRoster(ids));
+  const s = C.freshChallenger(1, ids);
+  assert(C.validChallenger(s));
+  assert(s.rounds[0].every((m) => V.get(m.a).region !== V.get(m.b).region));
+  C.finishChallenger(s);
+  assert(C.validChallenger(s));
+  assert.equal(C.challengerMatches(s).length, 82);
+}
+const excessive = Object.entries({
+  CEV: 17,
+  AVC: 5,
+  NORCECA: 6,
+  CAVB: 2,
+  CSV: 2,
+}).flatMap(([r, n]) =>
+  V.regionTeams(r)
+    .slice(0, n)
+    .map((t) => t.id),
+);
+assert(!C.validChallengerRoster(excessive));
+assert.throws(() => C.freshChallenger(1, excessive));
+assert(!C.validChallengerRoster(C.challengerRoster().slice(1)));
+assert(!C.validChallengerRoster([...C.challengerRoster().slice(1), "INVALID"]));
+console.log(
+  "PASS custom Challenger rosters: 80 complete seasons using all regions and extreme allowed quotas; opening region/seed rules preserved, invalid sizes and excessive regional quotas rejected",
+);

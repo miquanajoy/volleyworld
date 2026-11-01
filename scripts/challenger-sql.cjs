@@ -65,9 +65,43 @@ if (!b) throw Error("No same-region negative fixture");
 [a.b, b.b] = [b.b, a.b];
 if (C.validChallenger(opening)) throw Error("Region protection not validated");
 invalid.push({ key: "bad-opening-same-region", state: opening });
+const customIds = Object.entries({
+  CEV: 16,
+  AVC: 6,
+  NORCECA: 6,
+  CAVB: 2,
+  CSV: 2,
+}).flatMap(([r, n]) =>
+  V.regionTeams(r)
+    .slice(-n)
+    .map((t) => t.id),
+);
+const custom = C.freshChallenger(2, customIds),
+  customFixtures = [{ key: "custom-fresh", state: clone(custom) }];
+const changed = [...customIds],
+  out = changed.find((id) => V.get(id).region === "CEV"),
+  replacement = V.regionTeams("CEV").find((t) => !changed.includes(t.id)).id;
+changed[changed.indexOf(out)] = replacement;
+const edited = C.freshChallenger(2, changed);
+edited.seasonId = custom.seasonId;
+edited.createdAt = custom.createdAt;
+customFixtures.push({ key: "custom-edit", state: clone(edited) });
+C.recordChallengerScore(edited, edited.rounds[0][0].id, [
+  [25, 20],
+  [25, 20],
+  [25, 20],
+]);
+customFixtures.push({ key: "custom-started", state: clone(edited) });
+C.finishChallenger(edited);
+customFixtures.push({ key: "custom-complete", state: clone(edited) });
+if (!customFixtures.every((f) => C.validChallenger(f.state)))
+  throw Error("Invalid custom fixture");
 const quote = (s) => "'" + JSON.stringify(s).replaceAll("'", "''") + "'::jsonb";
 const values = [
   ...fixtures.map((f, i) => `(${i},'${f.key}',${quote(f.state)},true)`),
+  ...customFixtures.map(
+    (f, i) => `(${50 + i},'${f.key}',${quote(f.state)},true)`,
+  ),
   ...invalid.map((f, i) => `(${100 + i},'${f.key}',${quote(f.state)},false)`),
 ].join(",\n");
 const template = fs.readFileSync("supabase/tests/challenger.sql", "utf8");
@@ -77,6 +111,7 @@ fs.writeFileSync(
     "__FIXTURE_JSON__",
     quote([
       ...fixtures.map((f, i) => ({ ...f, seq: i, expected: true })),
+      ...customFixtures.map((f, i) => ({ ...f, seq: 50 + i, expected: true })),
       ...invalid.map((f, i) => ({ ...f, seq: 100 + i, expected: false })),
     ]),
   ),
@@ -86,5 +121,5 @@ fs.writeFileSync(
   `with fixtures(seq,key,state,expected) as (values ${values}) select key, public.volleyworld_challenger_state_valid(state)=expected as passed from fixtures order by seq;`,
 );
 console.log(
-  `Prepared ${fixtures.length} valid and ${invalid.length} invalid JS/SQL fixtures; verification always rolls back`,
+  `Prepared ${fixtures.length + customFixtures.length} valid and ${invalid.length} invalid JS/SQL fixtures; verification always rolls back`,
 );

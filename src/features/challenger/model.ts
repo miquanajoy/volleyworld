@@ -10,6 +10,15 @@ export const model = {
   selected: null as string | null,
   section: "overview",
   round: 0,
+  swissView: "tree" as "tree" | "matches",
+  setup: null as null | {
+    scope: string;
+    token: number;
+    editId: string | null;
+    ids: string[];
+    region: string;
+    error: string;
+  },
   loading: false,
   error: "",
 };

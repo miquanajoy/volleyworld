@@ -3,6 +3,7 @@ const containers = [
   ".playoff-tree-scroll",
   ".double-lower-scroll",
   ".full-bracket",
+  ".swiss-tree-scroll",
 ];
 /** Replacing the bracket DOM must not send a player back to its first column. */
 export function preserveBracketScroll(

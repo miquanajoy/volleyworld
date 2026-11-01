@@ -1,4 +1,4 @@
-import { defaultIds, get } from "../../data/teams";
+import { defaultIds, get, limits } from "../../data/teams";
 import type { Match, SetScore, TeamId } from "../types";
 import { score, validate, winner, loser } from "../match/scoring";
 import { simulate } from "../match/simulation";
@@ -13,6 +13,19 @@ import type { ChallengerSeason } from "./types";
 export * from "./types";
 export const challengerRoster = () =>
   [...defaultIds].sort((a, b) => get(a).rank - get(b).rank);
+export function validChallengerRoster(ids: string[]): boolean {
+  if (
+    !Array.isArray(ids) ||
+    ids.length !== 32 ||
+    new Set(ids).size !== 32 ||
+    !ids.every((id) => !!get(id))
+  )
+    return false;
+  return Object.entries(limits).every(([region, limit]) => {
+    const n = ids.filter((id) => get(id).region === region).length;
+    return n >= limit.min && n <= Math.min(limit.max, 16);
+  });
+}
 /** Bipartite matching keeps both seed protection and regional separation. */
 function openingOpponents(roster: TeamId[]) {
   const lower = shuffle(roster.slice(16)),
@@ -35,8 +48,13 @@ function openingOpponents(roster: TeamId[]) {
   const opponent = new Map([...owner].map(([b, a]) => [a, b]));
   return roster.slice(0, 16).map((a) => opponent.get(a)!);
 }
-export function freshChallenger(number = 1): ChallengerSeason {
-  const roster = challengerRoster(),
+export function freshChallenger(
+  number = 1,
+  selected = challengerRoster(),
+): ChallengerSeason {
+  if (!validChallengerRoster(selected))
+    throw Error("Chọn đủ 32 đội và đúng giới hạn khu vực.");
+  const roster = [...selected].sort((a, b) => get(a).rank - get(b).rank),
     lower = openingOpponents(roster);
   return {
     version: 1,

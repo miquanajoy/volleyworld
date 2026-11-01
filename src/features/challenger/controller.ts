@@ -1,3 +1,5 @@
+import { get } from "../../data/teams";
+import { setupHtml } from "./setup";
 import * as C from "../../domain/challenger/index";
 import type { WorldStage } from "../../domain/full-season/types";
 import { simulate } from "../../domain/match/simulation";
@@ -42,6 +44,7 @@ export function enter() {
   store.seasonView = null;
   store.tab = "challenger";
   model.selected = null;
+  model.setup = null;
   model.section = "overview";
   render();
 }
@@ -49,21 +52,118 @@ const nextNumber = () =>
   Math.max(0, ...model.records.map((r) => r.season_number)) + 1;
 export function create() {
   cloud.initialize();
+  model.setup = {
+    scope: model.scope,
+    token: model.token,
+    editId: null,
+    ids: C.challengerRoster(),
+    region: "CEV",
+    error: "",
+  };
+  store.tab = "challenger";
+  render();
+}
+export function editRoster() {
+  const row = selected();
+  if (!row?.snapshot || row.played || view.readonly()) return;
+  model.setup = {
+    scope: model.scope,
+    token: model.token,
+    editId: row.season_id,
+    ids: [...row.snapshot.roster],
+    region: "CEV",
+    error: "",
+  };
+  render();
+}
+export function cancelSetup() {
+  model.setup = null;
+  render();
+}
+export function setupRegion(region: string) {
+  if (
+    !model.setup ||
+    model.setup.scope !== model.scope ||
+    model.setup.token !== model.token ||
+    !["CEV", "AVC", "NORCECA", "CAVB", "CSV"].includes(region)
+  )
+    return;
+  model.setup.region = region;
+  render();
+}
+export function toggleTeam(id: string) {
+  const draft = model.setup;
+  if (
+    !draft ||
+    draft.scope !== model.scope ||
+    draft.token !== model.token ||
+    !get(id)
+  )
+    return;
+  draft.ids = draft.ids.includes(id)
+    ? draft.ids.filter((x) => x !== id)
+    : [...draft.ids, id];
+  draft.error = "";
+  render();
+}
+export function resetRoster() {
+  if (
+    model.setup &&
+    model.setup.scope === model.scope &&
+    model.setup.token === model.token
+  ) {
+    model.setup.ids = C.challengerRoster();
+    model.setup.error = "";
+    render();
+  }
+}
+export function start() {
+  const draft = model.setup;
+  if (!draft || draft.scope !== model.scope || draft.token !== model.token)
+    return;
+  if (!C.validChallengerRoster(draft.ids)) {
+    draft.error =
+      "Cần đúng 32 đội; châu Âu 2–16, châu Á 2–12, Bắc/Trung Mỹ 2–12, châu Phi 2–8, Nam Mỹ 2–6.";
+    render();
+    return;
+  }
   run(() => {
-    const s = C.freshChallenger(nextNumber()),
-      row = recordOf(s);
-    row.dirty = true;
-    model.records.push(row);
-    model.selected = s.seasonId;
-    model.section = "overview";
-    model.round = 0;
-    store.tab = "challenger";
-    if (!persist()) toast("Chưa lưu được trên thiết bị. Hãy xuất mùa mới.");
-    cloud.queue(row);
+    if (draft.editId) {
+      const row = selected();
+      if (row?.season_id !== draft.editId || row.played || view.readonly())
+        throw Error(
+          "Mùa đã bắt đầu hoặc tiến trình đã thay đổi. Không thể đổi đội.",
+        );
+      mutate((s) => {
+        const fresh = C.freshChallenger(s.seasonNumber, draft.ids);
+        Object.assign(s, fresh, {
+          seasonId: s.seasonId,
+          createdAt: s.createdAt,
+        });
+      });
+    } else {
+      const s = C.freshChallenger(nextNumber(), draft.ids),
+        row = recordOf(s);
+      row.dirty = true;
+      model.records.push(row);
+      model.selected = s.seasonId;
+      model.section = "overview";
+      model.round = 0;
+      if (!persist()) toast("Chưa lưu được trên thiết bị. Hãy xuất mùa mới.");
+      cloud.queue(row);
+    }
+    model.setup = null;
+    model.swissView = "tree";
     render();
   });
 }
+export function swissView(value: string) {
+  if (value !== "tree" && value !== "matches") return;
+  model.swissView = value;
+  render();
+}
 export function open(id: string) {
+  model.setup = null;
   if (!model.records.some((r) => r.season_id === id)) return;
   model.selected = id;
   model.section = "overview";
@@ -325,7 +425,12 @@ export function renderChallenger() {
           ? "● Challenger đã giữ trên thiết bị · chờ đồng bộ"
           : "● Challenger đã lưu";
       let html = view.statusHtml();
-      if (!row) html += view.libraryHtml();
+      if (
+        model.setup?.scope === model.scope &&
+        model.setup.token === model.token
+      )
+        html += setupHtml();
+      else if (!row) html += view.libraryHtml();
       else if (!s) {
         html += `<section class="panel full-empty"><h3>Đang tải mùa Challenger…</h3><button data-action="Challenger.enter">← Các mùa</button><button data-action="Challenger.open" data-arg="${esc(row.season_id)}">Thử lại</button></section>`;
         const key = model.scope + row.season_id;

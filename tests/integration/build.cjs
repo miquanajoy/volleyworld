@@ -288,7 +288,12 @@ const fs = require("node:fs"),
   click('[data-action="navigate"][data-arg="home"]');
   click('[data-action="Challenger.enter"]');
   click('[data-action="Challenger.create"]');
+  assert(w.document.querySelector(".challenger-roster-setup"));
+  click('[data-action="Challenger.start"]');
   click('[data-action="Challenger.section"][data-arg="swiss"]');
+  assert.equal(w.document.querySelectorAll(".swiss-map-match").length, 16);
+  assert.equal(w.document.querySelectorAll(".swiss-map-lines path").length, 18);
+  click('[data-action="Challenger.swissView"][data-arg="matches"]');
   assert.equal(w.document.querySelectorAll(".full-match").length, 16);
   click('[data-action="Challenger.edit"]');
   w.document.getElementById("generatedWinner").value = "0";

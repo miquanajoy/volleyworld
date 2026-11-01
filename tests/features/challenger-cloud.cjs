@@ -97,12 +97,14 @@ function meta(r) {
     d = t.w.document;
   full.enter();
   full.create();
+  full.start();
   const guest = t.w.localStorage.getItem("volleyworld-challenger-guest");
   assert(guest);
   await full.challengerCloud.switchAccount(service("A"), "A");
   assert.equal(full.model.records.length, 0);
   assert.equal(t.w.localStorage.getItem("volleyworld-challenger-guest"), guest);
   full.create();
+  full.start();
   let row = full.model.records[0],
     id = row.season_id;
   let saved = await full.challengerCloud.saveNow();
@@ -176,6 +178,7 @@ function meta(r) {
   assert.equal(remote.get("B").size, 1);
   // A write already in flight for B does not acknowledge or replace C's progress.
   full.create();
+  full.start();
   let unblock;
   delayedWrite = new Promise((r) => (unblock = r));
   const writing = full.challengerCloud.saveNow();
@@ -188,6 +191,7 @@ function meta(r) {
   assert.equal(full.model.records.length, 0);
   // Number collisions at creation are rebased on a refresh rather than overwriting a season.
   full.create();
+  full.start();
   row = full.model.records[0];
   const other = F.freshChallenger(1);
   remote.set(

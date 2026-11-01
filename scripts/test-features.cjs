@@ -24,6 +24,7 @@ for (const file of [
   "challenger",
   "challenger-ui",
   "challenger-cloud",
+  "challenger-setup-tree",
 ]) {
   const r = spawnSync(process.execPath, ["tests/features/" + file + ".cjs"], {
     encoding: "utf8",

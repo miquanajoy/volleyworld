@@ -3,7 +3,7 @@ import { validate, winner, loser } from "../match/scoring";
 import { worldStages } from "../full-season/types";
 import { seedSlots } from "../full-season/qualification";
 import type { Match, TeamId } from "../types";
-import { challengerRoster, challengerStandings, swissDone } from "./index";
+import { validChallengerRoster, challengerStandings, swissDone } from "./index";
 import { roundSizes, type ChallengerSeason } from "./types";
 const same = (a: TeamId[], b: TeamId[]) =>
   Array.isArray(a) &&
@@ -13,7 +13,7 @@ const same = (a: TeamId[], b: TeamId[]) =>
 export function validChallenger(value: unknown): value is ChallengerSeason {
   try {
     const s = value as ChallengerSeason,
-      roster = challengerRoster();
+      roster = s?.roster;
     if (
       !s ||
       s.version !== 1 ||
@@ -25,8 +25,10 @@ export function validChallenger(value: unknown): value is ChallengerSeason {
       s.seasonNumber > 2147483647 ||
       typeof s.createdAt !== "string" ||
       !Number.isFinite(Date.parse(s.createdAt)) ||
-      !same(s.roster, roster) ||
-      s.roster.some((id, i) => id !== roster[i]) ||
+      !validChallengerRoster(roster) ||
+      roster.some(
+        (id, i) => i > 0 && get(roster[i - 1]).rank >= get(id).rank,
+      ) ||
       !same(s.tie, roster) ||
       !Array.isArray(s.rounds) ||
       s.rounds.length < 1 ||

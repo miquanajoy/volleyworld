@@ -37,6 +37,13 @@ const arg = (e: HTMLElement) => e.dataset.arg || "";
 const actions: Record<string, Action> = {
   "Challenger.enter": () => Challenger.enter(),
   "Challenger.create": () => Challenger.create(),
+  "Challenger.editRoster": () => Challenger.editRoster(),
+  "Challenger.start": () => Challenger.start(),
+  "Challenger.cancelSetup": () => Challenger.cancelSetup(),
+  "Challenger.setupRegion": (e) => Challenger.setupRegion(arg(e)),
+  "Challenger.toggleTeam": (e) => Challenger.toggleTeam(arg(e)),
+  "Challenger.resetRoster": () => Challenger.resetRoster(),
+  "Challenger.swissView": (e) => Challenger.swissView(arg(e)),
   "Challenger.open": (e) => Challenger.open(arg(e)),
   "Challenger.section": (e) => Challenger.section(arg(e)),
   "Challenger.round": (e) => Challenger.round(arg(e)),

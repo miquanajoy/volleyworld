@@ -14,8 +14,10 @@ const assert = require("node:assert/strict"),
   click('[data-action="Challenger.enter"]');
   assert(d.querySelector(".challenger-hero"));
   click('[data-action="Challenger.create"]');
+  click('[data-action="Challenger.start"]');
   const id = api.selected().season_id;
   click('[data-action="Challenger.section"][data-arg="swiss"]');
+  click('[data-action="Challenger.swissView"][data-arg="matches"]');
   assert.equal(d.querySelectorAll(".full-match").length, 16);
   assert.equal(d.querySelectorAll(".full-match .form-dot").length, 160);
   assert.equal(
@@ -93,6 +95,7 @@ const assert = require("node:assert/strict"),
       expected,
     );
     click('[data-action="Challenger.section"][data-arg="swiss"]');
+    click('[data-action="Challenger.swissView"][data-arg="matches"]');
     click('[data-action="Challenger.next"]');
   }
   assert.equal(api.model.section, "playoff");
@@ -131,9 +134,11 @@ const assert = require("node:assert/strict"),
   d.getElementById("playoffMatchDialog").close();
   click('[data-action="Challenger.enter"]');
   click('[data-action="Challenger.create"]');
+  click('[data-action="Challenger.start"]');
   assert.equal(api.model.records.length, 2);
   assert.equal(api.model.records[0].played, 82);
   click('[data-action="Challenger.section"][data-arg="swiss"]');
+  click('[data-action="Challenger.swissView"][data-arg="matches"]');
   click('[data-action="Challenger.edit"]');
   const stale = JSON.stringify(api.selected().snapshot);
   api.model.token++;
