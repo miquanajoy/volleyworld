@@ -339,7 +339,7 @@ function regionalHtml(s: T.TourSeason, v: TourViewState, locked: boolean) {
     F.regionalDone(s.worldcup.regions[k]),
   );
   const overview = selected === null && v.section === "matches";
-  return `${nav}${roundNav(g.rounds, r)}${allDone && r === g.rounds.length - 1 ? qualifiersHtml(s, false) : ""}${
+  return `${nav}${roundNav(g.rounds, r)}${allDone && r === g.rounds.length - 1 ? `<details class="panel tour-details tour-regional-tickets"><summary>${F.worldCupBerths(regional).total} đội đã giành vé từ vòng loại khu vực · Bấm xem</summary>${qualifiersHtml(s, false)}</details>` : ""}${
     overview
       ? regionalOverview(s, v, r)
       : selected === null
@@ -400,8 +400,29 @@ function worldHtml(s: T.TourSeason, v: TourViewState, locked: boolean) {
       : '<section class="panel tour-empty"><h3>16 suất playoff</h3><p>Hai đội đầu mỗi bảng và bốn đội hạng ba tốt nhất sẽ bước tiếp sau ba lượt trận.</p></section>';
   const historical = F.worldAtRound(w, r),
     thirds = F.worldThirds(historical),
-    finished = historical.groups.every(F.fullLeagueDone);
-  return `${roundNav(w.groups[0].rounds, r)}${v.section === "table" ? `<div class="tour-world-tables">${w.groups.map((g, i) => `<section class="panel tour-group-table"><div class="section-head"><h3>Bảng ${"ABCDEF"[i]}</h3><span class="badge">TOP 2 ĐI TIẾP</span></div>${fullStandingsTable(g, 2, r).replaceAll("Full.team", "Tour.team")}</section>`).join("")}</div><section class="panel tour-group-table"><div class="section-head"><h3>Cuộc đua các đội hạng ba</h3><span class="badge">4 SUẤT PLAYOFF</span></div><div class="table-wrap"><table class="full-standings"><thead><tr><th>#</th><th>ĐỘI TUYỂN</th><th>BẢNG</th><th>W</th><th>L</th><th>HS SET</th><th>HS ĐIỂM</th></tr></thead><tbody>${thirds.map((t, i) => `<tr class="${i < 4 ? "direct" : ""}"><td>${i + 1}</td><td>${team(t.id)}${finished && i < 4 ? '<span class="full-qualification">✓ Vào playoff</span>' : ""}</td><td>${"ABCDEF"[t.group]}</td><td>${t.w}</td><td>${t.l}</td><td>${t.sf - t.sa}</td><td>${t.pf - t.pa}</td></tr>`).join("")}</tbody></table></div></section>` : `<p class="sub">Lượt ${r + 1}/3 · Các bảng A–F thi đấu cùng lượt trước khi chuyển sang lượt tiếp theo.</p>${w.groups.map((g, i) => `<section class="tour-group-fixtures"><div class="section-head"><h3>Bảng ${"ABCDEF"[i]} · Lượt ${r + 1}</h3><button data-action="Tour.section" data-arg="table">Xem BXH ↗</button></div>${cards(s, g.rounds[r], locked, `World Cup · Bảng ${"ABCDEF"[i]} · Lượt ${r + 1}`, history)}</section>`).join("")}${w.bracket ? '<button class="primary" data-action="Tour.section" data-arg="playoff">Vào nhánh World Cup →</button>' : ""}`}`;
+    finished = historical.groups.every(F.fullLeagueDone),
+    selected =
+      Number.isInteger(v.group) && v.group! >= 0 && v.group! < 6
+        ? v.group
+        : null,
+    navigation = `<section class="panel full-group-switcher tour-regional-switcher" aria-label="Điều hướng bảng World Cup"><span class="full-group-switcher-label">BẢNG ĐẤU</span><nav class="full-group-nav"><button data-action="Tour.group" data-arg="all" aria-current="${selected === null ? "page" : "false"}">← Tất cả 6 bảng</button>${w.groups.map((_, i) => `<button data-action="Tour.group" data-arg="${i}" aria-current="${selected === i ? "page" : "false"}">Bảng ${"ABCDEF"[i]}</button>`).join("")}</nav></section>`,
+    fixtures = w.groups
+      .map((g, i) =>
+        selected !== null && selected !== i
+          ? ""
+          : `<section class="panel full-group tour-world-group" data-world-group="${i}"><div class="section-head"><h3>Bảng ${"ABCDEF"[i]}</h3><span class="badge">LƯỢT ${r + 1} · ${g.rounds[r].filter((m) => m.sets).length}/2 TRẬN</span></div>${F.fullStandings(
+              historical.groups[i],
+            )
+              .map(
+                (t, j) =>
+                  `<div class="full-group-team"><span>#${j + 1}</span>${team(t.id)}<span class="badge">S${w.pots.findIndex((p) => p.includes(t.id)) + 1}</span><b>${t.w}W · ${t.l}L</b></div>`,
+              )
+              .join(
+                "",
+              )}<div class="full-world-round-fixtures">${cards(s, g.rounds[r], locked, `World Cup · Bảng ${"ABCDEF"[i]} · Lượt ${r + 1}`, history)}</div><button class="tour-group-open" data-action="Tour.group" data-arg="${i}">Xem riêng bảng ${"ABCDEF"[i]} →</button></section>`,
+      )
+      .join("");
+  return `${navigation}${roundNav(w.groups[0].rounds, r)}${v.section === "table" ? `<div class="tour-world-tables">${w.groups.map((g, i) => (selected !== null && selected !== i ? "" : `<section class="panel tour-group-table"><div class="section-head"><h3>Bảng ${"ABCDEF"[i]}</h3><span class="badge">TOP 2 ĐI TIẾP</span></div>${fullStandingsTable(g, 2, r).replaceAll("Full.team", "Tour.team")}</section>`)).join("")}</div><section class="panel tour-group-table"><div class="section-head"><h3>Cuộc đua các đội hạng ba</h3><span class="badge">4 SUẤT PLAYOFF</span></div><div class="table-wrap"><table class="full-standings"><thead><tr><th>#</th><th>ĐỘI TUYỂN</th><th>BẢNG</th><th>W</th><th>L</th><th>HS SET</th><th>HS ĐIỂM</th></tr></thead><tbody>${thirds.map((t, i) => `<tr class="${i < 4 ? "direct" : ""}"><td>${i + 1}</td><td>${team(t.id)}${finished && i < 4 ? '<span class="full-qualification">✓ Vào playoff</span>' : ""}</td><td>${"ABCDEF"[t.group]}</td><td>${t.w}</td><td>${t.l}</td><td>${t.sf - t.sa}</td><td>${t.pf - t.pa}</td></tr>`).join("")}</tbody></table></div></section>` : `<p class="sub">Lượt ${r + 1}/3 · Các bảng A–F thi đấu cùng lượt trước khi chuyển sang lượt tiếp theo.</p><div class="full-groups full-world-matchday tour-world-matchday">${fixtures}</div>${w.bracket ? '<button class="primary" data-action="Tour.section" data-arg="playoff">Vào nhánh World Cup →</button>' : ""}`}`;
 }
 function rosterHtml(s: T.TourSeason) {
   return `<div class="section-head">${title("ĐỘI HÌNH ĐÃ XÁC NHẬN", "32 quốc gia. Hai đấu trường.", "League và Challenger dùng chung danh sách dưới đây. Vòng loại World Cup có đầy đủ 100 đội.")}</div><div class="tour-roster-regions">${F.regionOrder

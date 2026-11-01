@@ -210,16 +210,19 @@ export function region(value: string) {
 }
 export function group(value: string) {
   const s = selected()?.snapshot;
-  if (!s || model.stage !== 1) return;
+  if (!s || ![1, 7].includes(model.stage)) return;
   if (value === "all") {
     model.group = null;
     render();
     return;
   }
   const index = Number(value),
-    groups = s.worldcup.regions[model.region].groups || [
-      s.worldcup.regions[model.region].teamIds,
-    ];
+    groups =
+      model.stage === 7
+        ? s.worldcup.world?.groups || []
+        : s.worldcup.regions[model.region].groups || [
+            s.worldcup.regions[model.region].teamIds,
+          ];
   if (!Number.isInteger(index) || index < 0 || index >= groups.length) return;
   model.group = index;
   render();

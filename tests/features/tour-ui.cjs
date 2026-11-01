@@ -290,6 +290,31 @@ for (let stage = 0; stage < 8; stage++) {
   }
   if (stage === 7) {
     select("matches");
+    const beforeBrowse = JSON.stringify(api.selected().snapshot);
+    assert.equal(d.querySelectorAll("[data-world-group]").length, 6);
+    assert.equal(
+      d.querySelectorAll(".tour-world-group .full-group-team").length,
+      24,
+    );
+    click('[data-action="Tour.group"][data-arg="2"]');
+    assert.equal(d.querySelectorAll("[data-world-group]").length, 1);
+    assert.equal(d.querySelector("[data-world-group]").dataset.worldGroup, "2");
+    assert.equal(d.querySelectorAll(".full-match").length, 2);
+    select("table");
+    assert.equal(
+      d.querySelectorAll(".tour-world-tables .tour-group-table").length,
+      1,
+    );
+    assert(
+      d.querySelector(".tour-world-tables h3").textContent.includes("Bảng C"),
+    );
+    click('[data-action="Tour.group"][data-arg="all"]');
+    assert.equal(
+      d.querySelectorAll(".tour-world-tables .tour-group-table").length,
+      6,
+    );
+    assert.equal(JSON.stringify(api.selected().snapshot), beforeBrowse);
+    select("matches");
     assert.equal(
       d.querySelectorAll(".full-match").length,
       12,
@@ -323,6 +348,11 @@ for (let stage = 0; stage < 8; stage++) {
   assert(T.stageDone(api.selected().snapshot));
   assert(T.validTour(api.selected().snapshot));
   if (stage === 1) {
+    select("table");
+    click('[data-action="Tour.group"][data-arg="0"]');
+    assert.equal(d.querySelectorAll(".tour-group-table").length, 1);
+    assert(!d.querySelector(".tour-regional-tickets").open);
+    assert(!d.querySelector(".tour-group-table").closest("details"));
     select("playoff");
     assert(d.querySelector(".qualification-tree"));
   }
