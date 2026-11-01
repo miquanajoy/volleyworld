@@ -3365,39 +3365,89 @@
   font-size: 12px;
 }
 
+/* Undrawn groups size to their roster; no clipped waiting-state footer. */
 .swiss-map-node.is-pending {
-  border-style: dashed;
-  border-color: #cfdac3;
-  background: #fcfdf9;
-  box-shadow: none;
+  border: 1px solid #d9e2d3;
+  background: #fff;
+  box-shadow: 0 4px 16px #213d2410;
 }
-.swiss-map-node.is-pending > header {
-  background: #f2f6ec;
+.swiss-map-node > header {
+  gap: 12px;
+  padding: 0 14px;
 }
-.swiss-map-match:nth-child(even) {
-  background: #f8faf6;
+.swiss-map-node > header strong {
+  display: grid;
+  place-items: center;
+  min-width: 64px;
+  height: 38px;
+  border-radius: 8px;
+  background: #e9f0e2;
+  font-size: 24px;
+  letter-spacing: -1px;
 }
-.swiss-map-match:hover {
-  background: #edf5e3;
-  box-shadow: inset 3px 0 #93b46f;
+.swiss-map-node > header > span {
+  font-size: 10px;
+  letter-spacing: 0.4px;
 }
-.swiss-map-match:focus-visible {
-  outline: 2px solid #82a85c;
-  outline-offset: -2px;
+.swiss-map-node > header > small {
+  font-size: 11px;
 }
-.swiss-map-match > span {
-  padding: 5px 2px;
+.swiss-map-pending {
+  padding: 12px;
+  gap: 12px;
 }
-.swiss-map-match > b {
-  font-weight: 800;
-  letter-spacing: -0.3px;
+.swiss-map-pending > p {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 20px;
+  font-size: 12px;
 }
-.swiss-map-node > footer > b {
-  padding: 2px 5px;
-  border-radius: 4px;
-  background: #eaf0e2;
-  font-size: 9px;
-  font-weight: 600;
+.swiss-map-pending > p b {
+  color: var(--green);
+  font-weight: 650;
+}
+.swiss-map-pending > p > span {
+  font-size: 11px;
+  color: #86917e;
+}
+.swiss-map-pending > div {
+  gap: 4px 8px;
+}
+.swiss-map-pending > div > span {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #f5f7f2;
+}
+.swiss-map-pending .swiss-map-team {
+  width: 100%;
+  grid-template-columns: 23px minmax(0, 1fr);
+  gap: 4px;
+}
+.swiss-map-pending .swiss-map-team > small {
+  color: #7d8a76;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.swiss-map-pending .team {
+  gap: 6px;
+}
+.swiss-map-pending > small {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: #edf4e7;
+  color: #537340;
+  font-size: 11px;
+  line-height: 18px;
+}
+.swiss-map-pending > small:empty {
+  display: none;
 }
 .swiss-map-pending > .swiss-map-waiting {
   display: flex;
@@ -3405,31 +3455,35 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 8px;
   text-align: center;
   color: #899a79;
 }
 .swiss-map-waiting svg {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   fill: none;
-  stroke: #a5b793;
+  stroke: #93aa81;
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 .swiss-map-waiting strong {
-  font-size: 13px;
+  font-size: 14px;
   color: #617452;
   font-weight: 600;
 }
 .swiss-map-waiting span {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
   color: #8a9682;
 }
-.swiss-map-pending > small:empty {
-  display: none;
+.swiss-map-node > footer > b {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #eaf0e2;
+  font-size: 9px;
+  font-weight: 600;
 }
 .swiss-map-terminal .swiss-map-empty {
   margin: 8px 0;
