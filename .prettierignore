@@ -3,3 +3,5 @@ tests/fixtures/
 tests/legacy/
 dist/
 .test-build/
+
+tests/support/legacy-index.html

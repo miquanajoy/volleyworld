@@ -8,7 +8,7 @@ export const listTourSeasons = (
   client
     .from("volleyworld_tour_seasons")
     .select(
-      "season_id,season_number,created_at,status,played,podium,revision,updated_at",
+      "season_id,season_number,created_at,status,played,podium,honours,total_matches,revision,updated_at",
     )
     .eq("user_id", uid)
     .order("season_number", { ascending: true })

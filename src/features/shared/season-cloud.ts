@@ -5,7 +5,7 @@ import type {
 } from "../../data/repositories/full-seasons";
 import type { AppTab } from "../../app/store";
 import { store } from "../../app/store";
-import { getPorts } from "../../app/ports";
+import { renderApplication } from "../../app/ports";
 import { CloudWriter } from "../../data/cloud/write-queue";
 import { toast } from "../../shared/feedback";
 export interface SeasonIdentity {
@@ -88,7 +88,7 @@ export function createSeasonCloud<
   const writers = new Map<string, CloudWriter<S>>();
   const accountWaiters = new Set<() => void>();
   function redraw() {
-    if (store.tab === config.tab) getPorts().commands.render();
+    if (store.tab === config.tab) renderApplication();
   }
   function initialize() {
     if (!model.loadedScope) {

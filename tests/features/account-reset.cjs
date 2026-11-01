@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict"),
-  { ui } = require("../support/parity-harness.cjs");
+  { ui } = require("../support/tour-harness.cjs");
 (async () => {
   const t = ui("new", 27156),
     ls = t.w.localStorage;

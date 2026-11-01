@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict"),
   T = require("../../.test-build/tour-engine.js"),
   V = require("../../.test-build/engine.js"),
-  { ui } = require("../support/parity-harness.cjs");
+  { ui } = require("../support/tour-harness.cjs");
 const t = ui("new", 81731),
   d = t.w.document,
   api = t.w.__tour;
@@ -13,7 +13,6 @@ const click = (selector) => {
 };
 const select = (section) =>
   click(`[data-action="Tour.section"][data-arg="${section}"]`);
-const classic = t.run("JSON.stringify(state)");
 click('[data-action="Tour.enter"]');
 assert(d.querySelector(".tour-hero"));
 assert(d.querySelector(".tour-empty"));
@@ -94,6 +93,32 @@ assert.equal(
   "Old League standings/form remain unchanged",
 );
 assert.equal(d.querySelectorAll(".tour-standings tbody tr").length, 32);
+api.showTeam(first.a);
+assert.equal(
+  d.querySelectorAll("#teamLeagueSummary .tour-team-stats > span").length,
+  3,
+);
+assert.equal(d.querySelectorAll("#teamLeagueRows tr").length, 31);
+assert.equal(
+  d.querySelectorAll("#teamLeagueRows .team-league-result").length,
+  1,
+  "Old-round team modal only counts results through that round",
+);
+assert(
+  d
+    .querySelector("#teamLeagueRows .tour-team-round")
+    .textContent.startsWith("Vòng "),
+);
+assert(
+  !d.querySelector("#teamLeagueRows").textContent.includes("L0-"),
+  "Raw schedule IDs never appear as round labels",
+);
+assert.equal(
+  d.querySelectorAll("#teamLeagueRows .team-league-sets > span").length,
+  3,
+);
+d.getElementById("teamLeagueDialog").close();
+
 api.showMatch(first.id);
 assert.equal(
   [...d.querySelectorAll("#playoffMatchBody .form-strip")]
@@ -108,6 +133,23 @@ for (let stage = 0; stage < 8; stage++) {
   assert.equal(api.selected().snapshot.stage, stage);
   assert.equal(api.model.stage, stage);
   if (stage === 1) {
+    select("matches");
+    assert.equal(
+      d.querySelectorAll("[data-regional-group]").length,
+      6,
+      "Europe opens on six compact group tables",
+    );
+    assert.equal(
+      d.querySelectorAll(".tour-regional-compact tbody tr").length,
+      39,
+    );
+    click('[data-action="Tour.group"][data-arg="0"]');
+    assert.equal(api.model.group, 0);
+    assert.equal(d.querySelectorAll(".tour-group-table").length, 1);
+    assert(d.querySelector(".tour-group-fixtures"));
+    assert(d.querySelectorAll(".full-match").length > 0);
+    click('[data-action="Tour.group"][data-arg="all"]');
+    assert.equal(d.querySelectorAll("[data-regional-group]").length, 6);
     select("table");
     click('[data-action="Tour.region"][data-arg="CSV"]');
     assert.equal(d.querySelectorAll(".tour-group-table tbody tr").length, 6);
@@ -182,8 +224,10 @@ for (let stage = 0; stage < 8; stage++) {
       "League Play-in has four matches",
     );
     click('[data-action="Tour.simRound"]');
-    assert.equal(api.selected().snapshot.league.bracket.r20.length, 4);
-    click('[data-action="Tour.simRound"]');
+    assert(
+      !api.selected().snapshot.league.bracket.r20,
+      "Original top12 format has no round20",
+    );
     assert.equal(
       d.querySelectorAll(".full-tree-match").length,
       16,
@@ -246,16 +290,23 @@ for (let stage = 0; stage < 8; stage++) {
   click('[data-action="Tour.next"]');
 }
 assert.equal(api.selected().status, "completed");
-assert.equal(api.selected().played, 968);
+assert.equal(api.selected().played, 964);
 assert.equal(d.querySelectorAll(".tour-champions > section").length, 3);
-assert.equal(d.querySelectorAll(".tour-journey-card.is-done").length, 8);
+assert.equal(d.querySelectorAll(".tour-journey-recap > li").length, 8);
+assert(
+  !d.querySelector(".tour-journey-disclosure").open,
+  "Finished journey recap is collapsed",
+);
+assert.equal(d.querySelectorAll(".tour-summary-podium > li").length, 9);
+for (const place of [1, 2, 3])
+  assert.equal(d.querySelectorAll(`[data-medal-place="${place}"]`).length, 3);
 const completed = JSON.stringify(api.selected().snapshot);
 for (let stage = 0; stage < 8; stage++) {
   click(`[data-action="Tour.viewStage"][data-arg="${stage}"]`);
   for (const section of ["matches", "table", "playoff"]) {
     select(section);
     assert(d.querySelector(".tour-page"));
-    if (stage === 1) {
+    if (stage === 1 && section !== "playoff") {
       assert.equal(
         d.querySelectorAll(".tour-qualified-list > div").length,
         21,
@@ -284,11 +335,22 @@ assert.equal(
   completed,
   "History browsing never changes the season",
 );
-assert.equal(
-  t.run("JSON.stringify(state)"),
-  classic,
-  "Standalone World League is unchanged",
+
+click('[data-action="Tour.achievements"]');
+assert.equal(d.querySelectorAll(".tour-country-card").length, 39);
+const profileId = api.model.records[0].snapshot.roster.find(
+  (id) => V.get(id).region === "CEV",
 );
+click(`[data-action="Tour.achievementTeam"][data-arg="${profileId}"]`);
+assert.equal(d.querySelectorAll("[data-achievement-season]").length, 1);
+assert.equal(
+  d.querySelectorAll("[data-achievement-season] [data-competition]").length,
+  3,
+);
+click('[data-action="Tour.achievementCompetition"][data-arg="league"]');
+assert.equal(api.model.achievementCompetition, "league");
+click('[data-action="Tour.achievementTeam"][data-arg=""]');
+assert.equal(d.querySelectorAll(".tour-country-card").length, 39);
 const data = t.data();
 t.close();
 const reload = ui("new", 81732, data),
@@ -296,12 +358,12 @@ const reload = ui("new", 81732, data),
 restored.enter();
 restored.open(id);
 assert(T.validTour(restored.selected().snapshot));
-assert.equal(restored.selected().played, 968);
+assert.equal(restored.selected().played, 964);
 assert.equal(
   reload.w.document.querySelectorAll(".tour-champions > section").length,
   3,
 );
 reload.close();
 console.log(
-  "PASS Tour UI: exact regional setup, shared roster, eight gated stages, manual/per-set editor, dialog simulation, historical League/Swiss/world/third-place tables, regional and intercontinental brackets, global World Cup matchdays, League play-in/r20, all completed history tabs read-only, three champions, persistence and standalone isolation",
+  "PASS Tour UI: exact regional setup, shared roster, eight gated stages, manual/per-set editor, dialog simulation, historical League/Swiss/world/third-place tables, regional and intercontinental brackets, global World Cup matchdays, League top12/play-in, all completed history tabs read-only, three champions, compact summary, all three podiums and persistence",
 );

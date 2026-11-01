@@ -9,7 +9,6 @@ export type AppTab =
   | "tour"
   | "challenger"
   | "full-season"
-  | "nations-league"
   | "home"
   | "history"
   | "settings"

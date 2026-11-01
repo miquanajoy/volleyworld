@@ -52,7 +52,9 @@ function domain(version, seed) {
 function ui(version, seed = 1742, storage, frozenSimulation = false) {
   const html = fs
     .readFileSync(
-      version === "main" ? fixture + "index.html" : "index.html",
+      version === "main"
+        ? fixture + "index.html"
+        : "tests/support/legacy-index.html",
       "utf8",
     )
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");

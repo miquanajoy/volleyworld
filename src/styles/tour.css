@@ -913,3 +913,1162 @@
     padding: 20px;
   }
 }
+
+/* Season archives: each competition gets one clear gold/silver/bronze podium. */
+.tour-season-card.is-completed {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+.tour-season-card.is-completed h3 {
+  margin: 16px 0 7px;
+}
+.tour-season-card.is-completed > .sub {
+  margin-bottom: 20px;
+}
+.tour-history-awards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0 0 22px;
+}
+.tour-history-awards > section {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #e1e7da;
+  background: #fafbf7;
+  border-radius: 9px;
+}
+.tour-history-awards h4 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  letter-spacing: 0.1px;
+}
+.tour-history-award {
+  display: grid;
+  grid-template-columns: 27px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 0;
+}
+.tour-history-award .team {
+  min-width: 0;
+  font-size: 12px;
+}
+.tour-history-award .flag {
+  font-size: 17px;
+}
+.tour-history-medal {
+  font-size: 21px;
+  line-height: 1;
+}
+.tour-history-award > small {
+  color: #8a957e;
+  font-size: 9px;
+  white-space: nowrap;
+}
+.tour-award-unavailable {
+  font-size: 12px;
+  color: #8b9680;
+  line-height: 1.6;
+  margin: 12px 0 4px;
+}
+.tour-season-card.is-completed .tour-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-top: 17px;
+  border-top: 1px solid #e6eadf;
+}
+.tour-season-card.is-completed .tour-card-footer > small {
+  margin: 0;
+  flex: 1;
+}
+.tour-season-card.is-completed .tour-card-footer > button {
+  width: auto;
+  min-width: 190px;
+}
+.tour-summary-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+  padding: 28px 0 24px;
+}
+.tour-summary-heading h3 {
+  margin: 10px 0;
+  font-size: 34px;
+  letter-spacing: -0.8px;
+}
+.tour-summary-heading p {
+  margin: 0;
+  color: #7e8d72;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.tour-summary-seal {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 9px;
+  color: #6c8459;
+  background: #edf3e5;
+  border: 1px solid #dce6d1;
+  border-radius: 25px;
+  padding: 10px 14px;
+  font-size: 11px;
+}
+.tour-summary-seal > span {
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  color: #fff;
+  background: #7c9a61;
+  font-size: 11px;
+}
+.tour-summary-heading + .tour-champions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.tour-champions > .tour-competition-summary {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid #d8e0cd;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 4px 15px #213d2407;
+}
+.tour-competition-heading {
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid #e4e9dc;
+  background: #f7f9f1;
+}
+.tour-competition-heading > .eyebrow {
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  color: #829470;
+}
+.tour-competition-heading > h3 {
+  margin: 9px 0 7px;
+  font-size: 23px;
+  letter-spacing: -0.5px;
+}
+.tour-competition-heading > small {
+  color: #859477;
+  font-size: 10px;
+}
+.tour-summary-podium {
+  list-style: none;
+  padding: 9px 18px;
+  margin: 0;
+}
+.tour-summary-podium > li {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 4px;
+  border-bottom: 1px solid #eef1e8;
+  min-width: 0;
+}
+.tour-summary-podium > li:last-child {
+  border-bottom: 0;
+}
+.tour-podium-medal {
+  display: grid;
+  place-items: center;
+  flex: 0 0 39px;
+  width: 39px;
+  height: 43px;
+  border-radius: 10px;
+  background: #f5f5ed;
+  font-size: 29px;
+}
+.tour-summary-podium .medal-1 .tour-podium-medal {
+  background: #f7f0d9;
+}
+.tour-summary-podium .medal-2 .tour-podium-medal {
+  background: #edf1ef;
+}
+.tour-summary-podium .medal-3 .tour-podium-medal {
+  background: #f5eade;
+}
+.tour-summary-podium > li > div {
+  min-width: 0;
+  flex: 1;
+}
+.tour-summary-podium small {
+  display: block;
+  font-size: 9px;
+  color: #8b967f;
+  margin-bottom: 6px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+.tour-summary-podium .team {
+  min-width: 0;
+  font-size: 15px;
+  gap: 7px;
+}
+.tour-summary-podium .flag {
+  font-size: 21px;
+}
+.tour-competition-links {
+  display: flex;
+  gap: 8px;
+  padding: 14px 18px 18px;
+  margin-top: auto;
+}
+.tour-competition-links > button {
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  white-space: nowrap;
+  padding: 9px 8px;
+  border-color: #dce5d1;
+  border-radius: 6px;
+  color: #5c7547;
+  background: #fbfcf8;
+}
+.tour-competition-links > button:hover {
+  background: #edf3e4;
+  border-color: #b8cba3;
+}
+.tour-journey-disclosure {
+  padding: 20px 22px;
+  margin: 0 0 24px;
+}
+.tour-journey-disclosure > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+.tour-journey-disclosure > summary > small {
+  color: #8b967f;
+  margin-left: 12px;
+  font-weight: 400;
+  font-size: 11px;
+}
+.tour-journey-recap {
+  list-style: none;
+  padding: 15px 0 0;
+  margin: 0;
+}
+.tour-journey-recap > li {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 0;
+  border-bottom: 1px solid #e9ede2;
+}
+.tour-journey-recap > li:last-child {
+  border-bottom: 0;
+}
+.tour-journey-recap > li > span {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #edf3e5;
+  display: grid;
+  place-items: center;
+  color: #729354;
+  font-size: 10px;
+}
+.tour-journey-recap > li > div {
+  flex: 1;
+}
+.tour-journey-recap b {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.tour-journey-recap small {
+  display: block;
+  color: #8b967f;
+  font-size: 10px;
+}
+.tour-journey-recap button {
+  font-size: 10px;
+  padding: 7px 10px;
+}
+
+/* Country achievements: three competitions share one explicit row per season. */
+.tour-achievements > .section-head h2 {
+  margin: 9px 0;
+}
+.tour-achievement-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+  margin: 0 0 25px;
+}
+.tour-achievement-filters > span {
+  color: #859478;
+  font-size: 8px;
+  letter-spacing: 0.9px;
+  margin-right: 9px;
+}
+.tour-achievement-filters > button {
+  font-size: 11px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: #fff;
+}
+.tour-achievement-filters > button[aria-pressed="true"] {
+  border-color: #a6bb91;
+  background: #eaf2e0;
+  color: #527039;
+}
+.tour-country-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.tour-country-card {
+  min-width: 0;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #dde5d3;
+  border-radius: 12px;
+  text-align: left;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.tour-country-card:hover {
+  border-color: #9fb887;
+  box-shadow: 0 4px 15px #243b2310;
+  background: #fcfdf9;
+}
+.tour-country-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #a1ad96;
+  margin-bottom: 17px;
+}
+.tour-country-card-top > .team-rank {
+  font-size: 9px;
+  justify-content: flex-start;
+  font-weight: 500;
+}
+.tour-country-card-top > span:last-child {
+  font-size: 14px;
+}
+.tour-country-name {
+  display: block;
+  min-width: 0;
+  margin-bottom: 20px;
+}
+.tour-country-name .team {
+  min-width: 0;
+  font-size: 15px;
+  gap: 9px;
+}
+.tour-country-name .flag {
+  font-size: 24px;
+}
+.tour-medal-counts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tour-medal-counts > span {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 100px;
+  padding: 14px 17px;
+  border: 1px solid #e4e8dc;
+  border-radius: 11px;
+  background: #fff;
+}
+.tour-medal-counts > span > span {
+  font-size: 23px;
+  line-height: 1;
+}
+.tour-medal-counts b {
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.tour-medal-counts small {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #91a281;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+.tour-medal-counts.is-compact {
+  gap: 6px;
+}
+.tour-medal-counts.is-compact > span {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 5px;
+  border: 0;
+  border-radius: 6px;
+  background: #f5f7f0;
+  gap: 5px;
+}
+.tour-medal-counts.is-compact > span > span {
+  font-size: 15px;
+}
+.tour-medal-counts.is-compact b {
+  font-size: 13px;
+  color: #68814e;
+}
+.tour-country-caption {
+  display: block;
+  color: #96a08b;
+  font-size: 9px;
+  margin-top: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+.tour-country-card.has-medals .tour-country-caption {
+  color: #7b925f;
+}
+.tour-country-profile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+  margin-bottom: 24px;
+  padding: 27px;
+  border-radius: 14px;
+  color: #fff;
+  background: #1c493b;
+}
+.tour-country-profile > div:first-child {
+  min-width: 0;
+}
+.tour-profile-back {
+  display: block;
+  margin: 0 0 22px;
+  padding: 0;
+  color: #b7c8b5;
+  background: transparent;
+  border: 0;
+  font-size: 10px;
+}
+.tour-profile-back:hover {
+  color: #fff;
+  background: transparent;
+}
+.tour-country-profile .eyebrow {
+  display: block;
+  color: #9cb89a;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.tour-country-profile h3 {
+  font-size: 26px;
+  margin: 12px 0 10px;
+}
+.tour-country-profile h3 .team {
+  min-width: 0;
+  color: inherit;
+  font-size: 26px;
+  gap: 12px;
+}
+.tour-country-profile h3 .flag {
+  font-size: 32px;
+}
+.tour-country-profile p {
+  color: #a5bca4;
+  font-size: 11px;
+  margin: 0;
+}
+.tour-country-profile .tour-medal-counts > span {
+  color: #edf4e6;
+  background: #ffffff08;
+  border-color: #537461;
+}
+.tour-country-history {
+  padding: 24px;
+  min-width: 0;
+}
+.tour-country-history > .section-head {
+  margin-bottom: 22px;
+}
+.tour-country-history h3 {
+  font-size: 20px;
+  margin: 8px 0 0;
+}
+.tour-achievement-table {
+  min-width: 760px;
+  width: 100%;
+  border-collapse: collapse;
+}
+.tour-achievement-table thead th {
+  padding: 13px 16px;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  color: #7e8d71;
+  text-align: left;
+  background: #f5f7f0;
+  border-bottom: 1px solid #dfe6d7;
+}
+.tour-achievement-table thead th:first-child {
+  width: 140px;
+}
+.tour-achievement-table tbody td,
+.tour-achievement-table tbody th {
+  padding: 18px 16px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid #e8ede0;
+}
+.tour-achievement-table tbody th {
+  font-weight: 400;
+}
+.tour-achievement-table tbody th > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+}
+.tour-achievement-table tbody th > button > span {
+  font-size: 10px;
+  color: #9aaa8c;
+}
+.tour-achievement-table tbody th > small {
+  display: block;
+  color: #97a18d;
+  font-size: 9px;
+  margin-top: 7px;
+}
+.tour-achievement-table .is-selected {
+  background: #f5f9ee;
+}
+.tour-achievement-result {
+  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+.tour-achievement-result strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  color: #476339;
+  font-weight: 750;
+}
+.tour-achievement-result small {
+  color: #91a080;
+  font-size: 9px;
+  line-height: 1.5;
+}
+.tour-achievement-result.medal-1 strong,
+.tour-achievement-result.medal-2 strong,
+.tour-achievement-result.medal-3 strong {
+  font-size: 30px;
+  line-height: 1;
+}
+.tour-achievement-result.is-absent strong {
+  color: #b0b8a9;
+  font-size: 22px;
+  font-weight: 400;
+}
+.tour-achievement-result.is-pending strong,
+.tour-achievement-result.is-active strong,
+.tour-achievement-result.is-unavailable strong {
+  font-size: 11px;
+  font-weight: 500;
+  color: #8e9d80;
+}
+.tour-achievement-result.is-active strong {
+  color: #6c8b4e;
+}
+.tour-achievement-result.is-unavailable strong {
+  color: #9b8b6a;
+}
+.tour-achievement-note {
+  color: #97a18b;
+  font-size: 10px;
+  line-height: 1.7;
+  margin: 17px 0 0;
+}
+@media (max-width: 1050px) {
+  .tour-country-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .tour-summary-heading + .tour-champions {
+    gap: 12px;
+  }
+  .tour-competition-heading {
+    padding: 18px 15px 15px;
+  }
+  .tour-competition-heading > h3 {
+    font-size: 20px;
+  }
+  .tour-summary-podium {
+    padding: 8px 12px;
+  }
+  .tour-summary-podium > li {
+    gap: 9px;
+    padding: 13px 2px;
+  }
+  .tour-summary-podium .team {
+    font-size: 13px;
+  }
+  .tour-competition-links {
+    padding: 12px;
+    gap: 5px;
+  }
+  .tour-competition-links > button {
+    font-size: 9px;
+    padding: 8px 5px;
+  }
+  .tour-history-awards {
+    gap: 12px;
+  }
+  .tour-history-award {
+    grid-template-columns: 23px minmax(0, 1fr);
+  }
+  .tour-history-award > small {
+    grid-column: 2;
+    margin-top: -5px;
+  }
+  .tour-country-profile {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 760px) {
+  .tour-summary-heading + .tour-champions {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+  }
+  .tour-competition-heading {
+    padding: 20px;
+  }
+  .tour-competition-heading > h3 {
+    font-size: 23px;
+  }
+  .tour-summary-podium {
+    padding: 7px 20px;
+  }
+  .tour-summary-podium > li {
+    padding: 13px 0;
+  }
+  .tour-summary-podium .team {
+    font-size: 15px;
+  }
+  .tour-competition-links {
+    padding: 15px 20px 20px;
+    gap: 9px;
+  }
+  .tour-competition-links > button {
+    font-size: 11px;
+    padding: 10px;
+  }
+  .tour-history-awards {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .tour-history-awards > section {
+    padding: 14px;
+  }
+  .tour-history-award {
+    grid-template-columns: 27px minmax(0, 1fr) auto;
+    padding: 6px 0;
+  }
+  .tour-history-award > small {
+    grid-column: auto;
+    margin: 0;
+  }
+  .tour-history-awards h4 {
+    margin-bottom: 8px;
+  }
+  .tour-summary-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 23px;
+  }
+  .tour-summary-heading h3 {
+    font-size: 28px;
+  }
+  .tour-country-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tour-country-profile {
+    padding: 22px;
+    gap: 24px;
+  }
+  .tour-country-profile .tour-medal-counts {
+    width: 100%;
+  }
+  .tour-country-profile .tour-medal-counts > span {
+    min-width: 0;
+    flex: 1;
+  }
+  .tour-achievement-filters > span {
+    flex-basis: 100%;
+    margin: 0 0 3px;
+  }
+  .tour-country-history {
+    padding: 18px;
+  }
+  .tour-journey-disclosure {
+    padding: 18px;
+  }
+  .tour-journey-disclosure > summary > small {
+    display: block;
+    margin: 7px 0 0;
+  }
+  .tour-season-card.is-completed .tour-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .tour-season-card.is-completed .tour-card-footer > button {
+    width: 100%;
+  }
+}
+@media (max-width: 390px) {
+  .tour-country-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tour-journey-recap > li {
+    gap: 8px;
+  }
+  .tour-journey-recap button {
+    font-size: 9px;
+    padding: 6px 7px;
+  }
+  .tour-country-profile h3 .team {
+    font-size: 23px;
+  }
+}
+
+/* Regional qualification keeps the familiar group overview and quick group navigation. */
+.tour-regional-switcher {
+  padding: 15px 18px;
+  margin-bottom: 20px;
+}
+.tour-regional-overview {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.tour-regional-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 20px;
+}
+.tour-regional-group > .section-head {
+  margin-bottom: 12px;
+  align-items: center;
+}
+.tour-regional-group h3 {
+  font-size: 19px;
+  margin: 0;
+}
+.tour-regional-group .badge {
+  font-size: 8px;
+  letter-spacing: 0.4px;
+}
+.tour-regional-compact {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.tour-regional-compact th {
+  font-size: 8px;
+  letter-spacing: 0.2px;
+  color: #8b997d;
+  padding: 9px 4px;
+  border-bottom: 1px solid #e1e8d8;
+  text-align: center;
+}
+.tour-regional-compact th:first-child {
+  width: 22px;
+}
+.tour-regional-compact th:nth-child(2) {
+  width: auto;
+  text-align: left;
+}
+.tour-regional-compact th:nth-child(3),
+.tour-regional-compact th:nth-child(4) {
+  width: 24px;
+}
+.tour-regional-compact th:last-child {
+  width: 43px;
+}
+.tour-regional-compact td {
+  text-align: center;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  padding: 10px 4px;
+  border-bottom: 1px solid #eef1e8;
+}
+.tour-regional-compact td:first-child {
+  color: #96a287;
+  font-size: 9px;
+}
+.tour-regional-compact td:nth-child(2) {
+  text-align: left;
+}
+.tour-regional-compact .team {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 11px;
+  gap: 5px;
+}
+.tour-regional-compact .flag {
+  font-size: 17px;
+}
+.tour-regional-compact .full-qualification {
+  display: block;
+  padding: 0;
+  margin: 6px 0 0;
+  line-height: 1.5;
+  font-size: 8px;
+}
+.tour-regional-compact tr.direct td:nth-child(2) {
+  color: #476838;
+}
+.tour-group-open {
+  margin-top: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 11px;
+  text-align: left;
+  background: #f5f8ef;
+  border-color: #dce5d0;
+  color: #607a49;
+}
+.tour-regional-playoff-gate {
+  padding: 22px;
+  margin: 20px 0;
+  align-items: center;
+}
+.tour-regional-playoff-gate h3 {
+  margin: 8px 0;
+  font-size: 19px;
+}
+.tour-regional-playoff-gate .sub {
+  max-width: 620px;
+  line-height: 1.7;
+  margin: 0;
+}
+@media (max-width: 1120px) {
+  .tour-regional-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .tour-regional-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tour-regional-group {
+    padding: 18px;
+  }
+  .tour-regional-compact .team {
+    font-size: 12px;
+  }
+  .tour-regional-playoff-gate {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+  .tour-regional-playoff-gate .primary {
+    width: 100%;
+  }
+}
+
+/* Team details retain the established match-history layout in every Tour event. */
+#teamLeagueDialog {
+  width: min(940px, 95vw);
+  padding: 26px;
+  border-radius: 16px;
+  border-color: #d6e1c9;
+}
+#teamLeagueDialog > .section-head {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 18px;
+  margin: 0 0 22px;
+}
+#teamLeagueDialog #teamLeagueTitle {
+  min-width: 0;
+  margin: 0;
+}
+#teamLeagueDialog #teamLeagueTitle .team {
+  min-width: 0;
+  font-size: 25px;
+  gap: 12px;
+}
+#teamLeagueDialog #teamLeagueTitle .team-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#teamLeagueDialog #teamLeagueTitle .flag {
+  font-size: 29px;
+}
+#teamLeagueDialog > .section-head > button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  flex-shrink: 0;
+  color: #87977b;
+}
+#teamLeagueDialog .tour-team-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+}
+#teamLeagueDialog .tour-team-stats > span {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  padding: 17px 20px;
+  background: #f3f6ed;
+  border: 1px solid #e2e9d8;
+  border-radius: 10px;
+  color: #8a9a7c;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+#teamLeagueDialog .tour-team-stats b {
+  font-size: 27px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.8px;
+  color: var(--green);
+  line-height: 1;
+}
+#teamLeagueDialog .tour-team-stats b small {
+  font-size: 15px;
+  font-weight: 400;
+  color: #9eab91;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+#teamLeagueDialog .tour-team-stats .is-win {
+  background: #edf5e7;
+  border-color: #dce8d0;
+  color: #7b9c60;
+}
+#teamLeagueDialog .tour-team-stats .is-win b {
+  color: #5c8b3e;
+}
+#teamLeagueDialog .tour-team-stats .is-loss {
+  background: #faf1e9;
+  border-color: #eedfd3;
+  color: #bb967e;
+}
+#teamLeagueDialog .tour-team-stats .is-loss b {
+  color: #b88361;
+}
+#teamLeagueDialog .tour-team-context {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 22px;
+  padding: 0 2px;
+}
+#teamLeagueDialog .tour-team-context > p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #8c9c7c;
+}
+#teamLeagueDialog .team-league-form {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+#teamLeagueDialog .team-league-form .sub {
+  margin: 0;
+  font-size: 8px;
+  color: #9ca78e;
+}
+#teamLeagueDialog .team-league-form .form-strip {
+  gap: 3px;
+}
+#teamLeagueDialog .team-league-form .form-dot {
+  width: 17px;
+  height: 19px;
+  font-size: 9px;
+  border-radius: 3px;
+}
+#teamLeagueDialog .team-league-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+#teamLeagueDialog .team-league-table th {
+  padding: 12px 10px;
+  background: #f4f7ee;
+  color: #8d9a7f;
+  border-bottom: 1px solid #dfe7d3;
+  font-size: 8px;
+  letter-spacing: 0.8px;
+  text-align: left;
+}
+#teamLeagueDialog .team-league-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #e9eee0;
+  vertical-align: middle;
+}
+#teamLeagueDialog .team-league-table th:first-child {
+  width: 118px;
+}
+#teamLeagueDialog .team-league-table th:nth-child(2) {
+  width: 190px;
+}
+#teamLeagueDialog .team-league-table th:nth-child(3) {
+  width: 120px;
+  text-align: center;
+}
+#teamLeagueDialog .team-league-table th:last-child {
+  width: auto;
+}
+#teamLeagueDialog .team-league-table td:nth-child(2) .team {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 12px;
+  gap: 7px;
+}
+#teamLeagueDialog .team-league-table td:nth-child(2) .team-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#teamLeagueDialog .team-league-table td:nth-child(2) .flag {
+  font-size: 18px;
+}
+#teamLeagueDialog .tour-team-round {
+  display: block;
+  color: #8f9e80;
+  font-size: 10px;
+  line-height: 1.5;
+}
+#teamLeagueDialog .team-league-result {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  min-width: 88px;
+  border-radius: 7px;
+}
+#teamLeagueDialog .team-league-result > b {
+  font-size: 14px;
+  min-width: 28px;
+}
+#teamLeagueDialog .team-league-result > span {
+  font-size: 10px;
+}
+#teamLeagueDialog .team-league-result.won {
+  color: #608b45;
+  background: #eef5e7;
+}
+#teamLeagueDialog .team-league-result.lost {
+  color: #b98260;
+  background: #faf0e7;
+}
+#teamLeagueDialog .team-league-sets {
+  min-width: 0;
+  white-space: normal;
+}
+#teamLeagueDialog .team-league-sets > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 3px 5px 3px 0;
+  padding: 5px 6px;
+  border-radius: 4px;
+  background: #f5f7f0;
+  color: #a3ae96;
+  font-size: 8px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+#teamLeagueDialog .team-league-sets b {
+  color: #7b8e68;
+  font-size: 9px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+#teamLeagueDialog .team-league-table .is-upcoming .team {
+  opacity: 0.65;
+}
+#teamLeagueDialog > p.sub {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #a2ad96;
+  margin: 18px 0 0;
+}
+@media (max-width: 650px) {
+  #teamLeagueDialog {
+    padding: 18px;
+  }
+  #teamLeagueDialog #teamLeagueTitle .team {
+    font-size: 21px;
+  }
+  #teamLeagueDialog #teamLeagueTitle .flag {
+    font-size: 25px;
+  }
+  #teamLeagueDialog .tour-team-stats {
+    gap: 8px;
+  }
+  #teamLeagueDialog .tour-team-stats > span {
+    padding: 14px 12px;
+    font-size: 7px;
+  }
+  #teamLeagueDialog .tour-team-stats b {
+    font-size: 25px;
+  }
+  #teamLeagueDialog .tour-team-context {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  #teamLeagueDialog .team-league-form {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+}
+.tour-fixture-empty {
+  padding: 22px;
+  border: 1px solid #e1e8d8;
+  background: #f7f9f2;
+  border-radius: 10px;
+  color: #92a081;
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0 0 22px;
+}

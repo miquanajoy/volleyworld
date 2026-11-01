@@ -15,6 +15,7 @@ for (let trial = 0; trial < 24; trial++) {
   const s = T.freshTour(trial + 1, roster);
   assert(T.validTour(s));
   assert.equal(new Set(s.roster).size, 32);
+  assert.equal(s.league.playoffEntry, undefined);
   if (!trial) fixtures.push({ key: "fresh", expected: true, state: clone(s) });
   assert.throws(() => T.nextStage(s));
   assert.throws(() =>
@@ -69,6 +70,14 @@ for (let trial = 0; trial < 24; trial++) {
         assert.equal(new Set(pairs).size, pairs.length);
       }
     }
+    if (stage === 6) {
+      assert.equal(s.league.bracket.r20, undefined);
+      const ranks = V.standings(s.league);
+      for (let i = 0; i < 4; i++) {
+        assert.equal(s.league.playin[i].a, ranks[12 + i].id);
+        assert.equal(s.league.playin[i].b, ranks[19 - i].id);
+      }
+    }
     if (stage === 4)
       assert.equal(s.league.rounds.flat().filter((m) => m.sets).length, 496);
     if (stage < 7)
@@ -87,8 +96,8 @@ for (let trial = 0; trial < 24; trial++) {
       });
   }
   assert(T.complete(s));
-  assert.equal(T.played(s), 968);
-  assert.equal(T.matches(s).length, 968);
+  assert.equal(T.played(s), 964);
+  assert.equal(T.matches(s).length, 964);
   assert.equal(T.podium(s).length, 3);
   assert(V.complete(s.league));
   assert(F.worldComplete(s.worldcup));
@@ -99,6 +108,41 @@ for (let trial = 0; trial < 24; trial++) {
   T.finishTour(replay);
   assert.deepEqual(s, replay);
 }
+// Existing expanded Tour saves keep their recorded format; new seasons never opt in.
+const legacy = T.freshTour(25);
+legacy.league.playoffEntry = "top16";
+assert(T.validTour(legacy));
+T.finishTour(legacy);
+assert(T.validTour(legacy));
+assert.equal(T.played(legacy), 968);
+assert.equal(T.seasonTotal(legacy), 968);
+fixtures.push({
+  key: "legacy-expanded-completed",
+  expected: true,
+  state: clone(legacy),
+});
+const upgrade = T.freshTour(26);
+upgrade.league.playoffEntry = "top16";
+T.finishStage(upgrade);
+const beforePoints = clone(upgrade.league.rounds);
+assert(T.useOriginalPlayoff(upgrade));
+assert.deepEqual(upgrade.league.rounds, beforePoints);
+assert(T.validTour(upgrade));
+assert.equal(T.seasonTotal(upgrade), 964);
+const locked = clone(legacy);
+assert.equal(T.useOriginalPlayoff(locked), false);
+assert.deepEqual(locked, legacy);
+const unplayedKnockout = T.freshTour(27);
+unplayedKnockout.league.playoffEntry = "top16";
+while (unplayedKnockout.stage < 6) {
+  T.finishStage(unplayedKnockout);
+  T.nextStage(unplayedKnockout);
+}
+assert(T.useOriginalPlayoff(unplayedKnockout));
+assert(T.validTour(unplayedKnockout));
+const table = V.standings(unplayedKnockout.league);
+assert.equal(unplayedKnockout.league.playin[0].a, table[12].id);
+assert.equal(unplayedKnockout.league.playin[0].b, table[19].id);
 const seed = fixtures[0].state;
 function invalid(key, change) {
   const s = clone(seed);
@@ -124,7 +168,7 @@ invalid(
 );
 invalid("missing-worldcup", (s) => (s.worldcup = null));
 invalid("wrong-format", (s) => (s.league.playoffFormat = "double"));
-invalid("wrong-entry", (s) => delete s.league.playoffEntry);
+invalid("wrong-entry", (s) => (s.league.playoffEntry = "invalid"));
 const same = clone(seed);
 T.simulateBatch(same);
 assert(T.validTour(same));
@@ -151,5 +195,5 @@ fs.writeFileSync(
   ),
 );
 console.log(
-  "PASS Tour: 24 complete seasons, exact 32-team quotas, 8 ordered stage gates, 10+10+11 rounds, shared Challenger roster, 24 World Cup entrants, bronze-first paths, 968 matches, fixed champions, future-stage/manual-score guards and corrupt-state rejection",
+  "PASS Tour: 24 complete seasons, exact 32-team quotas, 8 ordered stage gates, 10+10+11 rounds, shared Challenger roster, 24 World Cup entrants, bronze-first paths, 964 matches, fixed champions, future-stage/manual-score guards and corrupt-state rejection",
 );

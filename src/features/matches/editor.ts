@@ -1,4 +1,4 @@
-import { getPorts } from "../../app/ports";
+import { getPorts, renderApplication } from "../../app/ports";
 import { store } from "../../app/store";
 import { formHtml, team } from "../../components/team";
 import * as V from "../../domain/index";
@@ -176,7 +176,7 @@ export function saveScoreEditor() {
       getPorts().commands.save();
     }
     $("editor").close();
-    getPorts().commands.render();
+    renderApplication();
     toast("Đã lưu kết quả");
   } catch (e) {
     toast(e instanceof Error ? e.message : "Chưa lưu được kết quả.");

@@ -1,12 +1,14 @@
 const assert = require("node:assert/strict"),
   F = require("../../.test-build/tour-engine.js"),
-  { ui } = require("../support/parity-harness.cjs");
+  { ui } = require("../support/tour-harness.cjs");
 const copy = (x) => JSON.parse(JSON.stringify(x)),
   tick = () => new Promise((r) => setTimeout(r, 10));
 const remote = new Map();
 let offline = false,
   delayedRead = null,
   delayedWrite = null;
+let activeReads = 0,
+  maxReads = 0;
 function service(uid) {
   return {
     from(table) {
@@ -36,7 +38,10 @@ function service(uid) {
           };
         },
         async maybeSingle() {
+          activeReads++;
+          maxReads = Math.max(maxReads, activeReads);
           if (delayedRead) await delayedRead;
+          activeReads--;
           if (offline) return { error: { message: "offline" } };
           assert.equal(filters.user_id, uid);
           const r = remote.get(uid)?.get(filters.season_id);
@@ -87,6 +92,18 @@ function meta(r) {
     status: F.complete(r.state) ? "completed" : "active",
     played: F.matches(r.state).filter((m) => m.sets).length,
     podium: F.podium(r.state),
+    total_matches: F.seasonTotal(r.state),
+    honours: {
+      league: require("../../.test-build/engine.js").podium(r.state.league),
+      challenger: r.state.challenger
+        ? require("../../.test-build/challenger-engine.js").challengerPodium(
+            r.state.challenger,
+          )
+        : [],
+      worldcup: require("../../.test-build/full-engine.js").worldPodium(
+        r.state.worldcup,
+      ),
+    },
     revision: r.revision,
     updated_at: r.updated_at,
   };
@@ -138,7 +155,7 @@ function meta(r) {
   await full.tourCloud.resolve(true);
   row = full.model.records[0];
   assert.equal(row.status, "completed");
-  assert.equal(row.played, 968);
+  assert.equal(row.played, 964);
   assert.equal(row.revision, 3);
   assert(!row.dirty);
   assert(F.validTour(row.snapshot));
@@ -210,6 +227,57 @@ function meta(r) {
   await full.tourCloud.switchAccount(null, null);
   assert.equal(t.w.localStorage.getItem("volleyworld-tour-guest"), guest);
   assert.equal(full.model.records.length, 1);
+  // Older history is loaded at most three snapshots at a time, without UI/account leakage.
+  const archive = new Map();
+  for (let n = 1; n <= 8; n++) {
+    const s = F.freshTour(n);
+    F.finishTour(s);
+    archive.set(s.seasonId, {
+      state: s,
+      revision: 1,
+      updated_at: new Date().toISOString(),
+    });
+  }
+  remote.set("H", archive);
+  await full.tourCloud.switchAccount(service("H"), "H");
+  assert(full.model.records.every((r) => !r.snapshot));
+  assert(
+    full.model.records.every(
+      (r) =>
+        r.honours.league.length === 3 &&
+        r.honours.challenger.length === 3 &&
+        r.honours.worldcup.length === 3,
+    ),
+  );
+  let releaseHistory;
+  delayedRead = new Promise((r) => (releaseHistory = r));
+  maxReads = 0;
+  full.achievements();
+  await tick();
+  assert.equal(activeReads, 3);
+  assert.equal(maxReads, 3);
+  releaseHistory();
+  delayedRead = null;
+  for (let n = 0; n < 100 && !full.model.records.every((r) => r.snapshot); n++)
+    await tick();
+  assert(full.model.records.every((r) => r.snapshot));
+  assert(maxReads <= 3);
+  assert.equal(
+    remote.get("H").size,
+    8,
+    "Read-only achievements never create seasons",
+  );
+  full.model.records.forEach((r) => (r.snapshot = undefined));
+  let releaseStale;
+  delayedRead = new Promise((r) => (releaseStale = r));
+  full.achievements();
+  await tick();
+  await full.tourCloud.switchAccount(service("I"), "I");
+  releaseStale();
+  delayedRead = null;
+  await tick();
+  assert.equal(full.model.records.length, 0);
+  assert.equal(full.model.scope, "volleyworld-tour-user-I");
   t.close();
   console.log(
     "PASS Tour cloud: account-scoped guest retention, CAS/offline retry, explicit conflict/immutable remote history, lazy snapshots, cross-account stale reads/writes, import as new seasons and creation-number collisions",

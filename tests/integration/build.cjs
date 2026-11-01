@@ -79,11 +79,15 @@ const fs = require("node:fs"),
   await main.link(linker);
   await main.evaluate();
   await new Promise((r) => setTimeout(r, 150));
-  assert(w.document.getElementById("content").textContent.includes("Mùa 1"));
-  assert(
-    !w.document.getElementById("saved").textContent.includes("Chưa đồng bộ"),
-    "real bundled SDK must initialize guest state",
+  assert(w.document.querySelector(".tour-hero"));
+  assert.equal(
+    w.localStorage.getItem("volleyworld-v1"),
+    null,
+    "No standalone League save on startup",
   );
+  assert.equal(w.document.querySelector('[data-action^="Nations."]'), null);
+  assert.equal(w.document.querySelector('[data-action^="Full."]'), null);
+  assert.equal(w.document.querySelector('[data-action^="Challenger."]'), null);
   for (const name of [
     "V",
     "Seasons",
@@ -91,32 +95,25 @@ const fs = require("node:fs"),
     "Cloud",
     "state",
     "render",
-    "__installAccount",
+    "__tour",
     "__full",
     "__nations",
     "__challenger",
   ])
-    assert.equal(w[name], undefined, "production global leak " + name);
+    assert.equal(w[name], undefined, "production API leak " + name);
   const click = (selector) => {
-    const el = w.document.querySelector(selector);
-    assert(el, "missing " + selector);
-    el.click();
+    const e = w.document.querySelector(selector);
+    assert(e, "missing " + selector);
+    assert(!e.disabled, "disabled " + selector);
+    e.click();
   };
-  click("#heroAction");
-  assert(
-    w.document
-      .getElementById("content")
-      .textContent.includes("Tùy chỉnh giải đấu"),
-  );
-  click('[data-action="Settings.next"]');
-  click('[data-action="Settings.review"]');
-  click('[data-action="Settings.apply"]');
-  const beforeDraft = w.localStorage.getItem("volleyworld-v1");
-  click('[data-action="editMatch"]');
-  assert.equal(
-    w.document.querySelectorAll(".set-block:not([hidden])").length,
-    1,
-  );
+  click('[data-action="Tour.create"]');
+  assert(w.document.querySelector(".tour-selection-intro"));
+  click('[data-action="Tour.start"]');
+  assert.equal(w.document.querySelectorAll(".tour-journey-card").length, 8);
+  click('[data-action="Tour.viewStage"][data-arg="0"]');
+  click('[data-action="Tour.edit"]');
+  assert(w.document.getElementById("editor").open);
   click('[data-action="simulateEditorSet"]:not([hidden])');
   assert.equal(
     w.document.querySelectorAll(".set-block:not([hidden])").length,
@@ -125,242 +122,55 @@ const fs = require("node:fs"),
   w.document.getElementById("generatedWinner").value = "1";
   w.document.getElementById("generatedLosses").value = "2";
   click('[data-action="generateScore"]');
-  assert.equal(w.document.getElementById("liveScore1").textContent, "3");
-  assert.equal(w.localStorage.getItem("volleyworld-v1"), beforeDraft);
   w.document
     .getElementById("scoreForm")
     .dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
   assert(!w.document.getElementById("editor").open);
+  let record = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
+  assert.equal(record.played, 1);
+  assert.equal(record.snapshot.league.playoffEntry, undefined);
+  click('[data-action="Tour.simRound"]');
+  record = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
+  assert.equal(record.played, 16);
+  assert.equal(record.total_matches, 964);
+  click('[data-action="Tour.section"][data-arg="table"]');
   assert.equal(
-    JSON.parse(w.localStorage.getItem("volleyworld-v1")).rounds[0][0].sets
-      .length,
-    5,
-  );
-  click('[data-action="simOne"]');
-  const snapshot = JSON.parse(w.localStorage.getItem("volleyworld-v1"));
-  assert.equal(snapshot.rounds.flat().filter((m) => m.sets).length, 2);
-  click('[data-action="navigate"][data-arg="table"]');
-  assert.equal(w.document.querySelectorAll("#rows tr").length, 32);
-  assert.equal(w.document.querySelectorAll("#rows .rank-movement").length, 32);
-  const progressBeforeHistory = w.localStorage.getItem("volleyworld-v1"),
-    roundSelector = w.document.getElementById("standingsRound");
-  roundSelector.value = "1";
-  roundSelector.dispatchEvent(new w.Event("change", { bubbles: true }));
-  assert.equal(w.document.querySelectorAll("#rows .rank-same").length, 32);
-  assert(
-    w.document
-      .querySelector(".standings-round-note")
-      .textContent.includes("vòng 2"),
-  );
-  assert.equal(w.localStorage.getItem("volleyworld-v1"), progressBeforeHistory);
-  const latestSelector = w.document.getElementById("standingsRound");
-  latestSelector.value = "latest";
-  latestSelector.dispatchEvent(new w.Event("change", { bubbles: true }));
-  click("#accountButton");
-  assert(
-    w.document
-      .getElementById("cloudContent")
-      .textContent.includes("Đăng nhập bằng liên kết"),
-    "actual SDK login form",
-  );
-  click("#saveProgress");
-  await new Promise((r) => setTimeout(r, 20));
-  assert.equal(w.document.getElementById("saveProgress").disabled, false);
-  assert(
-    w.document
-      .getElementById("toast")
-      .textContent.includes("Đã lưu trên thiết bị"),
-  );
-  click('[data-action="closeDialog"][data-arg="cloudDialog"]');
-  click('#nav [data-action="navigate"][data-arg="achievements"]');
-  click('[data-action="achievementView"][data-arg="ranking"]');
-  click('[data-action="achievementWorld"]');
-  assert(
-    w.document
-      .querySelector(".ranking-unavailable")
-      .textContent.includes("Chưa có đội đủ điều kiện"),
-  );
-  assert(
-    w.document.querySelector(".points-rules").textContent.includes("4.170"),
-  );
-  // Exercise the expanded single-elimination flow through the actual Vite bundle.
-  assert.equal(
-    JSON.parse(w.localStorage.getItem("volleyworld-v1")).playoffEntry,
-    "top16",
-  );
-  click('[data-action="navigate"][data-arg="league"]');
-  click('[data-action="simLeague"]');
-  click('[data-action="navigate"][data-arg="playoff"]');
-  click('[data-action="startPlayin"]');
-  click('[data-action="simPlayin"]');
-  click('[data-action="drawBracket"]');
-  assert.equal(
-    w.document.querySelectorAll(
-      '.round20-section [data-action="openPlayoffMatch"]',
-    ).length,
-    4,
-  );
-  click('[data-action="simStage"][data-arg="r20"]');
-  click('[data-action="drawBracket"]');
-  click('[data-action="setPlayoffLayout"][data-arg="tree"]');
-  w.document.querySelector(".playoff-tree-scroll").scrollLeft = 480;
-  for (const key of ["r16", "qf", "sf", "bronze", "final"]) {
-    click(`[data-action="simStage"][data-arg="${key}"]`);
-    assert.equal(
-      w.document.querySelector(".playoff-tree-scroll").scrollLeft,
-      480,
-      "actual production render must retain bracket position",
-    );
-  }
-  const completedClassic = JSON.parse(w.localStorage.getItem("volleyworld-v1"));
-  assert.equal(completedClassic.bracket.r20.length, 4);
-  assert(
-    completedClassic.bracket.bronze[0].resultOrder <
-      completedClassic.bracket.final[0].resultOrder,
-  );
-  assert.equal(
-    w.document.querySelectorAll(".live-podium .medal-card").length,
-    3,
-  );
-  const classicBeforeFull = w.localStorage.getItem("volleyworld-v1");
-  click('[data-action="navigate"][data-arg="home"]');
-  click('[data-action="Full.enter"]');
-  click('[data-action="Full.create"]');
-  assert(w.document.querySelector('[data-action="Full.drawWorld"]').disabled);
-  click('[data-action="Full.section"][data-arg="CSV"]');
-  click('[data-action="Full.simLeague"]');
-  click('[data-action="Full.section"][data-arg="overview"]');
-  assert(w.document.querySelector('[data-action="Full.drawWorld"]').disabled);
-  click('[data-action="Full.finish"]');
-  const full = JSON.parse(w.localStorage.getItem("volleyworld-full-guest"))[0];
-  assert.equal(full.played, 366);
-  assert.equal(full.status, "completed");
-  assert.equal(
-    w.document.querySelectorAll(".full-season-summary .medal-card").length,
-    3,
-  );
-  assert.equal(
-    w.document.querySelectorAll(".full-finals-table tbody tr").length,
-    24,
-  );
-  assert.equal(w.localStorage.getItem("volleyworld-v1"), classicBeforeFull);
-  // The third mode must work through production ESM, including a second cycle.
-  const fullBeforeNations = w.localStorage.getItem("volleyworld-full-guest");
-  click('[data-action="navigate"][data-arg="home"]');
-  click('[data-action="Nations.enter"]');
-  click('[data-action="Nations.create"]');
-  click('[data-action="Nations.section"][data-arg="groups"]');
-  assert.equal(w.document.querySelectorAll(".full-match").length, 32);
-  click('[data-action="Nations.simRound"]');
-  assert(w.document.querySelector('[data-action="Nations.next"]'));
-  click('[data-action="Nations.next"]');
-  click('[data-action="Nations.finish"]');
-  let nations = JSON.parse(w.localStorage.getItem("volleyworld-nations-guest"));
-  assert.equal(nations[0].played, 221);
-  assert.equal(nations[0].status, "completed");
-  click('[data-action="Nations.section"][data-arg="overview"]');
-  assert.equal(
-    w.document.querySelectorAll(".full-season-summary .medal-card").length,
-    3,
-  );
-  click('footer [data-action="Seasons.requestNew"]');
-  await new Promise((r) => setTimeout(r, 10));
-  nations = JSON.parse(w.localStorage.getItem("volleyworld-nations-guest"));
-  assert.equal(nations.length, 2);
-  assert.equal(nations[1].cycle_number, 2);
-  assert.equal(nations[1].previous_id, nations[0].season_id);
-  assert.equal(nations[1].campaign_id, nations[0].campaign_id);
-  assert.equal(w.document.querySelectorAll("[data-transfer-team]").length, 24);
-  click("#saveProgress");
-  await new Promise((r) => setTimeout(r, 10));
-  assert(
-    w.document.getElementById("toast").textContent.includes("Nations League"),
-  );
-  assert.equal(
-    w.localStorage.getItem("volleyworld-full-guest"),
-    fullBeforeNations,
-  );
-  assert.equal(w.localStorage.getItem("volleyworld-v1"), classicBeforeFull);
-  // Fourth mode: actual production actions, shared score editor, draw and cloud-save routing.
-  const nationsBeforeChallenger = w.localStorage.getItem(
-    "volleyworld-nations-guest",
-  );
-  click('[data-action="navigate"][data-arg="home"]');
-  click('[data-action="Challenger.enter"]');
-  click('[data-action="Challenger.create"]');
-  assert(w.document.querySelector(".challenger-roster-setup"));
-  click('[data-action="Challenger.start"]');
-  click('[data-action="Challenger.section"][data-arg="swiss"]');
-  assert.equal(w.document.querySelectorAll(".swiss-map-match").length, 16);
-  assert.equal(w.document.querySelectorAll(".swiss-map-lines path").length, 18);
-  click('[data-action="Challenger.swissView"][data-arg="matches"]');
-  assert.equal(w.document.querySelectorAll(".full-match").length, 16);
-  click('[data-action="Challenger.edit"]');
-  w.document.getElementById("generatedWinner").value = "0";
-  w.document.getElementById("generatedLosses").value = "0";
-  click('[data-action="generateScore"]');
-  w.document
-    .getElementById("scoreForm")
-    .dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
-  assert.equal(
-    JSON.parse(w.localStorage.getItem("volleyworld-challenger-guest"))[0]
-      .played,
-    1,
-  );
-  click('[data-action="Challenger.simRound"]');
-  click('[data-action="Challenger.next"]');
-  assert.equal(
-    JSON.parse(w.localStorage.getItem("volleyworld-challenger-guest"))[0]
-      .snapshot.rounds.length,
-    2,
-  );
-  click("#saveProgress");
-  await new Promise((r) => setTimeout(r, 10));
-  assert(w.document.getElementById("toast").textContent.includes("Challenger"));
-  click('[data-action="Challenger.finish"]');
-  const challenger = JSON.parse(
-    w.localStorage.getItem("volleyworld-challenger-guest"),
-  )[0];
-  assert.equal(challenger.played, 82);
-  assert.equal(challenger.status, "completed");
-  click('[data-action="Challenger.section"][data-arg="overview"]');
-  assert.equal(
-    w.document.querySelectorAll(".podium-grid .medal-card").length,
-    3,
-  );
-  assert.equal(
-    w.document.querySelectorAll(".swiss-standings tbody tr").length,
+    w.document.querySelectorAll(".tour-standings tbody tr").length,
     32,
   );
-  assert.equal(
-    w.localStorage.getItem("volleyworld-nations-guest"),
-    nationsBeforeChallenger,
+  click('[data-action="Tour.team"]');
+  assert(w.document.getElementById("teamLeagueDialog").open);
+  assert(w.document.querySelector(".tour-team-stats"));
+  assert(
+    w.document
+      .querySelector("#teamLeagueRows td")
+      .textContent.includes("Vòng 1"),
   );
-  assert.equal(
-    w.localStorage.getItem("volleyworld-full-guest"),
-    fullBeforeNations,
-  );
-  assert.equal(w.localStorage.getItem("volleyworld-v1"), classicBeforeFull);
-  click('[data-action="navigate"][data-arg="home"]');
-  click('[data-action="Tour.enter"]');
-  click('[data-action="Tour.create"]');
-  assert(w.document.querySelector(".tour-selection-intro"));
-  click('[data-action="Tour.start"]');
-  assert.equal(w.document.querySelectorAll(".tour-journey-card").length, 8);
-  click('[data-action="Tour.viewStage"][data-arg="0"]');
-  assert.equal(w.document.querySelectorAll(".full-match").length, 16);
-  click('[data-action="Tour.simRound"]');
-  const tour = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
-  assert.equal(tour.played, 16);
-  assert.equal(tour.snapshot.stage, 0);
+  click('[data-action="closeDialog"][data-arg="teamLeagueDialog"]');
   click("#saveProgress");
   await new Promise((r) => setTimeout(r, 10));
   assert(w.document.getElementById("toast").textContent.includes("Tour"));
-  assert.equal(w.localStorage.getItem("volleyworld-v1"), classicBeforeFull);
+  click('[data-action="Tour.finish"]');
+  record = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
+  assert.equal(record.played, 964);
+  assert.equal(record.status, "completed");
+  assert.equal(
+    w.document.querySelectorAll(".tour-champions > section").length,
+    3,
+  );
+  assert.equal(w.document.querySelectorAll("[data-medal-place]").length, 9);
+  click('[data-action="Tour.achievements"]');
+  assert.equal(w.document.querySelectorAll(".tour-country-card").length, 39);
+  click('[data-action="Tour.achievementTeam"]');
+  assert.equal(
+    w.document.querySelectorAll("[data-achievement-season]").length,
+    1,
+  );
+  assert.equal(w.localStorage.getItem("volleyworld-v1"), null);
   assert.equal(errors.length, 0, errors.map(String).join("\n"));
   dom.window.close();
   console.log(
-    "PASS production build: emitted HTML/assets resolve; actual Vite ESM and bundled Supabase SDK initialize; guest setup/start/simulation/table/account/manual-save work; no test/global API leaks or DOM runtime errors",
+    "PASS production single-mode Tour: real Vite ESM/SDK, no standalone lobby/save, fixed original playoffs, per-set/forced editor, friendly team history, nine medals across three titles, team achievements and manual save",
   );
 })().catch((e) => {
   console.error(e);

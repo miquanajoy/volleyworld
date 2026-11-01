@@ -1,9 +1,9 @@
 // Test-only facade for the main branch's historical VM regressions.
-import { bootstrap } from "../../src/app/bootstrap";
-import * as app from "../../src/app/application";
+import { bootstrap } from "./legacy-bootstrap";
+import * as app from "./legacy-application";
 import * as settings from "../../src/features/setup/controller";
 import * as seasons from "../../src/features/seasons/controller";
-import * as cloud from "../../src/features/account/controller";
+import * as cloud from "./legacy-account";
 import * as league from "../../src/features/league/controller";
 import * as leagueViews from "../../src/features/league/views";
 import * as qualificationViews from "../../src/features/league/qualification-view";
@@ -63,7 +63,7 @@ target.__installAccount = () => {
 };
 import { getPorts, registerPorts } from "../../src/app/ports";
 
-import { initializeActions } from "../../src/app/actions";
+import { initializeActions } from "./legacy-actions";
 target.__initializeActions = initializeActions;
 
 target.__ports = getPorts;
@@ -72,11 +72,6 @@ import * as fullController from "../../src/features/full-season/controller";
 import * as fullCloud from "../../src/features/full-season/cloud";
 import * as fullModel from "../../src/features/full-season/model";
 target.__full = { ...fullController, ...fullCloud, ...fullModel };
-
-import * as nationsController from "../../src/features/nations-league/controller";
-import { nationsCloud } from "../../src/features/nations-league/cloud";
-import * as nationsModel from "../../src/features/nations-league/model";
-target.__nations = { ...nationsController, ...nationsModel, nationsCloud };
 
 import * as challengerController from "../../src/features/challenger/controller";
 import * as challengerModel from "../../src/features/challenger/model";

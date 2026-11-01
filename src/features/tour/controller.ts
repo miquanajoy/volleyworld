@@ -1,10 +1,11 @@
+import { achievementsHtml } from "./achievements";
 import * as T from "../../domain/tour/index";
 import * as F from "../../domain/full-season/index";
 import * as C from "../../domain/challenger/index";
 import * as V from "../../domain/index";
 import type { Region } from "../../domain/types";
 import { store } from "../../app/store";
-import { getPorts } from "../../app/ports";
+import { renderApplication } from "../../app/ports";
 import { $, esc } from "../../shared/dom";
 import { toast } from "../../shared/feedback";
 import { preserveBracketScroll } from "../../shared/bracket-scroll";
@@ -15,7 +16,7 @@ import { editFullScore } from "../matches/editor";
 import { model, selected, clone, persist, backup, recordOf } from "./model";
 import { tourCloud as cloud } from "./cloud";
 import * as view from "./views";
-const render = () => getPorts().commands.render();
+const render = () => renderApplication();
 const readonly = () =>
   !selected()?.snapshot ||
   selected()?.status === "completed" ||
@@ -47,6 +48,7 @@ export function enter() {
   store.seasonView = null;
   store.tab = "tour";
   model.selected = null;
+  model.group = null;
   model.setup = null;
   model.section = "journey";
   render();
@@ -147,13 +149,17 @@ export function section(key: string) {
   if (s) model.round = currentRound(s, model.stage);
   render();
 }
-export function viewStage(value: string) {
+export function viewStage(value: string, targetSection?: string) {
   const n = Number(value),
     s = selected()?.snapshot;
   if (!s || !Number.isInteger(n) || n < 0 || n > 7 || n > s.stage) return;
   model.stage = n;
+  model.group = null;
   model.round = currentRound(s, n);
-  model.section = "matches";
+  model.section =
+    targetSection && ["table", "playoff", "matches"].includes(targetSection)
+      ? targetSection
+      : "matches";
   render();
 }
 export function round(value: string) {
@@ -165,8 +171,25 @@ export function round(value: string) {
 export function region(value: string) {
   if (!F.regionOrder.includes(value as Region)) return;
   model.region = value as Region;
+  model.group = null;
   const s = selected()?.snapshot;
   if (s) model.round = currentRound(s, model.stage);
+  render();
+}
+export function group(value: string) {
+  const s = selected()?.snapshot;
+  if (!s || model.stage !== 1) return;
+  if (value === "all") {
+    model.group = null;
+    render();
+    return;
+  }
+  const index = Number(value),
+    groups = s.worldcup.regions[model.region].groups || [
+      s.worldcup.regions[model.region].teamIds,
+    ];
+  if (!Number.isInteger(index) || index < 0 || index >= groups.length) return;
+  model.group = index;
   render();
 }
 export function swissView(value: string) {
@@ -183,6 +206,7 @@ export function next() {
     mutate(T.nextStage);
     const fresh = selected()!.snapshot!;
     model.stage = Math.min(7, fresh.stage);
+    model.group = null;
     model.round = currentRound(fresh, model.stage);
     model.section = T.complete(fresh) ? "journey" : "matches";
     render();
@@ -421,13 +445,66 @@ export function showTeam(id: string) {
   } else source = [];
   const ms = source.filter((m) => m.a === id || m.b === id);
   $("teamLeagueTitle").innerHTML = team(id);
-  $("teamLeagueSummary").textContent =
-    `Tour · Mùa ${s.seasonNumber} · ${ms.filter((m) => m.sets).length}/${ms.length} trận`;
+  const played = ms.filter((m) => m.sets),
+    wins = played.filter((m) => V.winner(m) === id).length;
+  const form = F.fullForm(ms, id);
+  const edition = [0, 2, 4, 6].includes(model.stage)
+    ? "World League"
+    : model.stage === 3
+      ? "Challenger"
+      : model.stage === 1
+        ? "Vòng loại khu vực"
+        : model.stage === 5
+          ? "World Cup Play-in"
+          : "World Cup";
+  $("teamLeagueSummary").innerHTML =
+    `<div class="tour-team-stats"><span><b>${played.length}<small>/${ms.length}</small></b>ĐÃ ĐẤU</span><span class="is-win"><b>${wins}</b>THẮNG</span><span class="is-loss"><b>${played.length - wins}</b>THUA</span></div><div class="tour-team-context"><p class="sub">Mùa ${s.seasonNumber} · ${edition}${[0, 2, 4, 3, 7].includes(model.stage) && model.section !== "playoff" ? ` · Đến vòng ${model.round + 1}` : ""}</p><div class="team-league-form"><span class="form-strip" aria-label="5 trận gần nhất, cũ đến mới">${Array.from({ length: 5 - form.length }, () => '<span class="form-dot empty">–</span>').join("")}${form.map((f) => `<span class="form-dot ${f.win ? "form-win" : "form-loss"}" title="${esc(f.opponent)}">${f.win ? "W" : "L"}</span>`).join("")}</span><span class="sub">5 trận gần nhất · cũ → mới</span></div></div>`;
+  const label = (m: import("../../domain/types").Match): string => {
+    let round = s.league.rounds.findIndex((row) =>
+      row.some((x) => x.id === m.id),
+    );
+    if (round >= 0) return `Vòng ${round + 1}`;
+    round =
+      s.challenger?.rounds.findIndex((row) => row.some((x) => x.id === m.id)) ??
+      -1;
+    if (round >= 0) return `Swiss · Vòng ${round + 1}`;
+    for (const r of F.regionOrder) {
+      round = s.worldcup.regions[r].rounds.findIndex((row) =>
+        row.some((x) => x.id === m.id),
+      );
+      if (round >= 0) return `Vòng ${round + 1}`;
+    }
+    if (s.worldcup.world) {
+      for (const g of s.worldcup.world.groups) {
+        round = g.rounds.findIndex((row) => row.some((x) => x.id === m.id));
+        if (round >= 0) return `Vòng bảng · Lượt ${round + 1}`;
+      }
+    }
+    if (s.league.playin?.some((x) => x.id === m.id) || model.stage === 5)
+      return "Play-in";
+    for (const [key, name] of [
+      ["r20", "Vòng 20 đội"],
+      ["r16", "Vòng 16 đội"],
+      ["qf", "Tứ kết"],
+      ["sf", "Bán kết"],
+      ["bronze", "Tranh hạng ba"],
+      ["final", "Chung kết"],
+    ] as const) {
+      if (
+        s.league.bracket?.[key]?.some((x) => x.id === m.id) ||
+        s.challenger?.bracket?.[key as "r16"]?.some((x) => x.id === m.id) ||
+        s.worldcup.world?.bracket?.[key as "r16"]?.some((x) => x.id === m.id)
+      )
+        return name;
+    }
+    return "Playoff khu vực";
+  };
   $("teamLeagueRows").innerHTML = ms
     .map((m) => {
-      const a = m.a === id,
-        r = V.score(m);
-      return `<tr><td>${esc(m.id)}</td><td>${team(a ? m.b : m.a)}</td><td>${m.sets ? `${r[a ? 0 : 1]}–${r[a ? 1 : 0]}` : ""}</td><td>${m.sets ? m.sets.map(([x, y], i) => `S${i + 1} ${a ? x : y}–${a ? y : x}`).join(" · ") : ""}</td></tr>`;
+      const own = m.a === id,
+        r = V.score(m),
+        win = V.winner(m) === id;
+      return `<tr class="${m.sets ? "" : "is-upcoming"}"><td><span class="tour-team-round">${label(m)}</span></td><td>${team(own ? m.b : m.a)}</td><td>${m.sets ? `<span class="team-league-result ${win ? "won" : "lost"}"><b>${r[own ? 0 : 1]}–${r[own ? 1 : 0]}</b><span>${win ? "Thắng" : "Thua"}</span></span>` : '<span class="team-league-unplayed" aria-label="Chưa có kết quả"></span>'}</td><td class="team-league-sets">${m.sets ? m.sets.map(([x, y], i) => `<span>S${i + 1} <b>${own ? x : y}–${own ? y : x}</b></span>`).join("") : ""}</td></tr>`;
     })
     .join("");
   $("teamLeagueDialog").showModal();
@@ -520,6 +597,68 @@ export function restore() {
     }
   });
 }
+const achievementLoads = new Set<string>(),
+  achievementFailed = new Set<string>();
+export function achievements() {
+  cloud.initialize();
+  model.setup = null;
+  model.selected = null;
+  model.section = "achievements";
+  store.tab = "tour";
+  render();
+}
+export function achievementRegion(value: string) {
+  if (!F.regionOrder.includes(value as Region)) return;
+  model.achievementRegion = value as Region;
+  model.achievementTeam = null;
+  render();
+}
+export function achievementTeam(id: string) {
+  if (id && !V.get(id)) return;
+  model.achievementTeam = id || null;
+  render();
+}
+export function achievementCompetition(value: string) {
+  if (!["all", "league", "challenger", "worldcup"].includes(value)) return;
+  model.achievementCompetition = value as typeof model.achievementCompetition;
+  render();
+}
+function ensureAchievementHistory() {
+  if (model.section !== "achievements") return;
+  const token = model.token,
+    scope = model.scope;
+  let available =
+    3 - [...achievementLoads].filter((k) => k.startsWith(scope + ":")).length;
+  for (const row of model.records) {
+    const key = scope + ":" + row.season_id;
+    if (available <= 0) break;
+    if (row.snapshot || achievementLoads.has(key) || achievementFailed.has(key))
+      continue;
+    available--;
+    achievementLoads.add(key);
+    void cloud
+      .load(row.season_id)
+      .catch(() => {
+        if (token === model.token) {
+          achievementFailed.add(key);
+          model.error =
+            "Chưa tải đủ lịch sử thành tích. Bấm Thử lại để tải tiếp.";
+        }
+      })
+      .finally(() => {
+        achievementLoads.delete(key);
+        if (token === model.token && model.section === "achievements") render();
+      });
+  }
+}
+export async function sync() {
+  achievementFailed.clear();
+  await cloud.reload();
+  if (model.section === "achievements") {
+    ensureAchievementHistory();
+    render();
+  }
+}
 const loading = new Set<string>();
 export function renderTour() {
   cloud.initialize();
@@ -535,7 +674,15 @@ export function renderTour() {
           ? "● Tour đã giữ trên thiết bị · chờ đồng bộ"
           : "● Tour đã lưu";
       let html = `${model.error ? `<p class="notice">${esc(model.error)} <button data-action="Tour.sync">Thử lại</button></p>` : ""}${row?.phase === "conflict" ? '<div class="notice">Có tiến trình khác trên thiết bị khác. <button data-action="Tour.exportOne">Xuất bản thiết bị</button><button data-action="Tour.remote">Dùng bản online</button><button data-action="Tour.local">Giữ bản thiết bị</button></div>' : ""}`;
-      if (draft()) html += view.setupHtml(draft()!.ids, draft()!.region);
+      if (model.section === "achievements" && !draft()) {
+        html += achievementsHtml(
+          model.records,
+          model.achievementRegion,
+          model.achievementTeam,
+          model.achievementCompetition,
+        );
+        ensureAchievementHistory();
+      } else if (draft()) html += view.setupHtml(draft()!.ids, draft()!.region);
       else if (!row) html += view.libraryHtml(model.records);
       else if (!s) {
         html +=

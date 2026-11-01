@@ -88,7 +88,16 @@ export interface RuntimePorts {
   cloud: AccountController;
 }
 let ports: RuntimePorts | undefined;
+let renderer: (() => void) | undefined;
+export function registerRenderer(value: () => void) {
+  renderer = value;
+}
+export function renderApplication() {
+  if (!renderer) throw Error("Renderer not initialized");
+  renderer();
+}
 export function registerPorts(value: RuntimePorts): void {
+  registerRenderer(value.commands.render);
   ports = value;
 }
 export function getPorts(): RuntimePorts {

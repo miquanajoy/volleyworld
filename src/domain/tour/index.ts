@@ -54,7 +54,6 @@ export function freshTour(number = 1, roster = defaultRoster()): TourSeason {
   if (!validRoster(roster)) throw Error("Chọn đủ đội theo hạn ngạch của Tour.");
   const league = V.fresh(roster, "single");
   league.setupConfirmed = true;
-  league.playoffEntry = "top16";
   league.seasonNumber = number;
   return {
     version: 1,
@@ -69,6 +68,22 @@ export function freshTour(number = 1, roster = defaultRoster()): TourSeason {
     worldcup: F.freshFullSeason(number),
   };
 }
+/** Safe upgrade: only unplayed knockout fixtures may change under the original rules. */
+export function useOriginalPlayoff(s: TourSeason): boolean {
+  if (!V.expandedSingle(s.league)) return false;
+  if (
+    s.stage > 6 ||
+    (s.stage === 6 &&
+      (s.league.bracket || s.league.playin?.some((m) => m.sets)))
+  )
+    return false;
+  delete s.league.playoffEntry;
+  if (s.stage === 6) {
+    s.league.playin = null;
+    V.startPlayin(s.league);
+  }
+  return true;
+}
 export const complete = (s: TourSeason) => s.stage === 8;
 export const matches = (s: TourSeason): Match[] => [
   ...V.matches(s.league),
@@ -77,7 +92,9 @@ export const matches = (s: TourSeason): Match[] => [
 ];
 export const played = (s: TourSeason) =>
   matches(s).filter((m) => m.sets).length;
-export const totalMatches = 520 + 82 + 366;
+export const totalMatches = 516 + 82 + 366;
+export const seasonTotal = (s: TourSeason) =>
+  V.totalMatches(s.league) + 82 + 366;
 export const phaseBounds = (stage: number) =>
   stage === 0 ? [0, 10] : stage === 2 ? [10, 20] : [20, 31];
 export function stageDone(s: TourSeason, stage = s.stage): boolean {
@@ -239,7 +256,8 @@ export function validTour(input: unknown): input is TourSeason {
     if (
       !V.validState(s.league) ||
       s.league.playoffFormat !== "single" ||
-      s.league.playoffEntry !== "top16" ||
+      (s.league.playoffEntry !== undefined &&
+        s.league.playoffEntry !== "top16") ||
       V.ids(s.league).some((id) => !s.roster.includes(id)) ||
       !F.validFullSeason(s.worldcup) ||
       s.worldcup.regionalFormat !== "qualification-v2"

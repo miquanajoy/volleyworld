@@ -10,13 +10,13 @@ for (const [name, entry, format] of [
   ["full-engine", "src/domain/full-season/index.ts", "cjs"],
   ["tour-engine", "src/domain/tour/index.ts", "cjs"],
   ["challenger-engine", "src/domain/challenger/index.ts", "cjs"],
-  ["nations-engine", "src/domain/nations-league/index.ts", "cjs"],
   ["career-ranking", "src/features/achievements/rankings.ts", "cjs"],
   ["points-policy", "src/domain/honours/points.ts", "cjs"],
   ["achievement-model", "src/features/achievements/model.ts", "cjs"],
   ["qualification", "src/domain/league/qualification/index.ts", "cjs"],
   ["sync-core", "src/data/cloud/write-queue.ts", "cjs"],
   ["app", "tests/support/compat-app.ts", "iife"],
+  ["tour-app", "tests/support/tour-app.ts", "iife"],
 ])
   esbuild.buildSync({
     entryPoints: [entry],

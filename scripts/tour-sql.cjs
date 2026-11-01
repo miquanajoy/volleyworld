@@ -35,7 +35,7 @@ fs.writeFileSync(
   select revision into rev from public.save_volleyworld_tour_season(s,rev);
  end loop;
  assert rev=9,'all eight transitions stored with CAS';
- assert (select played=968 and status='completed' and jsonb_array_length(podium)=3 from public.volleyworld_tour_seasons where user_id=actor and season_id=s->>'seasonId'),'server derives correct completed metadata';
+ assert (select played=964 and total_matches=964 and status='completed' and jsonb_array_length(podium)=3 and jsonb_array_length(honours->'league')=3 and jsonb_array_length(honours->'challenger')=3 and jsonb_array_length(honours->'worldcup')=3 from public.volleyworld_tour_seasons where user_id=actor and season_id=s->>'seasonId'),'server derives correct completed metadata';
  begin perform public.save_volleyworld_tour_season(s,0);raise exception 'stale accepted';exception when raise_exception then if sqlerrm not like 'SAVE_CONFLICT%' then raise;end if;end;
  bad:=jsonb_set(s,'{league,tie}',(select jsonb_agg(value order by ord desc) from jsonb_array_elements(s->'league'->'tie') with ordinality q(value,ord)));
  begin perform public.save_volleyworld_tour_season(bad,rev);raise exception 'completed overwritten';exception when raise_exception then if sqlerrm not like 'SAVE_CONFLICT%' then raise;end if;end;
@@ -47,6 +47,6 @@ fs.writeFileSync(
  raise exception 'TOUR_ROLLBACK_OK';
  exception when raise_exception then if sqlerrm<>'TOUR_ROLLBACK_OK' then raise;end if;end;
 end $$;
-select 'PASS Tour CAS all stages, 968-match derived metadata, stale conflicts, immutable completion, cross-account RLS, anon denied; rolled back' result;`,
+select 'PASS Tour CAS all stages, 964-match derived metadata, stale conflicts, immutable completion, cross-account RLS, anon denied; rolled back' result;`,
 );
 console.log("Generated Tour readonly and rollback-only verification SQL");
