@@ -8,7 +8,7 @@ import { seasonMatchDetailHtml } from "../../components/season-match-detail";
 import { winner, loser } from "../../domain/match/scoring";
 import { esc } from "../../shared/dom";
 import { connectedPlayoffTree } from "../full-season/playoff-tree";
-import { model, selected } from "./model";
+import { model, selected, type ChallengerRecord } from "./model";
 export const readonly = () =>
   selected()?.status === "completed" || selected()?.phase === "conflict";
 export const teamLine = (s: C.ChallengerSeason, id: string, through?: number) =>
@@ -30,7 +30,26 @@ export function statusHtml() {
   return `${model.loading ? '<p class="notice">Đang đồng bộ Challenger…</p>' : ""}${model.error ? `<p class="notice">${esc(model.error)} <button data-action="Challenger.sync">Thử lại</button></p>` : ""}${row?.phase === "conflict" ? '<div class="notice"><b>Có tiến trình khác trên thiết bị khác.</b><p>Xuất bản thiết bị trước khi chọn bản cần giữ.</p><button data-action="Challenger.remote">Dùng bản online</button><button data-action="Challenger.local">Giữ bản thiết bị</button><button data-action="Challenger.export">Xuất lịch sử</button></div>' : ""}`;
 }
 export function libraryHtml() {
-  return `<section class="challenger-hero"><div><span class="eyebrow">32 ĐỘI · SWISS STAGE</span><h2>VolleyWorld Challenger</h2><p>Ba trận thắng để bước tiếp.<br>Ba trận thua để dừng cuộc chơi.</p><div class="actions"><button class="primary" data-action="Challenger.create">Bắt đầu Challenger mới →</button><button data-action="navigate" data-arg="home">← Trang chủ</button></div></div><div class="challenger-hero-numbers"><strong>3<span>W</span></strong><small>16 VÉ PLAYOFF · 82 TRẬN MỖI MÙA</small></div></section><div class="full-library-toolbar"><button data-action="Challenger.export">Xuất lịch sử</button><button data-action="Challenger.import">Nhập lịch sử</button><button data-action="Challenger.sync">Đồng bộ lịch sử</button></div>${rulesHtml(false)}<div class="section-head"><h3>Các mùa Challenger</h3><span class="badge">${model.records.length} mùa</span></div><div class="season-grid">${model.records.map((r) => `<section class="panel season-card"><span class="eyebrow">CHALLENGER · MÙA ${r.season_number}</span><h3>${r.status === "completed" ? "Đã hoàn tất" : r.played ? "Đang thi đấu" : "Sẵn sàng bắt đầu"}</h3><p class="sub">${r.played}/82 trận · ${r.phase === "conflict" ? "Cần chọn bản lưu" : r.dirty ? "Đã giữ trên thiết bị" : "Đã lưu"}</p>${r.podium.length ? `<div class="challenger-history-medals">${r.podium.map((id, i) => `<p>${["🥇", "🥈", "🥉"][i]} ${team(id)}</p>`).join("")}</div>` : ""}<button class="primary" data-action="Challenger.open" data-arg="${r.season_id}">${r.status === "completed" ? "Xem tổng kết" : r.played ? "Tiếp tục giải đấu" : "Bắt đầu giải đấu"} →</button></section>`).join("") || '<section class="panel full-empty"><h3>Một hành trình mới đang chờ</h3><p>Chọn 32 đội từ toàn bộ danh sách, với đối thủ được bốc thăm lại theo thành tích sau mỗi vòng.</p></section>'}</div>`;
+  return `<section class="challenger-hero"><div><span class="eyebrow">32 ĐỘI · SWISS STAGE</span><h2>VolleyWorld Challenger</h2><p>Ba trận thắng để bước tiếp.<br>Ba trận thua để dừng cuộc chơi.</p><div class="actions"><button class="primary" data-action="Challenger.create">Bắt đầu Challenger mới →</button><button data-action="navigate" data-arg="home">← Trang chủ</button></div></div><div class="challenger-hero-numbers"><strong>3<span>W</span></strong><small>16 VÉ PLAYOFF · 82 TRẬN MỖI MÙA</small></div></section><div class="full-library-toolbar"><button data-action="Challenger.export">Xuất lịch sử</button><button data-action="Challenger.import">Nhập lịch sử</button><button data-action="Challenger.sync">Đồng bộ lịch sử</button></div>${rulesHtml(false)}<div class="section-head"><h3>Các mùa Challenger</h3><span class="badge">${model.records.length} mùa</span></div><div class="season-grid challenger-season-grid">${model.records.map(seasonCardHtml).join("") || '<section class="panel full-empty"><h3>Một hành trình mới đang chờ</h3><p>Chọn 32 đội từ toàn bộ danh sách, với đối thủ được bốc thăm lại theo thành tích sau mỗi vòng.</p></section>'}</div>`;
+}
+function seasonCardHtml(r: ChallengerRecord) {
+  const done = r.status === "completed",
+    conflict = r.phase === "conflict",
+    label = conflict
+      ? "Có xung đột"
+      : done
+        ? "Hoàn tất"
+        : r.played
+          ? "Đang chơi"
+          : "Sẵn sàng",
+    phase = done
+      ? "Mùa giải đã khép lại"
+      : r.played >= 66
+        ? "Hành trình playoff"
+        : r.played
+          ? "Đang thi đấu Swiss Stage"
+          : "32 đội · Swiss Stage → Playoff";
+  return `<section class="panel season-card challenger-season-card ${done ? "is-complete" : ""}" data-challenger-season="${r.season_id}"><div class="challenger-card-head"><span class="eyebrow">CHALLENGER · SWISS</span><span class="challenger-card-state ${conflict ? "is-conflict" : done ? "is-done" : r.played ? "is-active" : ""}"><i aria-hidden="true"></i>${label}</span></div><div class="challenger-card-title"><h3>Mùa ${r.season_number}</h3><p>${phase}</p></div>${r.podium.length ? `<div class="challenger-history-medals">${r.podium.map((id, i) => `<p>${["🥇", "🥈", "🥉"][i]} ${team(id)}</p>`).join("")}</div>` : ""}<div class="challenger-card-progress"><div><span>TIẾN ĐỘ MÙA</span><b>${r.played}<small> / 82 trận</small></b></div><div class="challenger-progress-track" role="progressbar" aria-label="Tiến độ mùa ${r.season_number}" aria-valuenow="${r.played}" aria-valuemin="0" aria-valuemax="82"><i style="width:${(r.played / 82) * 100}%"></i></div></div><div class="challenger-card-footer"><span class="challenger-card-save ${r.dirty ? "is-local" : ""}"><i aria-hidden="true"></i>${conflict ? "Cần chọn bản lưu" : r.dirty ? "Đã lưu trên thiết bị" : r.revision ? "Đã đồng bộ" : "Đã lưu"}</span><button class="primary" data-action="Challenger.open" data-arg="${r.season_id}"><span>${done ? "Xem tổng kết" : r.played ? "Tiếp tục giải đấu" : "Bắt đầu giải đấu"}</span><span aria-hidden="true">→</span></button></div></section>`;
 }
 export function headerHtml(s: C.ChallengerSeason) {
   return `<div class="section-head"><div><span class="eyebrow">VOLLEYWORLD CHALLENGER</span><h2>Mùa ${s.seasonNumber}${C.challengerComplete(s) ? " · Đã hoàn tất" : ""}</h2><p class="sub">${C.challengerMatches(s).filter((m) => m.sets).length}/82 trận · ${readonly() ? "Chỉ xem" : "Tự động lưu trên thiết bị"}</p></div><div class="controls"><button data-action="Challenger.enter">← Các mùa</button><button data-action="Challenger.exportOne">Xuất mùa này</button>${!readonly() && !C.challengerMatches(s).some((m) => m.sets) ? '<button data-action="Challenger.editRoster">Chọn đội tham dự</button>' : ""}${readonly() ? "" : '<button data-action="Challenger.restore">Khôi phục bản trước</button><button data-action="Challenger.finish">Mô phỏng hết mùa</button>'}</div></div><nav class="full-nav">${[

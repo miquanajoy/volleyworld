@@ -14,10 +14,14 @@ interface Node {
   top: number;
   height: number;
 }
-const width = 330,
-  gap = 64,
-  space = 28;
-function layout() {
+const width = 360,
+  gap = 56,
+  space = 24;
+function layout(
+  s: C.ChallengerSeason,
+  through: number,
+  rows: ReturnType<typeof C.challengerStandings>,
+) {
   const specs = [
     [[0, 0, 16, 0]],
     [
@@ -45,7 +49,7 @@ function layout() {
       [2, 3, 0, 6],
     ],
   ];
-  const columns: Node[][] = specs.map((col) =>
+  const columns: Node[][] = specs.map((col, c) =>
     col.map(([w, l, games, slots]) => ({
       key: `${w}-${l}`,
       w,
@@ -54,7 +58,25 @@ function layout() {
       slots,
       end: slots > 0,
       top: 0,
-      height: slots ? 64 + slots * 28 : 76 + games * 40,
+      height: slots
+        ? Math.max(
+            124,
+            74 +
+              rows.filter((t) => t.w === w && t.l === l).length * 32 +
+              (rows.filter((t) => t.w === w && t.l === l).length < slots
+                ? 32
+                : 0),
+          )
+        : c <= through && s.rounds[c]
+          ? 90 + games * 46
+          : Math.max(
+              196,
+              128 +
+                Math.ceil(
+                  rows.filter((t) => t.w === w && t.l === l).length / 2,
+                ) *
+                  32,
+            ),
     })),
   );
   const height = Math.max(
@@ -83,10 +105,15 @@ function fixture(s: C.ChallengerSeason, m: Match) {
   return `<button type="button" class="swiss-map-match ${m.sets ? "is-completed" : ""}" data-action="Challenger.match" data-arg="${m.id}" aria-label="${esc(`${get(m.a).name} gặp ${get(m.b).name} · ${m.sets ? result.join("–") : "Chưa đấu"} · Xem chi tiết`)}"><span class="${win === m.a ? "is-winner" : win ? "is-loser" : ""}">${seedTeam(s, m.a)}</span><b>${m.sets ? result.join("–") : "VS"}</b><span class="${win === m.b ? "is-winner" : win ? "is-loser" : ""}">${seedTeam(s, m.b)}</span></button>`;
 }
 export function swissTreeHtml(s: C.ChallengerSeason, through: number) {
-  const { columns, height } = layout(),
+  const rows = C.challengerStandings(s, through),
+    { columns, height } = layout(s, through, rows),
     total = columns.length * width + (columns.length - 1) * gap,
-    rows = C.challengerStandings(s, through),
     byKey = new Map(columns.flat().map((n) => [n.key, n]));
+  const before = s.rounds
+    .slice(0, through + 1)
+    .map(
+      (_, r) => new Map(C.challengerStandings(s, r - 1).map((t) => [t.id, t])),
+    );
   const paths = columns.flatMap((col, c) =>
     col.flatMap((node) => {
       if (node.end) return [];
@@ -110,10 +137,8 @@ export function swissTreeHtml(s: C.ChallengerSeason, through: number) {
           const matches =
             !node.end && c <= through
               ? (s.rounds[c] || []).filter((m) => {
-                  const before = C.challengerStandings(s, c - 1).find(
-                    (r) => r.id === m.a,
-                  )!;
-                  return before.w === node.w && before.l === node.l;
+                  const record = before[c].get(m.a)!;
+                  return record.w === node.w && record.l === node.l;
                 })
               : [];
           const known = rows.filter((r) => r.w === node.w && r.l === node.l),
@@ -134,7 +159,7 @@ export function swissTreeHtml(s: C.ChallengerSeason, through: number) {
                 : node.l === 2
                   ? "TRẬN SINH TỬ"
                   : "CÙNG THÀNH TÍCH";
-          return `<section class="swiss-map-node ${terminal ? `is-${terminal}` : ""} ${c === through && !node.end ? "is-current" : ""}" data-swiss-node="${node.key}" style="left:${c * (width + gap)}px;top:${node.top}px;width:${width}px;height:${node.height}px"><header><strong>${node.w}–${node.l}</strong><span>${label}</span><small>${node.end ? `${known.length}/${capacity} đội` : `${node.games} trận`}</small></header>${node.end ? `<div class="swiss-map-terminal">${Array.from({ length: capacity }, (_, i) => (known[i] ? `<div data-swiss-team="${known[i].id}">${seedTeam(s, known[i].id)}<span aria-label="${node.w === 3 ? "Đã giành vé" : "Đã bị loại"}">${node.w === 3 ? "✓" : "–"}</span></div>` : '<div class="swiss-map-empty">Chờ xác định đội</div>')).join("")}</div>` : matches.length ? `<div class="swiss-map-fixtures">${matches.map((m) => fixture(s, m)).join("")}</div><footer>${matches.filter((m) => m.sets).length}/${matches.length} trận hoàn tất · BO5</footer>` : `<div class="swiss-map-pending"><p>${known.length}/${capacity} đội đã xác định</p><div>${known.map((r) => `<span data-swiss-team="${r.id}">${seedTeam(s, r.id)}</span>`).join("")}</div><small>${known.length === capacity ? "Đủ đội · Chờ bốc thăm vòng " + (c + 1) : "Chờ kết quả vòng trước"}</small></div>`}</section>`;
+          return `<section class="swiss-map-node ${terminal ? `is-${terminal}` : ""} ${!node.end && !matches.length ? "is-pending" : ""} ${c === through && !node.end ? "is-current" : ""}" data-swiss-node="${node.key}" style="left:${c * (width + gap)}px;top:${node.top}px;width:${width}px;height:${node.height}px"><header><strong>${node.w}–${node.l}</strong><span>${label}</span><small>${node.end ? `${known.length}/${capacity} đội` : `${node.games} trận`}</small></header>${node.end ? `<div class="swiss-map-terminal">${known.map((r) => `<div data-swiss-team="${r.id}">${seedTeam(s, r.id)}<span class="swiss-terminal-mark" aria-label="${node.w === 3 ? "Đã giành vé" : "Đã bị loại"}">${node.w === 3 ? "✓" : "–"}</span></div>`).join("")}${known.length < capacity ? `<p class="swiss-map-empty">${capacity - known.length} ${known.length ? "đội còn lại" : "suất"} chờ xác định</p>` : ""}</div>` : matches.length ? `<div class="swiss-map-fixtures">${matches.map((m) => fixture(s, m)).join("")}</div><footer><span>${matches.filter((m) => m.sets).length}/${matches.length} trận hoàn tất</span><b>BO5</b></footer>` : `<div class="swiss-map-pending ${known.length ? "" : "is-empty"}"><p><b>${known.length}</b>/${capacity} đội đã xác định</p>${known.length ? `<div>${known.map((r) => `<span data-swiss-team="${r.id}">${seedTeam(s, r.id)}</span>`).join("")}</div>` : `<div class="swiss-map-waiting"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 9h4c7 0 7 14 14 14h4m-5-5 5 5-5 5M5 23h4c3 0 5-3 7-7s4-7 7-7h4m-5-5 5 5-5 5"/></svg><strong>Chờ bốc thăm</strong><span>Đội tham dự được xác định<br>từ kết quả vòng trước</span></div>`}<small>${known.length === capacity ? "Đủ đội · Sẵn sàng bốc thăm vòng " + (c + 1) : known.length ? "Chờ các trận còn lại của vòng trước" : ""}</small></div>`}</section>`;
         })
         .join(""),
     )

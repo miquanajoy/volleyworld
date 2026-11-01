@@ -1140,7 +1140,18 @@
 .full-tree-side .full-team-line {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 78px;
+  align-items: center;
   gap: 6px;
+}
+.full-tree-side .full-team-line:has(> .team-rank) {
+  grid-template-columns: 24px minmax(0, 1fr) 78px;
+}
+.full-tree-side .full-team-line > .team-rank {
+  min-width: 0;
+  margin: 0;
+  font-size: 10px;
+  text-align: center;
+  white-space: nowrap;
 }
 .full-tree-side .team {
   gap: 6px;
@@ -3077,7 +3088,7 @@
 }
 .swiss-view-switch button {
   padding: 8px 14px;
-  font-size: 12px;
+  font-size: 14px;
   border: 0;
   background: transparent;
   color: var(--muted);
@@ -3093,7 +3104,7 @@
   align-items: center;
   gap: 12px 20px;
   margin: 0 0 12px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .swiss-map-legend > span {
@@ -3113,7 +3124,7 @@
   padding: 20px;
   border: 1px solid #dce4d4;
   border-radius: 14px;
-  background: #f1f5eb;
+  background: #f4f7f0;
   margin: 0 0 24px;
 }
 .swiss-map {
@@ -3121,7 +3132,7 @@
 }
 .swiss-map-head {
   display: flex;
-  gap: 64px;
+  gap: 56px;
   margin-bottom: 18px;
 }
 .swiss-map-head > div {
@@ -3133,12 +3144,12 @@
   border-bottom: 1px solid #d4dfca;
 }
 .swiss-map-head .eyebrow {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--green);
   letter-spacing: 1.2px;
 }
 .swiss-map-head b {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted);
 }
@@ -3153,7 +3164,7 @@
 }
 .swiss-map-lines path {
   fill: none;
-  stroke-width: 1.5;
+  stroke-width: 1.75;
 }
 .swiss-flow-win {
   stroke: #7e9f68;
@@ -3166,7 +3177,7 @@
   position: absolute;
   overflow: hidden;
   border: 1px solid #d7e1cf;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #fff;
   box-shadow: 0 3px 10px #1d382009;
 }
@@ -3177,7 +3188,7 @@
 .swiss-map-node > header {
   position: static;
   z-index: auto;
-  height: 52px;
+  height: 60px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -3187,20 +3198,20 @@
 }
 .swiss-map-node > header strong {
   color: var(--green);
-  font-size: 25px;
+  font-size: 27px;
   font-weight: 800;
   white-space: nowrap;
 }
 .swiss-map-node > header > span {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
   letter-spacing: 0.6px;
   font-weight: 700;
 }
 .swiss-map-node > header > small {
   margin-left: auto;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   white-space: nowrap;
 }
 .swiss-map-fixtures {
@@ -3208,11 +3219,11 @@
 }
 .swiss-map-match {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
   align-items: center;
   gap: 3px;
-  height: 40px;
-  min-height: 40px;
+  height: 46px;
+  min-height: 46px;
   width: 100%;
   padding: 0 6px;
   border: 0;
@@ -3231,7 +3242,7 @@
 }
 .swiss-map-match > b {
   text-align: center;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--green);
   font-variant-numeric: tabular-nums;
 }
@@ -3244,24 +3255,24 @@
 }
 .swiss-map-team {
   display: grid;
-  grid-template-columns: 17px minmax(0, 1fr);
+  grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
   gap: 3px;
   min-width: 0;
 }
 .swiss-map-team > small {
-  font-size: 8px;
+  font-size: 9px;
   color: #87927d;
   font-weight: 500;
 }
 .swiss-map-team .team {
   gap: 4px;
   min-width: 0;
-  font-size: 10px;
+  font-size: 12px;
 }
 .swiss-map-team .flag {
   flex-shrink: 0;
-  font-size: 14px;
+  font-size: 17px;
 }
 .swiss-map-team .team-name {
   min-width: 0;
@@ -3270,14 +3281,16 @@
   text-overflow: ellipsis;
 }
 .swiss-map-node > footer {
-  display: block;
-  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
   padding: 6px 10px;
   margin: 0;
   border: 0;
   color: var(--muted);
   background: #f8faf5;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 12px;
 }
 .swiss-map-node.is-qualified {
@@ -3308,30 +3321,30 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  height: 28px;
+  height: 32px;
   color: var(--green);
 }
 .swiss-map-terminal .swiss-map-team {
   flex: 1;
 }
 .swiss-map-terminal .swiss-map-team .team {
-  font-size: 11px;
+  font-size: 12px;
 }
 .swiss-map-terminal .swiss-map-empty {
-  font-size: 10px;
+  font-size: 12px;
   color: #9aa28f;
   font-weight: 400;
 }
 .swiss-map-pending {
   display: flex;
   flex-direction: column;
-  height: calc(100% - 52px);
+  height: calc(100% - 60px);
   padding: 10px;
   gap: 6px;
 }
 .swiss-map-pending > p {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .swiss-map-pending > div {
@@ -3342,14 +3355,100 @@
 .swiss-map-pending > div > span {
   padding: 6px 2px;
   min-width: 0;
-  height: 28px;
+  height: 32px;
   background: #f5f8f0;
   border-radius: 3px;
 }
 .swiss-map-pending > small {
   margin-top: auto;
   color: #98a18d;
-  font-size: 10px;
+  font-size: 12px;
+}
+
+.swiss-map-node.is-pending {
+  border-style: dashed;
+  border-color: #cfdac3;
+  background: #fcfdf9;
+  box-shadow: none;
+}
+.swiss-map-node.is-pending > header {
+  background: #f2f6ec;
+}
+.swiss-map-match:nth-child(even) {
+  background: #f8faf6;
+}
+.swiss-map-match:hover {
+  background: #edf5e3;
+  box-shadow: inset 3px 0 #93b46f;
+}
+.swiss-map-match:focus-visible {
+  outline: 2px solid #82a85c;
+  outline-offset: -2px;
+}
+.swiss-map-match > span {
+  padding: 5px 2px;
+}
+.swiss-map-match > b {
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.swiss-map-node > footer > b {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #eaf0e2;
+  font-size: 9px;
+  font-weight: 600;
+}
+.swiss-map-pending > .swiss-map-waiting {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  text-align: center;
+  color: #899a79;
+}
+.swiss-map-waiting svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: #a5b793;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.swiss-map-waiting strong {
+  font-size: 13px;
+  color: #617452;
+  font-weight: 600;
+}
+.swiss-map-waiting span {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #8a9682;
+}
+.swiss-map-pending > small:empty {
+  display: none;
+}
+.swiss-map-terminal .swiss-map-empty {
+  margin: 8px 0;
+  line-height: 16px;
+  text-align: center;
+  font-size: 11px;
+}
+.swiss-terminal-mark {
+  display: grid;
+  place-items: center;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #e5f0da;
+  font-size: 11px;
+}
+.is-eliminated .swiss-terminal-mark {
+  background: #e9e5dc;
+  color: #9b8f7d;
 }
 @media (max-width: 850px) {
   .challenger-roster-grid {
@@ -3388,5 +3487,174 @@
 @media (max-width: 380px) {
   .challenger-roster-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Challenger history cards follow the same hierarchy at every season state. */
+.challenger-season-grid {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+.challenger-season-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 276px;
+  padding: 22px;
+  border-radius: 14px;
+  border-color: #dce4d4;
+  background: #fff;
+  box-shadow: 0 3px 12px #1b352008;
+}
+.challenger-season-card:hover {
+  border-color: #b5c8a2;
+  box-shadow: 0 5px 18px #1b35200d;
+}
+.challenger-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.challenger-card-head .eyebrow {
+  font-size: 9px;
+  letter-spacing: 1.4px;
+  color: var(--green);
+}
+.challenger-card-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 20px;
+  background: #f0f3eb;
+  color: #79836f;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.challenger-card-state i,
+.challenger-card-save i {
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+.challenger-card-state.is-active {
+  background: #eaf3df;
+  color: #537b32;
+}
+.challenger-card-state.is-done {
+  background: #e5efe7;
+  color: var(--green);
+}
+.challenger-card-state.is-conflict {
+  background: #fff0d8;
+  color: #9d6e2e;
+}
+.challenger-card-title {
+  margin: 20px 0 22px;
+}
+.challenger-season-card .challenger-card-title h3 {
+  margin: 0 0 7px;
+  font-size: 27px;
+  line-height: 1.25;
+  letter-spacing: -0.7px;
+}
+.challenger-card-title p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.challenger-card-progress {
+  margin: 0 0 20px;
+}
+.challenger-card-progress > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.challenger-card-progress > div > span {
+  font-size: 9px;
+  letter-spacing: 0.9px;
+  color: #87917d;
+}
+.challenger-card-progress b {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--green);
+}
+.challenger-card-progress small {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.challenger-progress-track {
+  height: 5px;
+  overflow: hidden;
+  background: #edf1e7;
+  border-radius: 10px;
+}
+.challenger-progress-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #7ba454;
+}
+.challenger-season-card.is-complete .challenger-progress-track i {
+  background: var(--green);
+}
+.challenger-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+}
+.challenger-card-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #7b8a72;
+}
+.challenger-card-save.is-local {
+  color: #9a8967;
+}
+.challenger-card-footer button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+.challenger-season-card .challenger-history-medals {
+  display: grid;
+  gap: 7px;
+  margin: -4px 0 20px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f4f7ef;
+}
+.challenger-season-card .challenger-history-medals p {
+  margin: 0;
+  min-width: 0;
+}
+.challenger-season-card .challenger-history-medals .team {
+  font-size: 11px;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .challenger-season-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .challenger-season-card {
+    padding: 20px;
   }
 }
