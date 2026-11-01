@@ -1,3 +1,6 @@
+import { accountState } from "../features/account/model";
+import * as Tour from "../features/tour/controller";
+import { tourCloud } from "../features/tour/cloud";
 import * as Challenger from "../features/challenger/controller";
 import { challengerCloud } from "../features/challenger/cloud";
 import * as Nations from "../features/nations-league/controller";
@@ -35,6 +38,41 @@ type Action = (element: HTMLElement) => unknown;
 const arg = (e: HTMLElement) => e.dataset.arg || "";
 /** Explicit command table: markup carries data, never executable JavaScript. */
 const actions: Record<string, Action> = {
+  "Tour.enter": () => Tour.enter(),
+  "Tour.create": () => Tour.create(),
+  "Tour.start": () => Tour.start(),
+  "Tour.cancelSetup": () => Tour.cancelSetup(),
+  "Tour.toggleTeam": (e) => Tour.toggleTeam(arg(e)),
+  "Tour.setupRegion": (e) => Tour.setupRegion(arg(e)),
+  "Tour.resetRoster": () => Tour.resetRoster(),
+  "Tour.open": (e) => Tour.open(arg(e)),
+  "Tour.section": (e) => Tour.section(arg(e)),
+  "Tour.viewStage": (e) => Tour.viewStage(arg(e)),
+  "Tour.round": (e) =>
+    Tour.round(e.dataset.arg ?? (e as HTMLSelectElement).value),
+  "Tour.region": (e) => Tour.region(arg(e)),
+  "Tour.swissView": (e) => Tour.swissView(arg(e)),
+  "Tour.next": () => Tour.next(),
+  "Tour.simRound": () => Tour.simRound(),
+  "Tour.stage": (e) => Tour.stage(arg(e)),
+  "Tour.qualifierStage": (e) => Tour.qualifierStage(arg(e)),
+  "Tour.finishStage": () => Tour.finishStage(),
+  "Tour.finish": () => Tour.finish(),
+  "Tour.match": (e) => Tour.showMatch(arg(e)),
+  "Tour.simMatch": (e) => Tour.simMatch(arg(e)),
+  "Tour.edit": (e) => Tour.edit(arg(e)),
+  "Tour.dialogSim": () => Tour.actDialog(),
+  "Tour.dialogEdit": () => Tour.actDialog(true),
+  "Tour.team": (e) => Tour.showTeam(arg(e)),
+  "Tour.export": () => Tour.exportSeasons(),
+  "Tour.exportOne": () => Tour.exportSeasons(true),
+  "Tour.import": () => $("tourImport").click(),
+  "Tour.importFile": (e) =>
+    Tour.importSeasons((e as HTMLInputElement).files?.[0]),
+  "Tour.restore": () => Tour.restore(),
+  "Tour.sync": () => tourCloud.reload(),
+  "Tour.remote": () => tourCloud.resolve(true),
+  "Tour.local": () => tourCloud.resolve(false),
   "Challenger.enter": () => Challenger.enter(),
   "Challenger.create": () => Challenger.create(),
   "Challenger.editRoster": () => Challenger.editRoster(),
@@ -200,13 +238,15 @@ const actions: Record<string, Action> = {
   "Seasons.start": () => getPorts().seasons.start(),
   "Seasons.customize": () => getPorts().seasons.customize(),
   "Seasons.requestNew": () =>
-    store.tab === "challenger"
-      ? Challenger.create()
-      : store.tab === "nations-league"
-        ? Nations.requestNationsSeason()
-        : store.tab === "full-season"
-          ? Full.createFull()
-          : getPorts().seasons.requestNew(),
+    store.tab === "tour"
+      ? Tour.create()
+      : store.tab === "challenger"
+        ? Challenger.create()
+        : store.tab === "nations-league"
+          ? Nations.requestNationsSeason()
+          : store.tab === "full-season"
+            ? Full.createFull()
+            : getPorts().seasons.requestNew(),
   "Seasons.view": (e) => getPorts().seasons.view(arg(e)),
   "Seasons.resolve": (e) =>
     getPorts().seasons.resolve(arg(e), e.dataset.arg1 === "true"),
@@ -246,6 +286,13 @@ export function initializeActions(): () => void {
       !element ||
       (element instanceof HTMLButtonElement && element.disabled) ||
       (element.dataset.trigger || "click") !== event.type
+    )
+      return;
+    if (
+      accountState.resetPending &&
+      !["closeDialog", "Cloud.retry", "Cloud.logout", "Cloud.open"].includes(
+        element.dataset.action || "",
+      )
     )
       return;
     const action = actions[element.dataset.action || ""];

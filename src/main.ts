@@ -3,6 +3,7 @@ import { bootstrap } from "./app/bootstrap";
 import { init, initializeAccountEvents } from "./features/account/controller";
 import "./styles/app.css";
 import "./styles/enhancements.css";
+import "./styles/tour.css";
 bootstrap();
 initializeActions();
 initializeAccountEvents();

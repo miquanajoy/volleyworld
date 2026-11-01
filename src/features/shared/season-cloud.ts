@@ -96,6 +96,24 @@ export function createSeasonCloud<
       model.loadedScope = model.scope;
     }
   }
+  /** Stop account-bound writes before the SDK session can be reused by another UID. */
+  function suspend() {
+    for (const resolve of accountWaiters) resolve();
+    accountWaiters.clear();
+    if (model.loadedScope) persistFull();
+    for (const w of writers.values()) w.close();
+    writers.clear();
+    client = null;
+    uid = null;
+    ready = false;
+    model.token++;
+    model.scope = config.prefix + "-switching";
+    model.loadedScope = model.scope;
+    model.records = [];
+    model.selected = null;
+    model.section = "overview";
+    model.error = "";
+  }
   async function switchAccount(
     nextClient: SupabaseClient | null,
     nextUid: string | null,
@@ -405,6 +423,7 @@ export function createSeasonCloud<
 
   return {
     initialize,
+    suspend,
     switchAccount,
     queue,
     reload,

@@ -13,6 +13,7 @@ export const accountState = {
   epoch: 0,
   loadedAt: null as string | null,
   manualBusy: false,
+  resetPending: false,
 };
 export const el = $;
 export const text = (id: string, value: string) => {

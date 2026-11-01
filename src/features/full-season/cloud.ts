@@ -35,6 +35,7 @@ const cloud = createSeasonCloud({
 });
 export const {
   initialize: initializeFullScope,
+  suspend: suspendFullAccount,
   switchAccount: switchFullAccount,
   queue: queueFull,
   reload: reloadFullCloud,

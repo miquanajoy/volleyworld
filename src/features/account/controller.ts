@@ -1,7 +1,10 @@
+import { tourCloud } from "../tour/cloud";
+import { applyAccountReset } from "../../data/repositories/account-reset";
 import { challengerCloud } from "../challenger/cloud";
 import { nationsCloud } from "../nations-league/cloud";
 import {
   switchFullAccount,
+  suspendFullAccount,
   saveFullNow,
   fullCloudPending,
   reloadFullCloud,
@@ -35,7 +38,11 @@ import { toast } from "../../shared/feedback";
 import { accountState, cfg, configured, el, text } from "./model";
 import { draw } from "./views";
 export const storageKey = () =>
-  accountState.user ? "volleyworld-user-" + accountState.user!.id : KEY;
+  accountState.resetPending
+    ? "volleyworld-switching"
+    : accountState.user
+      ? "volleyworld-user-" + accountState.user!.id
+      : KEY;
 export function snapshot() {
   return JSON.parse(JSON.stringify(store.state));
 }
@@ -81,7 +88,9 @@ export function status(p: CloudPhase, message = "") {
     conflict: "⚠ Có tiến độ từ thiết bị khác",
     error: "⚠ Chưa đồng bộ · bản máy đã giữ",
   };
-  if (!["full-season", "nations-league", "challenger"].includes(store.tab))
+  if (
+    !["tour", "full-season", "nations-league", "challenger"].includes(store.tab)
+  )
     text("saved", labels[p] || labels.local);
   text("accountButton", accountState.user ? "☁ Tài khoản" : "☁ Đăng nhập");
   if (el("cloudDialog").open) draw();
@@ -195,7 +204,8 @@ export async function acceptLocal() {
   await accountState.writer!.flush();
 }
 export async function switchUser(next: User | null) {
-  if (next?.id === accountState.user?.id) return;
+  if (next?.id === accountState.user?.id && accountState.phase !== "error")
+    return;
   accountState.epoch++;
   const token = accountState.epoch;
   accountState.writer?.close();
@@ -203,17 +213,41 @@ export async function switchUser(next: User | null) {
   accountState.ready = false;
   accountState.remote = null;
   accountState.loadedAt = null;
-  if (accountState.user) {
+  if (accountState.user && !accountState.resetPending) {
     try {
       writeTournament(localStorage, storageKey(), store.state);
     } catch {}
   }
-  const guestArchives =
+  const priorGuestArchives =
     !accountState.user && next ? getPorts().seasons.localRecords() : null;
+  suspendFullAccount();
+  nationsCloud.suspend();
+  challengerCloud.suspend();
+  tourCloud.suspend();
+  accountState.user = next;
+  accountState.resetPending = !!next;
+  status("loading");
+  let resetAccount = false;
+  if (next && accountState.client) {
+    try {
+      resetAccount = await applyAccountReset(accountState.client, next.id);
+    } catch (e) {
+      if (token === accountState.epoch)
+        status(
+          "error",
+          e instanceof Error ? e.message : "Chưa kiểm tra được tài khoản.",
+        );
+      return;
+    }
+    if (token !== accountState.epoch) return;
+  }
+  accountState.resetPending = false;
+  const guestArchives = !resetAccount ? priorGuestArchives : null;
   accountState.user = next;
   void switchFullAccount(accountState.client, next?.id || null);
   void nationsCloud.switchAccount(accountState.client, next?.id || null);
   void challengerCloud.switchAccount(accountState.client, next?.id || null);
+  void tourCloud.switchAccount(accountState.client, next?.id || null);
   if (!accountState.user) {
     let guest;
     try {
@@ -233,7 +267,7 @@ export async function switchUser(next: User | null) {
     try {
       guest = readTournament(localStorage, KEY);
     } catch {}
-    apply(guest && V.validState(guest) ? guest : V.fresh());
+    apply(!resetAccount && guest && V.validState(guest) ? guest : V.fresh());
     getPorts().seasons.adopt(guestArchives);
   }
   status("loading");
@@ -262,6 +296,10 @@ export async function switchUser(next: User | null) {
 }
 export async function retry() {
   if (!accountState.user) return;
+  if (accountState.resetPending) {
+    accountState.phase = "error";
+    return switchUser(accountState.user);
+  }
   const token = accountState.epoch;
   status("loading");
   void loadHistory();
@@ -294,6 +332,9 @@ export async function syncNow() {
   await accountState.writer!.flush();
 }
 export async function manualSave(): Promise<ManualSaveResult> {
+  if (accountState.resetPending)
+    return { local: false, online: false, status: "account-changed" };
+  if (store.tab === "tour") return tourCloud.saveNow();
   if (store.tab === "challenger") return challengerCloud.saveNow();
   if (store.tab === "nations-league") return nationsCloud.saveNow();
   if (store.tab === "full-season") return saveFullNow();
@@ -460,6 +501,7 @@ export async function logout() {
     accountState.phase === "saving" ||
     fullCloudPending() ||
     nationsCloud.pending() ||
+    tourCloud.pending() ||
     challengerCloud.pending()
   ) {
     if (
@@ -547,6 +589,7 @@ export function initializeAccountEvents() {
       void reloadFullCloud();
       void nationsCloud.reload();
       void challengerCloud.reload();
+      void tourCloud.reload();
     }
   });
   window.addEventListener("focus", () => {
@@ -554,6 +597,7 @@ export function initializeAccountEvents() {
     if (store.tab === "full-season") void reloadFullCloud();
     if (store.tab === "nations-league") void nationsCloud.reload();
     if (store.tab === "challenger") void challengerCloud.reload();
+    if (store.tab === "tour") void tourCloud.reload();
   });
   window.addEventListener("beforeunload", (e) => {
     if (
@@ -562,6 +606,7 @@ export function initializeAccountEvents() {
         accountState.writer?.running ||
         fullCloudPending() ||
         nationsCloud.pending() ||
+        tourCloud.pending() ||
         challengerCloud.pending())
     ) {
       e.preventDefault();

@@ -156,6 +156,7 @@ function canonical(app, id = "body") {
     copy.querySelectorAll(".notice > .badge + p").forEach((el) => el.remove());
   remove('[data-action="Full.enter"]');
   remove('[data-action="Nations.enter"]');
+  remove('[data-action="Tour.enter"]');
   remove('[data-action="Challenger.enter"]');
   remove(".score-generator, .score-draft-status, .set-play, .set-clear");
   copy

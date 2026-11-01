@@ -1,5 +1,9 @@
 const { spawnSync } = require("node:child_process");
 for (const file of [
+  "tour",
+  "tour-ui",
+  "tour-cloud",
+  "account-reset",
   "placements",
   "league-history",
   "standings-movement",

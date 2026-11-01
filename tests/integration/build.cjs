@@ -341,6 +341,22 @@ const fs = require("node:fs"),
     fullBeforeNations,
   );
   assert.equal(w.localStorage.getItem("volleyworld-v1"), classicBeforeFull);
+  click('[data-action="navigate"][data-arg="home"]');
+  click('[data-action="Tour.enter"]');
+  click('[data-action="Tour.create"]');
+  assert(w.document.querySelector(".tour-selection-intro"));
+  click('[data-action="Tour.start"]');
+  assert.equal(w.document.querySelectorAll(".tour-journey-card").length, 8);
+  click('[data-action="Tour.viewStage"][data-arg="0"]');
+  assert.equal(w.document.querySelectorAll(".full-match").length, 16);
+  click('[data-action="Tour.simRound"]');
+  const tour = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
+  assert.equal(tour.played, 16);
+  assert.equal(tour.snapshot.stage, 0);
+  click("#saveProgress");
+  await new Promise((r) => setTimeout(r, 10));
+  assert(w.document.getElementById("toast").textContent.includes("Tour"));
+  assert.equal(w.localStorage.getItem("volleyworld-v1"), classicBeforeFull);
   assert.equal(errors.length, 0, errors.map(String).join("\n"));
   dom.window.close();
   console.log(

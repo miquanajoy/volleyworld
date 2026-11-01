@@ -86,3 +86,13 @@ target.__challenger = {
   ...challengerModel,
   challengerCloud,
 };
+
+import * as tourController from "../../src/features/tour/controller";
+import { tourCloud } from "../../src/features/tour/cloud";
+import * as tourModel from "../../src/features/tour/model";
+target.__tour = { ...tourController, ...tourModel, tourCloud };
+
+import { applyAccountReset } from "../../src/data/repositories/account-reset";
+import { accountState } from "../../src/features/account/model";
+target.__applyAccountReset = applyAccountReset;
+target.__accountState = accountState;
