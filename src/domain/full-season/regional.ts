@@ -134,12 +134,13 @@ export function groupBerths(
   direct: number,
   decider = false,
   contenderSlots = direct + 1,
+  maxNodes = 96,
 ) {
   const rows = fullStandings(g),
     remaining = g.rounds.flat().filter((m) => !m.sets),
     cutoffs = decider ? [direct, contenderSlots] : [direct];
   const certificates = remaining.length
-    ? solve(rows, remaining, cutoffs, 96)
+    ? solve(rows, remaining, cutoffs, maxNodes)
     : null;
   return Object.fromEntries(
     rows.map((t, i) => [

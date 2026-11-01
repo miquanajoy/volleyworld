@@ -14,6 +14,8 @@ import type { AppTab } from "./store";
 type Action = (element: HTMLElement) => unknown;
 const arg = (e: HTMLElement) => e.dataset.arg || "";
 const actions: Record<string, Action> = {
+  "Tour.competition": (e) => Tour.competition(arg(e)),
+  "Tour.resume": () => Tour.resume(),
   "Tour.enter": () => Tour.enter(),
   "Tour.create": () => Tour.create(),
   "Tour.start": () => Tour.start(),

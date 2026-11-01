@@ -2115,3 +2115,412 @@
   line-height: 1.7;
   margin: 0 0 22px;
 }
+
+/* The three competitions remain visible while the calendar advances independently. */
+.tour-competition-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 22px 0 12px;
+}
+.tour-competition-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 19px 20px 16px;
+  border: 1px solid #d9e3ce;
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+  box-shadow: 0 2px 9px #1d352407;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.tour-competition-card:hover {
+  border-color: #a2ba8b;
+  background: #fbfdf7;
+}
+.tour-competition-card.is-selected {
+  background: #f0f6e8;
+  border-color: #90ad73;
+  box-shadow: 0 0 0 1px #a8c18c33;
+}
+.tour-competition-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+.tour-competition-card-head .eyebrow {
+  min-width: 0;
+  font-size: 8px;
+  letter-spacing: 0.7px;
+  color: #8fa17d;
+}
+.tour-competition-view-label {
+  flex-shrink: 0;
+  color: #9aa98a;
+  font-size: 7px;
+  letter-spacing: 0.6px;
+}
+.tour-competition-card.is-selected .tour-competition-view-label {
+  color: #5c7d42;
+  background: #e4efda;
+  border-radius: 4px;
+  padding: 4px 5px;
+}
+.tour-competition-card-title {
+  display: block;
+  color: var(--green);
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  font-weight: 750;
+  margin-bottom: 9px;
+}
+.tour-competition-card-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #879879;
+  margin-bottom: 18px;
+}
+.tour-competition-card-status > i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #b6c2aa;
+}
+.tour-competition-card-status.is-live {
+  color: #5c7d42;
+}
+.tour-competition-card-status.is-live > i {
+  background: #83a15f;
+  box-shadow: 0 0 0 3px #dce9cc;
+}
+.tour-competition-card.is-complete .tour-competition-card-status {
+  color: #6c8c50;
+}
+.tour-competition-card-progress {
+  display: block;
+  width: 100%;
+  margin-top: auto;
+}
+.tour-competition-card-progress > span:first-child {
+  display: block;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: #95a387;
+  margin-bottom: 8px;
+}
+.tour-competition-card-progress b {
+  font-size: 13px;
+  font-weight: 650;
+  color: #647f50;
+}
+.tour-competition-mini-track {
+  display: block;
+  width: 100%;
+  height: 3px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #e7eddf;
+}
+.tour-competition-mini-track > i {
+  display: block;
+  height: 100%;
+  background: #91ad72;
+  border-radius: inherit;
+}
+.tour-competition-card-meta {
+  display: block;
+  font-size: 9px;
+  color: #8c9d7d;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+.tour-competition-card-meta.is-berths {
+  color: #6c8a50;
+  font-weight: 650;
+}
+.tour-calendar-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px 18px;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #8b9b7c;
+  padding: 3px 2px 0;
+  margin: 0 0 18px;
+}
+.tour-calendar-context > span:first-child {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.tour-calendar-context > span:first-child > i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #90a877;
+  margin-right: 3px;
+}
+.tour-calendar-context b {
+  font-weight: 600;
+  color: #6d8656;
+}
+.tour-view-context {
+  color: #9ca78d;
+}
+.tour-view-context > button {
+  border: 0;
+  background: transparent;
+  color: #6f8c54;
+  font-size: 10px;
+  padding: 0 0 0 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tour-competition-phases {
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.tour-competition-phases > button {
+  font-size: 11px;
+}
+.tour-competition-phases > button[aria-pressed="true"] > span {
+  background: #deeace;
+  color: #69894f;
+}
+.tour-main-nav {
+  margin-top: 18px;
+}
+.tour-world-berths {
+  margin: 20px 0 26px;
+}
+.tour-world-berths-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 23px 25px;
+  border: 1px solid #d8e4cb;
+  border-radius: 13px;
+  background: #f2f7eb;
+  margin: 0 0 17px;
+}
+.tour-world-berths-heading h3 {
+  margin: 9px 0;
+  font-size: 24px;
+  letter-spacing: -0.5px;
+}
+.tour-world-berths-heading p {
+  margin: 0;
+  max-width: 620px;
+  color: #8a9d78;
+  line-height: 1.7;
+  font-size: 11px;
+}
+.tour-world-berth-count {
+  flex-shrink: 0;
+  min-width: 130px;
+  padding-left: 23px;
+  border-left: 1px solid #dbe6cf;
+}
+.tour-world-berth-count strong {
+  display: block;
+  color: #52733d;
+  font-size: 35px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+  line-height: 1.2;
+  margin-bottom: 7px;
+}
+.tour-world-berth-count small {
+  color: #9aac8a;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+}
+.tour-world-berth-count > span {
+  color: #8ea17c;
+  letter-spacing: 0.8px;
+  font-size: 8px;
+}
+.tour-world-berths .tour-qualified-regions {
+  margin: 0;
+}
+.tour-world-berths .tour-qualified-list > div {
+  padding: 10px;
+  background: #f4f8ef;
+  align-items: center;
+  min-width: 0;
+}
+.tour-qualified-country {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+.tour-qualified-country .team {
+  min-width: 0;
+  color: var(--green);
+  font-weight: 650;
+}
+.tour-qualified-country > small {
+  color: #99a78b;
+  font-size: 8px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.tour-world-berths .tour-ticket-check {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #e4efda;
+  color: #7d9c5f;
+  font-size: 8px;
+}
+.tour-berth-waiting {
+  margin: 8px 0 14px;
+  padding: 17px 8px;
+  color: #9ca98d;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.tour-berth-waiting > span {
+  font-size: 9px;
+  color: #b0bba3;
+}
+.tour-berth-region-status {
+  font-size: 8px;
+  line-height: 1.6;
+  color: #a3b094;
+  padding: 12px 0 0;
+  margin: 13px 0 0;
+  border-top: 1px solid #edf1e6;
+}
+.tour-world-berth-note {
+  font-size: 10px;
+  line-height: 1.8;
+  color: #8d9d7e;
+  padding: 13px 3px 0;
+  margin: 0;
+}
+@media (max-width: 950px) {
+  .tour-competition-overview {
+    gap: 10px;
+  }
+  .tour-competition-card {
+    padding: 16px 14px;
+  }
+  .tour-competition-card-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .tour-competition-card-title {
+    font-size: 20px;
+  }
+  .tour-competition-card-status {
+    font-size: 9px;
+  }
+}
+@media (max-width: 650px) {
+  .tour-competition-overview {
+    gap: 7px;
+    margin-top: 18px;
+  }
+  .tour-competition-card {
+    padding: 12px 10px;
+    border-radius: 9px;
+  }
+  .tour-competition-card-head .eyebrow {
+    font-size: 6px;
+    letter-spacing: 0.2px;
+  }
+  .tour-competition-view-label {
+    font-size: 6px;
+  }
+  .tour-competition-card.is-selected .tour-competition-view-label {
+    padding: 3px 4px;
+  }
+  .tour-competition-card-title {
+    font-size: 16px;
+    letter-spacing: -0.4px;
+    margin-bottom: 8px;
+  }
+  .tour-competition-card-status {
+    min-height: 27px;
+    font-size: 8px;
+    line-height: 1.55;
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+  .tour-competition-card-status > i {
+    width: 4px;
+    height: 4px;
+  }
+  .tour-competition-card-progress > span:first-child {
+    font-size: 8px;
+  }
+  .tour-competition-card-progress b {
+    font-size: 11px;
+  }
+  .tour-competition-card-meta {
+    font-size: 8px;
+    line-height: 1.65;
+    min-height: 26px;
+  }
+  .tour-calendar-context {
+    font-size: 9px;
+  }
+  .tour-view-context > button {
+    font-size: 9px;
+  }
+  .tour-world-berths-heading {
+    padding: 20px;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .tour-world-berths-heading h3 {
+    font-size: 22px;
+  }
+  .tour-world-berth-count {
+    border-left: 0;
+    padding-left: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  .tour-world-berth-count strong {
+    margin: 0;
+    font-size: 30px;
+  }
+  .tour-world-berth-count small {
+    font-size: 18px;
+  }
+}
+@media (max-width: 380px) {
+  .tour-competition-card-title {
+    font-size: 14px;
+  }
+  .tour-competition-card {
+    padding: 11px 8px;
+  }
+  .tour-competition-card-meta {
+    font-size: 7px;
+  }
+}

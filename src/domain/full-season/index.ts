@@ -20,6 +20,7 @@ export * from "./types";
 export * from "./league";
 export * from "./world";
 export * from "./regional";
+export * from "./berths";
 import {
   newQualification,
   qualifierMatches,

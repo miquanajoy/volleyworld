@@ -38,6 +38,32 @@ assert.equal(
 );
 api.viewStage("7");
 assert.equal(api.model.stage, 0, "Cannot jump to a future event");
+assert.equal(
+  d.querySelectorAll("[data-competition-overview]").length,
+  3,
+  "All three competitions remain visible",
+);
+const previewBefore = JSON.stringify(api.selected().snapshot);
+click('[data-action="Tour.competition"][data-arg="challenger"]');
+assert.equal(
+  api.selected().snapshot.stage,
+  0,
+  "Inspecting a future competition does not advance the season",
+);
+assert(d.querySelector(".tour-empty").textContent.includes("chờ khởi tranh"));
+assert.equal(d.querySelectorAll(".tour-roster-team").length, 32);
+assert(!d.querySelector('[data-action="Tour.simRound"]'));
+click('[data-action="Tour.competition"][data-arg="worldcup"]');
+assert.equal(d.querySelectorAll("[data-berth-region]").length, 5);
+assert.equal(d.querySelectorAll("[data-qualified-team]").length, 0);
+assert.equal(
+  JSON.stringify(api.selected().snapshot),
+  previewBefore,
+  "Previews are read-only",
+);
+click('[data-action="Tour.competition"][data-arg="league"]');
+assert.equal(d.querySelectorAll(".tour-competition-phases > button").length, 4);
+
 click('[data-action="Tour.viewStage"][data-arg="0"]');
 assert.equal(d.querySelectorAll(".full-match").length, 16);
 assert.equal(d.querySelectorAll(".tour-round-nav button").length, 10);
@@ -133,6 +159,28 @@ for (let stage = 0; stage < 8; stage++) {
   assert.equal(api.selected().snapshot.stage, stage);
   assert.equal(api.model.stage, stage);
   if (stage === 1) {
+    const calendar = JSON.stringify(api.selected().snapshot);
+    click('[data-action="Tour.competition"][data-arg="league"]');
+    assert.equal(api.model.stage, 0);
+    assert.equal(api.selected().snapshot.stage, 1);
+    assert(
+      d
+        .querySelector('[data-competition-overview="league"]')
+        .classList.contains("is-selected"),
+    );
+    assert(d.querySelector('[data-competition-overview="worldcup"] .is-live'));
+    assert(
+      d
+        .querySelector(".tour-calendar-context")
+        .textContent.includes("Vòng loại khu vực"),
+    );
+    assert(
+      !d.querySelector('[data-action="Tour.simRound"]'),
+      "Inspecting paused League cannot simulate current WorldCup matches",
+    );
+    assert.equal(JSON.stringify(api.selected().snapshot), calendar);
+    click('[data-action="Tour.resume"]');
+    assert.equal(api.model.stage, 1);
     select("matches");
     assert.equal(
       d.querySelectorAll("[data-regional-group]").length,
@@ -301,8 +349,29 @@ assert.equal(d.querySelectorAll(".tour-summary-podium > li").length, 9);
 for (const place of [1, 2, 3])
   assert.equal(d.querySelectorAll(`[data-medal-place="${place}"]`).length, 3);
 const completed = JSON.stringify(api.selected().snapshot);
+click('[data-action="Tour.section"][data-arg="qualifiers"]');
+assert.equal(d.querySelectorAll("[data-qualified-team]").length, 24);
+assert(
+  d
+    .querySelector(".tour-world-berths-heading")
+    .textContent.includes("MỚI NHẤT"),
+);
+
 for (let stage = 0; stage < 8; stage++) {
+  const competition =
+    stage === 3
+      ? "challenger"
+      : [1, 5, 7].includes(stage)
+        ? "worldcup"
+        : "league";
+  click(`[data-action="Tour.competition"][data-arg="${competition}"]`);
   click(`[data-action="Tour.viewStage"][data-arg="${stage}"]`);
+  assert.equal(d.querySelectorAll("[data-competition-overview]").length, 3);
+  assert.equal(
+    d.querySelectorAll(".tour-competition-phases > button").length,
+    competition === "league" ? 4 : competition === "worldcup" ? 3 : 1,
+    "Only selectedcompetition phases appear",
+  );
   for (const section of ["matches", "table", "playoff"]) {
     select(section);
     assert(d.querySelector(".tour-page"));

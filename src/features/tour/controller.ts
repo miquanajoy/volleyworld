@@ -141,12 +141,44 @@ export function open(id: string) {
 }
 export function section(key: string) {
   if (
-    !["journey", "matches", "table", "playoff", "teams", "rules"].includes(key)
+    ![
+      "journey",
+      "matches",
+      "table",
+      "playoff",
+      "teams",
+      "rules",
+      "qualifiers",
+    ].includes(key)
   )
     return;
   model.section = key;
   const s = selected()?.snapshot;
+  if (s && key === "journey") model.stage = Math.min(s.stage, 7);
+  if (s && key === "qualifiers")
+    model.stage = [1, 5, 7].filter((n) => n <= s.stage).at(-1) ?? 1;
   if (s) model.round = currentRound(s, model.stage);
+  render();
+}
+export function competition(key: string) {
+  const s = selected()?.snapshot;
+  if (!s || !["league", "challenger", "worldcup"].includes(key)) return;
+  const phases =
+    key === "league" ? [0, 2, 4, 6] : key === "challenger" ? [3] : [1, 5, 7];
+  model.stage = phases.filter((n) => n <= s.stage).at(-1) ?? phases[0];
+  model.group = null;
+  model.round = currentRound(s, model.stage);
+  model.section =
+    key === "worldcup" && !s.worldcup.world ? "qualifiers" : "matches";
+  render();
+}
+export function resume() {
+  const s = selected()?.snapshot;
+  if (!s) return;
+  model.stage = Math.min(7, s.stage);
+  model.group = null;
+  model.round = currentRound(s, model.stage);
+  model.section = T.complete(s) ? "journey" : "matches";
   render();
 }
 export function viewStage(value: string, targetSection?: string) {
@@ -707,7 +739,7 @@ export function renderTour() {
             .finally(() => loading.delete(key));
         }
       } else {
-        model.stage = Math.min(model.stage, Math.min(s.stage, 7));
+        model.stage = Math.max(0, Math.min(model.stage, 7));
         html += view.seasonHtml(s, model, readonly());
       }
       $("content").innerHTML =
