@@ -119,6 +119,40 @@ assert.equal(
   "Old League standings/form remain unchanged",
 );
 assert.equal(d.querySelectorAll(".tour-standings tbody tr").length, 32);
+const navigationSnapshot = JSON.stringify(api.selected().snapshot);
+select("matches");
+assert.equal(
+  api.model.round,
+  0,
+  "Switching to fixtures retains the historical round",
+);
+select("table");
+assert.equal(
+  api.model.round,
+  0,
+  "Switching back to standings retains the historical round",
+);
+assert.equal(d.querySelector(".tour-standings tbody").textContent, table0);
+assert.equal(JSON.stringify(api.selected().snapshot), navigationSnapshot);
+api.enter();
+api.open(id);
+assert.equal(
+  api.model.section,
+  "matches",
+  "An unfinished season opens directly on its playable stage",
+);
+assert.equal(
+  api.model.round,
+  2,
+  "Opening season resumes first unfinished round",
+);
+assert.equal(d.querySelectorAll(".tour-main-nav > button").length, 4);
+assert(
+  !d.querySelector('[data-action="Tour.exportOne"]').closest("details").open,
+);
+api.round("0");
+select("table");
+
 api.showTeam(first.a);
 assert.equal(
   d.querySelectorAll("#teamLeagueSummary .tour-team-stats > span").length,
@@ -181,6 +215,12 @@ for (let stage = 0; stage < 8; stage++) {
     assert.equal(JSON.stringify(api.selected().snapshot), calendar);
     click('[data-action="Tour.resume"]');
     assert.equal(api.model.stage, 1);
+    click('[data-action="Tour.competition"][data-arg="worldcup"]');
+    assert.equal(
+      api.model.section,
+      "matches",
+      "World Cup opens active qualifying rather than a ticket detour",
+    );
     select("matches");
     assert.equal(
       d.querySelectorAll("[data-regional-group]").length,
@@ -191,7 +231,14 @@ for (let stage = 0; stage < 8; stage++) {
       d.querySelectorAll(".tour-regional-compact tbody tr").length,
       39,
     );
-    click('[data-action="Tour.group"][data-arg="0"]');
+    click('[data-action="Tour.group"][data-arg="0"][data-section="table"]');
+    assert.equal(
+      api.model.section,
+      "table",
+      "Group overview opens its exact standings in one click",
+    );
+    assert.equal(d.querySelectorAll(".tour-group-table").length, 1);
+    select("matches");
     assert.equal(api.model.group, 0);
     assert.equal(d.querySelectorAll(".tour-group-table").length, 1);
     assert(d.querySelector(".tour-group-fixtures"));
@@ -296,7 +343,9 @@ for (let stage = 0; stage < 8; stage++) {
       d.querySelectorAll(".tour-world-group .full-group-team").length,
       24,
     );
-    click('[data-action="Tour.group"][data-arg="2"]');
+    click('[data-action="Tour.group"][data-arg="2"][data-section="table"]');
+    assert.equal(api.model.section, "table");
+    select("matches");
     assert.equal(d.querySelectorAll("[data-world-group]").length, 1);
     assert.equal(d.querySelector("[data-world-group]").dataset.worldGroup, "2");
     assert.equal(d.querySelectorAll(".full-match").length, 2);

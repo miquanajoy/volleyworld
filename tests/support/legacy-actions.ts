@@ -55,7 +55,7 @@ const actions: Record<string, Action> = {
   "Tour.round": (e) =>
     Tour.round(e.dataset.arg ?? (e as HTMLSelectElement).value),
   "Tour.region": (e) => Tour.region(arg(e)),
-  "Tour.group": (e) => Tour.group(arg(e)),
+  "Tour.group": (e) => Tour.group(arg(e), e.dataset.section),
   "Tour.swissView": (e) => Tour.swissView(arg(e)),
   "Tour.next": () => Tour.next(),
   "Tour.simRound": () => Tour.simRound(),

@@ -134,8 +134,11 @@ export function open(id: string) {
   if (!model.records.some((r) => r.season_id === id)) return;
   model.setup = null;
   model.selected = id;
-  model.section = "journey";
-  model.stage = Math.min(7, selected()?.snapshot?.stage || 0);
+  const snapshot = selected()?.snapshot;
+  model.section = snapshot && !T.complete(snapshot) ? "matches" : "journey";
+  model.stage = Math.min(7, snapshot?.stage || 0);
+  model.group = null;
+  if (snapshot) model.round = currentRound(snapshot, model.stage);
   store.tab = "tour";
   render();
 }
@@ -152,12 +155,13 @@ export function section(key: string) {
     ].includes(key)
   )
     return;
+  const oldStage = model.stage;
   model.section = key;
   const s = selected()?.snapshot;
   if (s && key === "journey") model.stage = Math.min(s.stage, 7);
   if (s && key === "qualifiers")
     model.stage = [1, 5, 7].filter((n) => n <= s.stage).at(-1) ?? 1;
-  if (s) model.round = currentRound(s, model.stage);
+  if (s && model.stage !== oldStage) model.round = currentRound(s, model.stage);
   render();
 }
 export function competition(key: string) {
@@ -169,7 +173,11 @@ export function competition(key: string) {
   model.group = null;
   model.round = currentRound(s, model.stage);
   model.section =
-    key === "worldcup" && !s.worldcup.world ? "qualifiers" : "matches";
+    model.stage > s.stage && key === "worldcup"
+      ? "qualifiers"
+      : model.section === "table"
+        ? "table"
+        : "matches";
   render();
 }
 export function resume() {
@@ -208,7 +216,7 @@ export function region(value: string) {
   if (s) model.round = currentRound(s, model.stage);
   render();
 }
-export function group(value: string) {
+export function group(value: string, targetSection?: string) {
   const s = selected()?.snapshot;
   if (!s || ![1, 7].includes(model.stage)) return;
   if (value === "all") {
@@ -225,6 +233,8 @@ export function group(value: string) {
           ];
   if (!Number.isInteger(index) || index < 0 || index >= groups.length) return;
   model.group = index;
+  if (targetSection && ["table", "matches"].includes(targetSection))
+    model.section = targetSection;
   render();
 }
 export function swissView(value: string) {
