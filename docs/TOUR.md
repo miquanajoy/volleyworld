@@ -6,7 +6,11 @@ Tour combines World League, Challenger and World Cup into one independently save
 
 Before creating a season, choose exactly 32 national teams: Europe 7, Asia/Oceania 7, South America 6, North/Central America/Caribbean 7, Africa 5. Defaults use the catalog's highest regional ranks. League and Challenger share this roster for the entire season. World Cup qualification still includes all 100 catalog teams, including countries outside this selection.
 
-## Calendar
+## New seasons: merit World Cup berths
+
+New seasons on `feature/world-cup-merit-berths` use `rules: "merit-v1"` and the revised calendar/qualification described in [WORLD-CUP-MERIT.md](WORLD-CUP-MERIT.md). They have 948 matches and two title-based World Cup berths. Existing saves without the marker retain the legacy calendar and 964/968-match format below. No existing seasons or production database are migrated by checking out this branch.
+
+## Legacy calendar
 
 | Stage | Competition                      | Completion gate                                                                    |
 | ----- | -------------------------------- | ---------------------------------------------------------------------------------- |

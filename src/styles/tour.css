@@ -2656,3 +2656,21 @@
     width: min(280px, calc(100vw - 60px));
   }
 }
+
+.tour-preview-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  background: #fff7e7;
+  border: 1px solid #e7d6ab;
+  border-radius: 10px;
+  color: #785a2e;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.tour-preview-notice > strong {
+  font-size: 12px;
+}

@@ -7,6 +7,7 @@ import {
 import { validTour, complete } from "../../domain/tour/index";
 import {
   model,
+  tourStoragePrefix,
   persist,
   readScope,
   recordOf,
@@ -17,7 +18,7 @@ import {
 export const tourCloud = createSeasonCloud({
   model,
   tab: "tour",
-  prefix: "volleyworld-tour",
+  prefix: tourStoragePrefix,
   label: "Tour",
   persist,
   readScope,

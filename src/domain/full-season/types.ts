@@ -13,6 +13,7 @@ export interface FullLeague {
   tie: TeamId[];
 }
 export interface QualifierBracket {
+  advanceSlots?: 4;
   seeds: TeamId[];
   rounds: Match[][];
 }
@@ -40,7 +41,8 @@ export interface FullSeason {
   seasonId: string;
   seasonNumber: number;
   createdAt: string;
-  regionalFormat?: "groups-v1" | "qualification-v2";
+  regionalFormat?: "groups-v1" | "qualification-v2" | "merit-v1";
+  automatic?: TeamId[] | null;
   intercontinental?: { pots: TeamId[][]; branches: QualifierBracket[] } | null;
   regions: Record<Region, RegionalLeague>;
   world: WorldCup | null;

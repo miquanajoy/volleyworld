@@ -37,6 +37,7 @@ const fs = require("node:fs"),
   w.HTMLDialogElement.prototype.close = function () {
     this.open = false;
   };
+  const networkCalls = [];
   Object.assign(w, {
     TextEncoder,
     TextDecoder,
@@ -44,7 +45,8 @@ const fs = require("node:fs"),
     Request,
     Response,
     AbortController,
-    fetch: async () => {
+    fetch: async (...args) => {
+      networkCalls.push(args[0]);
       throw Error("Unexpected network in guest build test");
     },
   });
@@ -126,13 +128,32 @@ const fs = require("node:fs"),
     .getElementById("scoreForm")
     .dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
   assert(!w.document.getElementById("editor").open);
-  let record = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
+  const preview = !!w.document.querySelector("[data-preview-local]");
+  if (process.env.VOLLEY_PREVIEW_LOCAL === "1")
+    assert(preview, "Preview build must display local-only notice");
+  const storageKey = preview
+    ? "volleyworld-tour-merit-preview-guest"
+    : "volleyworld-tour-guest";
+  if (preview) {
+    click('[data-action="Cloud.open"]');
+    assert(
+      !w.document.querySelector("#loginForm"),
+      "Preview has no login or real account writes",
+    );
+    assert(
+      w.document
+        .querySelector("#cloudContent")
+        .textContent.includes("chơi thử độc lập"),
+    );
+    w.document.getElementById("cloudDialog").close();
+  }
+  let record = JSON.parse(w.localStorage.getItem(storageKey))[0];
   assert.equal(record.played, 1);
   assert.equal(record.snapshot.league.playoffEntry, undefined);
   click('[data-action="Tour.simRound"]');
-  record = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
+  record = JSON.parse(w.localStorage.getItem(storageKey))[0];
   assert.equal(record.played, 16);
-  assert.equal(record.total_matches, 964);
+  assert.equal(record.total_matches, 948);
   click('[data-action="Tour.section"][data-arg="table"]');
   assert.equal(
     w.document.querySelectorAll(".tour-standings tbody tr").length,
@@ -151,8 +172,8 @@ const fs = require("node:fs"),
   await new Promise((r) => setTimeout(r, 10));
   assert(w.document.getElementById("toast").textContent.includes("Tour"));
   click('[data-action="Tour.finish"]');
-  record = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
-  assert.equal(record.played, 964);
+  record = JSON.parse(w.localStorage.getItem(storageKey))[0];
+  assert.equal(record.played, 948);
   assert.equal(record.status, "completed");
   assert.equal(
     w.document.querySelectorAll(".tour-champions > section").length,
@@ -167,6 +188,18 @@ const fs = require("node:fs"),
     1,
   );
   assert.equal(w.localStorage.getItem("volleyworld-v1"), null);
+  if (preview) {
+    assert.equal(
+      networkCalls.length,
+      0,
+      "Preview never connects to auth or production database",
+    );
+    assert.equal(
+      w.localStorage.getItem("volleyworld-tour-guest"),
+      null,
+      "Preview does not use production guest storage",
+    );
+  }
   assert.equal(errors.length, 0, errors.map(String).join("\n"));
   dom.window.close();
   console.log(

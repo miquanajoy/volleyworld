@@ -1,3 +1,4 @@
+import { meritQualification, meritDirect } from "./merit";
 import { winner } from "../match/scoring";
 import { get } from "../../data/teams";
 import type { Region } from "../types";
@@ -9,7 +10,8 @@ import { qualifierWinner } from "./qualification";
 export interface WorldCupBerth {
   readonly id: string;
   readonly region: Region;
-  readonly route: "group" | "regional-playoff" | "playin";
+  readonly route:
+    "group" | "regional-playoff" | "playin" | "league" | "challenger";
   readonly label: string;
 }
 export interface WorldCupBerths {
@@ -45,6 +47,14 @@ export function worldCupBerths(s: FullSeason): WorldCupBerths {
         Object.freeze({ id, region: get(id).region, route, label }),
       );
   };
+  if (meritQualification(s))
+    s.automatic?.forEach((id, i) =>
+      add(
+        id,
+        i === 0 ? "league" : "challenger",
+        i === 0 ? "Vô địch League · Vé đặc cách" : "Vé đặc cách Challenger",
+      ),
+    );
   for (const r of regionOrder) {
     const region = s.regions[r],
       groups = region.groups
@@ -54,13 +64,15 @@ export function worldCupBerths(s: FullSeason): WorldCupBerths {
       region.directSlots ||
       (region.groups ? groupDirectSlots[r] : worldSlots[r]);
     groups.forEach((g, i) => {
-      for (const id of directQualifiers(g, slots))
+      for (const id of meritQualification(s) && s.automatic
+        ? meritDirect(s, r).filter((id) => g.teamIds.includes(id))
+        : directQualifiers(g, slots))
         add(
           id,
           "group",
           r === "CSV"
             ? `Top ${slots} Nam Mỹ · Vé trực tiếp`
-            : `${slots === 1 ? "Nhất" : "Top " + slots} bảng ${String.fromCharCode(65 + i)} · Vé trực tiếp`,
+            : `${slots === 1 ? (meritQualification(s) ? "Suất" : "Nhất") : "Top " + slots} bảng ${String.fromCharCode(65 + i)} · Vé trực tiếp`,
         );
     });
     const decider = region.decider && winner(region.decider);

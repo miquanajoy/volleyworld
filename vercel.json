@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "npm run check",
+  "buildCommand": "VOLLEY_PREVIEW_LOCAL=1 npm run check",
   "outputDirectory": "dist",
   "cleanUrls": true
 }

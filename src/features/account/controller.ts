@@ -9,7 +9,14 @@ import { restore } from "../tour/controller";
 export function status(phase: typeof accountState.phase, detail = "") {
   accountState.phase = phase;
   accountState.detail = detail;
-  text("accountButton", accountState.user ? "☁ Tài khoản" : "☁ Đăng nhập");
+  text(
+    "accountButton",
+    cfg.previewLocal
+      ? "Bản chơi thử"
+      : accountState.user
+        ? "☁ Tài khoản"
+        : "☁ Đăng nhập",
+  );
   if (el("cloudDialog").open) draw();
 }
 export async function switchUser(next: User | null) {

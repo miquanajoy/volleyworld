@@ -155,7 +155,7 @@ function meta(r) {
   await full.tourCloud.resolve(true);
   row = full.model.records[0];
   assert.equal(row.status, "completed");
-  assert.equal(row.played, 964);
+  assert.equal(row.played, 948);
   assert.equal(row.revision, 3);
   assert(!row.dirty);
   assert(F.validTour(row.snapshot));

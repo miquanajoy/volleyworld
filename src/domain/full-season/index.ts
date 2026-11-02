@@ -29,6 +29,7 @@ import {
   intercontinentalDone,
 } from "./qualification";
 export * from "./qualification";
+export * from "./merit";
 import { freshRegion, advanceRegions } from "./regional";
 export function freshFullSeason(
   number = 1,

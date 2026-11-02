@@ -14,8 +14,11 @@ export interface TourRecord extends ArchiveRecord<T.TourSeason> {
   total_matches?: number;
 }
 export const clone = <S>(s: S): S => JSON.parse(JSON.stringify(s));
+export const tourStoragePrefix = __VOLLEY_CONFIG__.previewLocal
+  ? "volleyworld-tour-merit-preview"
+  : "volleyworld-tour";
 export const model = {
-  scope: "volleyworld-tour-guest",
+  scope: `${tourStoragePrefix}-guest`,
   loadedScope: "",
   token: 0,
   records: [] as TourRecord[],
@@ -79,7 +82,8 @@ export function validRecord(input: unknown): input is TourRecord {
       Array.isArray(r.podium) &&
       r.podium.length === (r.status === "completed" ? 3 : 0) &&
       (r.dirty === undefined || typeof r.dirty === "boolean") &&
-      (r.total_matches === undefined || [964, 968].includes(r.total_matches)) &&
+      (r.total_matches === undefined ||
+        [948, 964, 968].includes(r.total_matches)) &&
       (r.honours === undefined ||
         [r.honours.league, r.honours.challenger, r.honours.worldcup].every(
           (ids) =>

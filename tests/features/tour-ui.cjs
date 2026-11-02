@@ -28,6 +28,13 @@ click(`[data-action="Tour.toggleTeam"][data-arg="${outgoing}"]`);
 assert(d.querySelector('[data-action="Tour.start"]').disabled);
 click(`[data-action="Tour.toggleTeam"][data-arg="${incoming}"]`);
 click('[data-action="Tour.start"]');
+// This suite preserves the previous Tour calendar as a loaded legacy snapshot.
+// The merit calendar is covered separately against the real production start flow.
+delete api.selected().snapshot.rules;
+api.selected().snapshot.worldcup.regionalFormat = "qualification-v2";
+delete api.selected().snapshot.worldcup.automatic;
+api.selected().total_matches = 964;
+api.section("journey");
 const id = api.selected().season_id;
 assert(api.selected().snapshot.roster.includes(incoming));
 assert(!api.selected().snapshot.roster.includes(outgoing));

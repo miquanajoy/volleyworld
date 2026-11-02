@@ -20,4 +20,5 @@ export const text = (id: string, value: string) => {
   if (el(id)) el(id).textContent = value;
 };
 export const cfg = __VOLLEY_CONFIG__;
-export const configured = !!(cfg.supabaseUrl && cfg.supabaseKey);
+export const configured =
+  !cfg.previewLocal && !!(cfg.supabaseUrl && cfg.supabaseKey);

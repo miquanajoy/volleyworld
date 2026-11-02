@@ -98,7 +98,7 @@ export function start() {
   run(() => {
     if (!T.validRoster(d.ids))
       throw Error("Cần đúng 7 Âu, 7 Á, 6 Nam Mỹ, 7 Bắc/Trung Mỹ và 5 Phi.");
-    const s = T.freshTour(
+    const s = T.freshMeritTour(
         Math.max(0, ...model.records.map((r) => r.season_number)) + 1,
         d.ids,
       ),
@@ -160,7 +160,8 @@ export function section(key: string) {
   const s = selected()?.snapshot;
   if (s && key === "journey") model.stage = Math.min(s.stage, 7);
   if (s && key === "qualifiers")
-    model.stage = [1, 5, 7].filter((n) => n <= s.stage).at(-1) ?? 1;
+    model.stage =
+      [1, T.qualificationStage(s), 7].filter((n) => n <= s.stage).at(-1) ?? 1;
   if (s && model.stage !== oldStage) model.round = currentRound(s, model.stage);
   render();
 }
@@ -168,7 +169,11 @@ export function competition(key: string) {
   const s = selected()?.snapshot;
   if (!s || !["league", "challenger", "worldcup"].includes(key)) return;
   const phases =
-    key === "league" ? [0, 2, 4, 6] : key === "challenger" ? [3] : [1, 5, 7];
+    key === "league"
+      ? [0, 2, 4, T.leagueStage(s)]
+      : key === "challenger"
+        ? [3]
+        : [1, T.qualificationStage(s), 7];
   model.stage = phases.filter((n) => n <= s.stage).at(-1) ?? phases[0];
   model.group = null;
   model.round = currentRound(s, model.stage);
@@ -267,7 +272,13 @@ export function simRound() {
   });
 }
 export function qualifierStage(prefix: string) {
-  if (!active() || ![1, 5].includes(selected()!.snapshot!.stage)) return;
+  if (
+    !active() ||
+    !(T.merit(selected()!.snapshot!) ? [6] : [1, 5]).includes(
+      selected()!.snapshot!.stage,
+    )
+  )
+    return;
   run(() =>
     mutate((s) =>
       T.simulateMatches(
@@ -280,13 +291,19 @@ export function qualifierStage(prefix: string) {
   );
 }
 export function stage(key: string) {
-  if (!active() || ![3, 6, 7].includes(selected()!.snapshot!.stage)) return;
+  if (
+    !active() ||
+    ![3, T.leagueStage(selected()!.snapshot!), 7].includes(
+      selected()!.snapshot!.stage,
+    )
+  )
+    return;
   run(() =>
     mutate((s) => {
       const b =
         s.stage === 3
           ? s.challenger!.bracket
-          : s.stage === 6
+          : s.stage === T.leagueStage(s)
             ? s.league.bracket
             : s.worldcup.world!.bracket;
       const ms = b?.[
@@ -362,7 +379,7 @@ export function edit(id: string) {
 function competitionMatches(s: T.TourSeason, id: string) {
   if ([0, 2, 4].includes(model.stage))
     return s.league.rounds.slice(0, model.round + 1).flat();
-  if (model.stage === 6) return V.matches(s.league);
+  if (model.stage === T.leagueStage(s)) return V.matches(s.league);
   if (model.stage === 3 && s.challenger)
     return model.section === "playoff"
       ? C.challengerMatches(s.challenger)
@@ -377,9 +394,12 @@ function competitionMatches(s: T.TourSeason, id: string) {
       ...(model.section === "playoff" ? F.qualifierMatches(g.playoff) : []),
     ];
   }
-  if (model.stage === 5)
+  if (model.stage === T.qualificationStage(s))
     return [
-      ...F.regionOrder.flatMap((r) => s.worldcup.regions[r].rounds.flat()),
+      ...F.regionOrder.flatMap((r) => [
+        ...s.worldcup.regions[r].rounds.flat(),
+        ...F.qualifierMatches(s.worldcup.regions[r].playoff),
+      ]),
       ...(s.worldcup.intercontinental?.branches.flatMap(F.qualifierMatches) ||
         []),
     ];
@@ -409,7 +429,7 @@ export function showMatch(id: string) {
   $("playoffMatchTitle").textContent = "Chi tiết trận · VolleyWorld Tour";
   $("playoffMatchBody").innerHTML = seasonMatchDetailHtml(m, !editable(id), {
     edition: `TOUR · MÙA ${s.seasonNumber}`,
-    label: T.stages[Math.min(model.stage, 7)][0],
+    label: T.calendar(s)[Math.min(model.stage, 7)][0],
     prefix: "Tour",
     renderTeam: (id) => seasonTeam(id, competitionMatches(s, m.id)),
     lockMessage: "Kết quả đã được chốt hoặc trận chưa đến lịch thi đấu.",
@@ -446,7 +466,7 @@ export function showTeam(id: string) {
         i > model.round ? { ...m, sets: null, resultOrder: undefined } : m,
       ),
     );
-  else if (model.stage === 6) source = V.matches(s.league);
+  else if (model.stage === T.leagueStage(s)) source = V.matches(s.league);
   else if (model.stage === 3 && s.challenger)
     source =
       model.section === "playoff"
@@ -470,9 +490,14 @@ export function showTeam(id: string) {
                 : m,
             ),
           );
-  } else if (model.stage === 5)
-    source =
-      s.worldcup.intercontinental?.branches.flatMap(F.qualifierMatches) || [];
+  } else if (model.stage === T.qualificationStage(s))
+    source = [
+      ...F.regionOrder.flatMap((r) =>
+        F.qualifierMatches(s.worldcup.regions[r].playoff),
+      ),
+      ...(s.worldcup.intercontinental?.branches.flatMap(F.qualifierMatches) ||
+        []),
+    ];
   else if (s.worldcup.world) {
     const w = s.worldcup.world;
     source =
@@ -493,13 +518,13 @@ export function showTeam(id: string) {
   const played = ms.filter((m) => m.sets),
     wins = played.filter((m) => V.winner(m) === id).length;
   const form = F.fullForm(ms, id);
-  const edition = [0, 2, 4, 6].includes(model.stage)
+  const edition = [0, 2, 4, T.leagueStage(s)].includes(model.stage)
     ? "World League"
     : model.stage === 3
       ? "Challenger"
       : model.stage === 1
         ? "Vòng loại khu vực"
-        : model.stage === 5
+        : model.stage === T.qualificationStage(s)
           ? "World Cup Play-in"
           : "World Cup";
   $("teamLeagueSummary").innerHTML =
@@ -525,7 +550,10 @@ export function showTeam(id: string) {
         if (round >= 0) return `Vòng bảng · Lượt ${round + 1}`;
       }
     }
-    if (s.league.playin?.some((x) => x.id === m.id) || model.stage === 5)
+    if (
+      s.league.playin?.some((x) => x.id === m.id) ||
+      model.stage === T.qualificationStage(s)
+    )
       return "Play-in";
     for (const [key, name] of [
       ["r20", "Vòng 20 đội"],
@@ -756,6 +784,9 @@ export function renderTour() {
         html += view.seasonHtml(s, model, readonly());
       }
       $("content").innerHTML =
+        (__VOLLEY_CONFIG__.previewLocal
+          ? '<aside class="tour-preview-notice" data-preview-local role="note"><strong>Bản chơi thử · Vé World Cup mới</strong><span>Tiến trình lưu riêng trên trình duyệt này. Không đăng nhập hoặc ghi vào tài khoản thật. Bạn có thể xuất file để giữ bản sao.</span></aside>'
+          : "") +
         html +
         '<input type="file" id="tourImport" accept="application/json" data-action="Tour.importFile" data-trigger="change" hidden>';
     },
