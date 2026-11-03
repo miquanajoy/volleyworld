@@ -109,7 +109,14 @@ for (let n = 0; n < 8; n++) {
       24,
     );
   }
-  api.finishStage();
+  if (api.selected().snapshot.stage === 1) {
+    const previousRegion = api.model.region;
+    for (const region of ["CEV", "AVC", "NORCECA", "CAVB", "CSV"]) {
+      api.region(region);
+      api.finishStage();
+    }
+    api.region(previousRegion);
+  } else api.finishStage();
   assert(T.validTour(api.selected().snapshot));
   api.next();
 }

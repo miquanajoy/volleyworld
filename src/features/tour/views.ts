@@ -198,6 +198,10 @@ function navigation(s: T.TourSeason, v: TourViewState) {
 }
 function stageActions(s: T.TourSeason, v: TourViewState, locked: boolean) {
   if (locked || v.stage !== s.stage || T.complete(s)) return "";
+  if (s.stage === 1 && !T.stageDone(s)) {
+    const pending = T.regionalBatch(s, v.region).length > 0;
+    return `<button class="primary" data-action="Tour.simRound" ${pending ? "" : "disabled"}>Chạy lượt khu vực</button><button data-action="Tour.finishStage" ${pending ? "" : "disabled"}>Mô phỏng hết khu vực</button>${pending ? "" : '<span class="sub">Khu vực đã hoàn tất · Chọn khu vực khác để tiếp tục</span>'}`;
+  }
   return T.stageDone(s)
     ? `<button class="primary" data-action="Tour.next">${s.stage === 7 ? "Xem tổng kết mùa →" : `Qua ${stageLabel(s, s.stage + 1)} →`}</button>`
     : `<button class="primary" data-action="Tour.simRound">Chạy lượt hiện tại</button><button data-action="Tour.finishStage">Mô phỏng hết chặng</button>`;

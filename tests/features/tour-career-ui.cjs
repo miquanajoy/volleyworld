@@ -29,6 +29,62 @@ const assert = require("node:assert/strict"),
     assert.equal(api.selected().snapshot.stage, stage);
     api.resume();
     if (stage === 1) {
+      const regions = () => api.selected().snapshot.worldcup.regions,
+        untouched = JSON.stringify(
+          Object.fromEntries(
+            Object.entries(regions()).filter(([r]) => r !== "CEV"),
+          ),
+        );
+      api.region("CEV");
+      const opening = T.regionalBatch(api.selected().snapshot, "CEV").map(
+        (m) => m.id,
+      );
+      api.simRound();
+      assert(opening.length > 0);
+      assert(regions().CEV.rounds[0].every((m) => m.sets));
+      assert(
+        regions().CEV.rounds[1].every((m) => !m.sets),
+        "Only one regional matchday runs",
+      );
+      assert.equal(
+        JSON.stringify(
+          Object.fromEntries(
+            Object.entries(regions()).filter(([r]) => r !== "CEV"),
+          ),
+        ),
+        untouched,
+        "Other regions must not progress",
+      );
+      const beforeCancel = JSON.stringify(api.selected().snapshot);
+      t.w.confirm = () => false;
+      api.finishStage();
+      assert.equal(JSON.stringify(api.selected().snapshot), beforeCancel);
+      t.w.confirm = () => true;
+      api.finishStage();
+      assert.equal(T.regionalBatch(api.selected().snapshot, "CEV").length, 0);
+      assert(
+        !T.stageDone(api.selected().snapshot),
+        "One complete region does not complete the stage",
+      );
+      assert.equal(
+        JSON.stringify(
+          Object.fromEntries(
+            Object.entries(regions()).filter(([r]) => r !== "CEV"),
+          ),
+        ),
+        untouched,
+        "Regional finish includes playoff but no other region",
+      );
+      assert(d.querySelector('[data-action="Tour.simRound"]').disabled);
+      assert(d.querySelector('[data-action="Tour.finishStage"]').disabled);
+      const europe = JSON.stringify(regions().CEV);
+      api.region("AVC");
+      assert(!d.querySelector('[data-action="Tour.simRound"]').disabled);
+      api.simRound();
+      assert(regions().AVC.rounds[0].every((m) => m.sets));
+      assert.equal(JSON.stringify(regions().CEV), europe);
+      api.region("CEV");
+      assert(T.validTour(api.selected().snapshot));
       assert(d.querySelector("[data-regional-group]"));
       api.group("0");
       assert.equal(d.querySelectorAll("[data-regional-group]").length, 1);
@@ -54,7 +110,14 @@ const assert = require("node:assert/strict"),
       );
       api.resume();
     }
-    api.finishStage();
+    if (api.selected().snapshot.stage === 1) {
+      const previousRegion = api.model.region;
+      for (const region of ["CEV", "AVC", "NORCECA", "CAVB", "CSV"]) {
+        api.region(region);
+        api.finishStage();
+      }
+      api.region(previousRegion);
+    } else api.finishStage();
     if (stage === 1) {
       api.region("CEV");
       api.group("all");

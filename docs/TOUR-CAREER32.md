@@ -19,6 +19,8 @@ Mùa đầu chọn 32 đội cho cả League và Challenger: CEV 7, AVC 7, NORCE
 
 Top 12 League vào thẳng playoff. Hạng 13–20 đấu 13–20, 14–19, 15–18, 16–17. Hạt giống bốn nhóm và nhánh cố định giữ nguyên. Đủ 16 đội playoff là có vé World Cup, không cần chờ thắng vòng 16 đội. Không cấp vé cho người dẫn đầu một Phase.
 
+Ở chặng tuyển chọn khu vực, **Chạy lượt khu vực** chỉ mô phỏng lượt đang chờ của khu vực được chọn (trên tất cả bảng/nhánh của khu vực đó). **Mô phỏng hết khu vực** hoàn tất riêng vòng bảng và playoff của khu vực, không chạy các khu vực khác. Khu vực hoàn tất thì khóa hai nút; chỉ qua chặng khi tất cả khu vực hoàn tất.
+
 ## Phân 16 suất tuyển chọn khu vực
 
 Khóa suất ngay khi tạo mùa. Với mỗi khu vực, `n` là số đội ngoài League; trần suất `c = min(n, 16 − số đội League khu vực)`. Có khả năng nhận suất thì tối thiểu một, hết khả năng thì không suất.

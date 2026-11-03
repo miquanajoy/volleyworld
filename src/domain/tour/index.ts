@@ -331,6 +331,24 @@ export function simulateMatches(s: TourSeason, ids: string[]) {
   current.filter((m) => ids.includes(m.id) && !m.sets).forEach(V.simulate);
   advance(s);
 }
+/** The selected region progresses independently; other regions keep their scores. */
+export function regionalBatch(s: TourSeason, region: Region): Match[] {
+  if (s.stage !== 1 || !F.regionOrder.includes(region)) return [];
+  const ids = new Set(s.worldcup.regions[region].teamIds);
+  return batch(s).filter((m) => ids.has(m.a) && ids.has(m.b) && !m.sets);
+}
+export function simulateRegion(s: TourSeason, region: Region, finish = false) {
+  for (let n = 0; ; n++) {
+    const ms = regionalBatch(s, region);
+    if (!ms.length) return;
+    if (n > 150) throw Error("Không thể hoàn tất khu vực.");
+    simulateMatches(
+      s,
+      ms.map((m) => m.id),
+    );
+    if (!finish) return;
+  }
+}
 export function simulateBatch(s: TourSeason) {
   const ms = batch(s).filter((m) => !m.sets);
   if (!ms.length) return;

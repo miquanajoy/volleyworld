@@ -6,7 +6,7 @@ import * as V from "../../domain/index";
 import type { Region } from "../../domain/types";
 import { store } from "../../app/store";
 import { renderApplication } from "../../app/ports";
-import { $, esc } from "../../shared/dom";
+import { $, esc, names } from "../../shared/dom";
 import { toast } from "../../shared/feedback";
 import { preserveBracketScroll } from "../../shared/bracket-scroll";
 import { seasonTeam } from "../../components/season-match";
@@ -373,7 +373,9 @@ export function next() {
 export function simRound() {
   if (!active()) return;
   run(() => {
-    mutate(T.simulateBatch);
+    mutate((s) =>
+      s.stage === 1 ? T.simulateRegion(s, model.region) : T.simulateBatch(s),
+    );
     const s = selected()!.snapshot!;
     model.round = currentRound(s, s.stage);
     render();
@@ -431,9 +433,20 @@ export function stage(key: string) {
 }
 export function finishStage() {
   if (!active()) return;
-  if (confirm("Mô phỏng các trận còn lại của chặng này?"))
+  const regional = selected()!.snapshot!.stage === 1;
+  if (
+    confirm(
+      regional
+        ? `Mô phỏng các trận còn lại của khu vực ${names[model.region]}?`
+        : "Mô phỏng các trận còn lại của chặng này?",
+    )
+  )
     run(() => {
-      mutate(T.finishStage);
+      mutate((s) =>
+        s.stage === 1
+          ? T.simulateRegion(s, model.region, true)
+          : T.finishStage(s),
+      );
       const s = selected()!.snapshot!;
       model.round = currentRound(s, s.stage);
       render();
