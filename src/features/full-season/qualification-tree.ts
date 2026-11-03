@@ -20,6 +20,8 @@ export function qualifierTreeHtml(
       (selectedFull()?.status === "completed" ||
         selectedFull()?.phase === "conflict"),
     actionPrefix = options.actionPrefix || "Full",
+    playinTicket = s.regionalFormat === "career-v1",
+    ticketLabel = playinTicket ? "Play-in World Cup" : "World Cup",
     size = 2 ** Math.ceil(Math.log2(b.seeds.length)),
     preliminary = size !== b.seeds.length,
     rows = preliminary ? size / 2 : size,
@@ -40,7 +42,7 @@ export function qualifierTreeHtml(
               ? "Tứ kết"
               : nominal === 4
                 ? "Bán kết"
-                : "Tranh vé World Cup",
+                : `Tranh vé ${ticketLabel}`,
       letter =
         r === 0 && preliminary
           ? "P"
@@ -75,5 +77,5 @@ export function qualifierTreeHtml(
     players = advancing;
     return `<section class="qualification-round" aria-label="${label}"><div class="section-head"><div><span class="eyebrow">VÒNG ${r + 1}</span><h4>${label}</h4></div>${!locked && r === next ? `<button data-action="${actionPrefix}.qualifierStage" data-arg="${prefix}">Chạy vòng</button>` : ""}</div><div class="qualification-nodes" style="grid-template-rows:repeat(${rows},64px)">${nodes.join("")}</div></section>`;
   });
-  return `${advancingTeams.length ? `<section class="panel qualification-winner"><span>✓ ĐẠI DIỆN PLAY-IN LIÊN KHU VỰC</span>${advancingTeams.map((id) => team(id)).join("")}</section>` : ""}${win ? `<section class="panel qualification-winner"><span>✓ GIÀNH VÉ WORLD CUP</span>${team(win)}</section>` : ""}<p class="sub qualification-seed-note">${b.seeds.length} đội · BO5 · Nhánh cố định${preliminary ? ` · ${size - b.seeds.length} hạt giống được miễn sơ loại (↪), đã có sẵn ở vòng tiếp theo` : ""}. Seed: hạng bảng → tỷ lệ thắng → HS set/trận → HS điểm/trận → BXH thế giới.</p><p class="tree-scroll-hint">Đọc từ trái sang phải · Bấm vào trận để xem chi tiết · Cuộn ngang để xem toàn bộ nhánh.</p><div class="full-bracket qualification-tree" role="region" tabindex="0" aria-label="Nhánh tranh vé World Cup có thể cuộn ngang">${columns.join("")}</div>`;
+  return `${advancingTeams.length ? `<section class="panel qualification-winner"><span>✓ ĐẠI DIỆN PLAY-IN LIÊN KHU VỰC</span>${advancingTeams.map((id) => team(id)).join("")}</section>` : ""}${win ? `<section class="panel qualification-winner"><span>✓ GIÀNH VÉ ${ticketLabel.toLocaleUpperCase("vi-VN")}</span>${team(win)}</section>` : ""}<p class="sub qualification-seed-note">${b.seeds.length} đội · BO5 · Nhánh cố định${preliminary ? ` · ${size - b.seeds.length} hạt giống được miễn sơ loại (↪), đã có sẵn ở vòng tiếp theo` : ""}. Seed: hạng bảng → tỷ lệ thắng → HS set/trận → HS điểm/trận → BXH thế giới.</p><p class="tree-scroll-hint">Đọc từ trái sang phải · Bấm vào trận để xem chi tiết · Cuộn ngang để xem toàn bộ nhánh.</p><div class="full-bracket qualification-tree" role="region" tabindex="0" aria-label="Nhánh tranh vé ${ticketLabel} có thể cuộn ngang">${columns.join("")}</div>`;
 }

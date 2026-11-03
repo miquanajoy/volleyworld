@@ -55,6 +55,51 @@ const assert = require("node:assert/strict"),
       api.resume();
     }
     api.finishStage();
+    if (stage === 1) {
+      api.region("CEV");
+      api.group("all");
+      api.section("table");
+      const region = api.selected().snapshot.worldcup.regions.CEV,
+        branchTeams = region.qualifierBranches.flatMap((b) => b.seeds),
+        qualified = d.querySelectorAll('[data-regional-status="playin"]'),
+        playoff = d.querySelectorAll('[data-regional-status="playoff"]');
+      assert.equal(
+        qualified.length,
+        7,
+        "Direct and regional winner get Play-in tickets",
+      );
+      assert.equal(
+        playoff.length,
+        branchTeams.length - 1,
+        "Other regional playoff entrants remain identified",
+      );
+      for (const id of branchTeams) {
+        const row = d
+          .querySelector(`[data-action="Tour.team"][data-arg="${id}"]`)
+          .closest("tr");
+        assert(row.querySelector("[data-regional-status]"), id);
+      }
+      api.section("playoff");
+      const content = d.getElementById("content");
+      assert(content.textContent.includes("GIÀNH VÉ PLAY-IN WORLD CUP"));
+      assert(!content.textContent.includes("GIÀNH VÉ WORLD CUP"));
+      assert(content.textContent.includes("Tranh vé Play-in World Cup"));
+      assert(!content.textContent.includes("Tranh vé World Cup"));
+      api.section("table");
+      api.round("0");
+      assert.equal(
+        d.querySelectorAll(
+          '[data-regional-status="playoff"], [data-regional-status="playin"]',
+        ).length,
+        0,
+        "Old round must not expose final qualification",
+      );
+      assert(
+        d.querySelector('[data-regional-status="provisional"]'),
+        "Live table explains provisional routes",
+      );
+      api.resume();
+    }
     assert(T.validTour(api.selected().snapshot));
     api.next();
   }

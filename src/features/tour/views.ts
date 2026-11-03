@@ -576,10 +576,29 @@ function careerRegionalHtml(
     return `${nav}<div class="section-head"><h3>${names[v.region]} · Playoff khu vực</h3><span class="badge">${f.career!.slots[v.region]} SUẤT PLAY-IN</span></div>${branches?.length ? branches.map((b, i) => `<section class="tour-qualifier-branch"><h4>Nhánh ${i + 1} · 1 suất Play-in World Cup</h4>${qualifierTreeHtml(f, b, `${v.region}B${i}`, { readonly: locked, actionPrefix: "Tour" })}</section>`).join("") : `<section class="panel tour-empty"><h3>${branches ? "Không cần playoff khu vực" : "Chờ hoàn tất vòng bảng"}</h3><p>Các suất còn lại được xác định bằng nhánh loại trực tiếp sau vòng bảng.</p></section>`}`;
   const table = (i: number) => {
     const g = region.groups ? F.regionalGroup(region, i) : region,
-      rows = F.fullStandings(
-        V.leagueRoundSnapshot(g, Math.min(r, g.rounds.length - 1)),
-      );
-    return `<section class="panel tour-regional-group" data-regional-group="${i}"><div class="section-head"><h3>Bảng ${String.fromCharCode(65 + i)}</h3><span class="badge">${g.teamIds.length} ĐỘI · ${layout.direct[i] || 0} SUẤT TRỰC TIẾP</span></div><div class="table-wrap"><table class="tour-regional-compact"><thead><tr><th>#</th><th>ĐỘI</th><th>W</th><th>L</th><th>HS SET</th></tr></thead><tbody>${rows.map((t, j) => `<tr class="${j < (layout.direct[i] || 0) ? "direct" : ""}"><td>${j + 1}</td><td><button class="tour-table-team" data-action="Tour.team" data-arg="${t.id}">${team(t.id)}</button>${F.careerRegionalDone(region) && r === region.rounds.length - 1 && entrants.includes(t.id) ? '<span class="full-qualification">✓ Dự Play-in World Cup</span>' : ""}</td><td>${t.w}</td><td>${t.l}</td><td>${t.sf - t.sa}</td></tr>`).join("")}</tbody></table></div><div class="tour-group-shortcuts"><button data-action="Tour.group" data-arg="${i}" data-section="matches">Lịch bảng →</button><button data-action="Tour.group" data-arg="${i}" data-section="table">Xem BXH →</button></div></section>`;
+      snapshot = V.leagueRoundSnapshot(g, Math.min(r, g.rounds.length - 1)),
+      rows = F.fullStandings(snapshot),
+      finished = F.fullLeagueDone(snapshot),
+      direct = layout.direct[i] || 0,
+      played = snapshot.rounds.flat().some((m) => !!m.sets),
+      route = (id: string, rank: number) => {
+        if (finished && r >= region.rounds.length - 1 && entrants.includes(id))
+          return '<span class="full-qualification" data-regional-status="playin">✓ Dự Play-in World Cup</span>';
+        if (rank < direct)
+          return finished
+            ? '<span class="full-qualification" data-regional-status="playin">✓ Dự Play-in World Cup</span>'
+            : played
+              ? '<span class="full-qualification" data-regional-status="provisional">Đang ở nhóm vé Play-in</span>'
+              : "";
+        if (rank < direct + layout.contenders)
+          return finished
+            ? '<span class="full-qualification" data-regional-status="playoff">✓ Vào playoff khu vực</span>'
+            : played
+              ? '<span class="full-qualification" data-regional-status="provisional">Đang ở nhóm playoff khu vực</span>'
+              : "";
+        return "";
+      };
+    return `<section class="panel tour-regional-group" data-regional-group="${i}"><div class="section-head"><h3>Bảng ${String.fromCharCode(65 + i)}</h3><span class="badge">${g.teamIds.length} ĐỘI · ${direct} VÉ PLAY-IN TRỰC TIẾP</span></div><p class="sub">${direct ? `Top ${direct} → Play-in World Cup` : "Không có vé Play-in trực tiếp"}${layout.contenders ? ` · Hạng ${direct + 1}${layout.contenders > 1 ? `–${direct + layout.contenders}` : ""} → playoff khu vực` : ""}</p><div class="table-wrap"><table class="tour-regional-compact"><thead><tr><th>#</th><th>ĐỘI</th><th>W</th><th>L</th><th>HS SET</th></tr></thead><tbody>${rows.map((t, j) => `<tr class="${j < (layout.direct[i] || 0) ? "direct" : ""}"><td>${j + 1}</td><td><button class="tour-table-team" data-action="Tour.team" data-arg="${t.id}">${team(t.id)}</button>${route(t.id, j)}</td><td>${t.w}</td><td>${t.l}</td><td>${t.sf - t.sa}</td></tr>`).join("")}</tbody></table></div><div class="tour-group-shortcuts"><button data-action="Tour.group" data-arg="${i}" data-section="matches">Lịch bảng →</button><button data-action="Tour.group" data-arg="${i}" data-section="table">Xem BXH →</button></div></section>`;
   };
   return `${nav}<div class="section-head"><div><h3>${names[v.region]} · Vòng loại ngoài League</h3><p class="sub">${region.teamIds.length} đội tranh ${f.career!.slots[v.region]} suất Play-in World Cup · ${layout.remaining} suất qua playoff khu vực.</p></div></div>${roundNav(region.rounds, r)}<div class="full-groups tour-regional-overview">${groups.map((_, i) => (selected === null || selected === i ? table(i) : "")).join("")}</div>${
     selected !== null && v.section !== "table"
