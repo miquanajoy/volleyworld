@@ -9,6 +9,7 @@ for (const [name, entry, format] of [
   ["engine", "src/domain/index.ts", "cjs"],
   ["full-engine", "src/domain/full-season/index.ts", "cjs"],
   ["tour-engine", "src/domain/tour/index.ts", "cjs"],
+  ["career-engine", "src/domain/career/index.ts", "cjs"],
   ["challenger-engine", "src/domain/challenger/index.ts", "cjs"],
   ["career-ranking", "src/features/achievements/rankings.ts", "cjs"],
   ["points-policy", "src/domain/honours/points.ts", "cjs"],

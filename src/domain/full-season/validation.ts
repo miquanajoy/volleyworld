@@ -1,3 +1,4 @@
+import { validCareerFull } from "../career/validation";
 import { meritQualification, meritPlayoffSeeds } from "./merit";
 import {
   newQualification,
@@ -32,6 +33,7 @@ const sameSet = (a: TeamId[], b: TeamId[]) =>
 export function validFullSeason(input: unknown): input is FullSeason {
   try {
     const s = input as FullSeason;
+    if (s?.regionalFormat === "career-v1") return validCareerFull(s);
     if (
       !s ||
       s.version !== 1 ||

@@ -2,7 +2,7 @@ const assert = require("node:assert/strict"),
   T = require("../../.test-build/tour-engine.js"),
   F = require("../../.test-build/full-engine.js"),
   { ui } = require("../support/tour-harness.cjs");
-const t = ui("new", 84217),
+const t = ui("local", 84217),
   d = t.w.document,
   api = t.w.__tour;
 const click = (selector) => {
@@ -15,6 +15,10 @@ const tab = (key) => click(`[data-action="Tour.section"][data-arg="${key}"]`);
 click('[data-action="Tour.enter"]');
 click('[data-action="Tour.create"]');
 click('[data-action="Tour.start"]');
+const meritFixture = T.freshMeritTour(1, [...api.selected().snapshot.roster]);
+api.model.records[0] = api.recordOf(meritFixture);
+api.model.selected = meritFixture.seasonId;
+api.section("journey");
 assert.equal(api.selected().snapshot.rules, "merit-v1");
 assert.equal(api.selected().total_matches, 948);
 const id = api.selected().season_id;
@@ -125,7 +129,7 @@ api.section("rules");
 assert(d.getElementById("content").textContent.includes("19 vé khu vực"));
 const data = t.data();
 t.close();
-const restored = ui("new", 84218, data);
+const restored = ui("local", 84218, data);
 restored.w.__tour.enter();
 restored.w.__tour.open(id);
 assert.equal(restored.w.__tour.selected().played, 948);

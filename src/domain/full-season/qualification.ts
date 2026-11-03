@@ -86,9 +86,11 @@ export function createQualifier(
   return b;
 }
 export const qualifierWinner = (b: QualifierBracket | null | undefined) =>
-  !b?.advanceSlots && b?.rounds.at(-1)?.[0]?.sets
-    ? winner(b.rounds.at(-1)![0])
-    : null;
+  b?.seeds.length === 1 && b.rounds.length === 0
+    ? b.seeds[0]
+    : !b?.advanceSlots && b?.rounds.at(-1)?.[0]?.sets
+      ? winner(b.rounds.at(-1)![0])
+      : null;
 export const qualifierMatches = (
   b: QualifierBracket | null | undefined,
 ): Match[] => b?.rounds.flat() || [];

@@ -1,3 +1,4 @@
+import { advanceCareerRegions, careerRegionalTotal } from "../career/regionals";
 import { meritQualification, qualifierAdvancers } from "./merit";
 import {
   advanceQualification,
@@ -101,6 +102,10 @@ export function regionQualifiers(g: RegionalLeague, r: Region): TeamId[] {
   ];
 }
 export function advanceRegions(s: FullSeason) {
+  if (s.regionalFormat === "career-v1") {
+    advanceCareerRegions(s);
+    return;
+  }
   if (s.regionalFormat === "qualification-v2" || meritQualification(s)) {
     advanceQualification(s);
     return;
@@ -115,17 +120,19 @@ export function advanceRegions(s: FullSeason) {
   }
 }
 export const fullTotalMatches = (s: FullSeason) =>
-  meritQualification(s)
-    ? 350
-    : s.regionalFormat === "qualification-v2"
-      ? 366
-      : regionOrder.reduce(
-          (n, r) =>
-            n +
-            s.regions[r].rounds.flat().length +
-            (s.regions[r].groups && ["AVC", "CAVB"].includes(r) ? 1 : 0),
-          52,
-        );
+  s.regionalFormat === "career-v1"
+    ? careerRegionalTotal(s) + 16 + 64
+    : meritQualification(s)
+      ? 350
+      : s.regionalFormat === "qualification-v2"
+        ? 366
+        : regionOrder.reduce(
+            (n, r) =>
+              n +
+              s.regions[r].rounds.flat().length +
+              (s.regions[r].groups && ["AVC", "CAVB"].includes(r) ? 1 : 0),
+            52,
+          );
 export function regionalDescription(s: FullSeason, r: Region) {
   const g = s.regions[r];
   return g.groups

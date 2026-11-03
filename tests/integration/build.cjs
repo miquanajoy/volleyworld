@@ -110,6 +110,29 @@ const fs = require("node:fs"),
     e.click();
   };
   click('[data-action="Tour.create"]');
+  if (!w.document.querySelector(".tour-selection-intro")) {
+    assert.equal(
+      process.env.VOLLEY_PREVIEW_LOCAL === "1",
+      false,
+      "Preview must allow local career creation",
+    );
+    assert(
+      w.document
+        .getElementById("toast")
+        .textContent.includes("thử nghiệm cục bộ"),
+    );
+    assert.equal(
+      w.localStorage.getItem("volleyworld-tour-guest"),
+      null,
+      "Blocked career does not create a production save",
+    );
+    assert.equal(errors.length, 0, errors.map(String).join("\n"));
+    dom.window.close();
+    console.log(
+      "PASS configured production Tour build: career creation blocked before production migration; no new save or standalone mode",
+    );
+    return;
+  }
   assert(w.document.querySelector(".tour-selection-intro"));
   click('[data-action="Tour.start"]');
   assert.equal(w.document.querySelectorAll(".tour-journey-card").length, 8);
@@ -153,7 +176,8 @@ const fs = require("node:fs"),
   click('[data-action="Tour.simRound"]');
   record = JSON.parse(w.localStorage.getItem(storageKey))[0];
   assert.equal(record.played, 16);
-  assert.equal(record.total_matches, 948);
+  assert(record.snapshot.career);
+  assert(record.total_matches > 0);
   click('[data-action="Tour.section"][data-arg="table"]');
   assert.equal(
     w.document.querySelectorAll(".tour-standings tbody tr").length,
@@ -173,19 +197,30 @@ const fs = require("node:fs"),
   assert(w.document.getElementById("toast").textContent.includes("Tour"));
   click('[data-action="Tour.finish"]');
   record = JSON.parse(w.localStorage.getItem(storageKey))[0];
-  assert.equal(record.played, 948);
+  assert.equal(record.played, record.total_matches);
+  assert.equal(record.snapshot.worldcup.world.groups.length, 8);
   assert.equal(record.status, "completed");
   assert.equal(
     w.document.querySelectorAll(".tour-champions > section").length,
     3,
   );
   assert.equal(w.document.querySelectorAll("[data-medal-place]").length, 9);
+  const previous = record.snapshot;
+  click('[data-action="Tour.nextSeason"]');
+  const records = JSON.parse(w.localStorage.getItem(storageKey));
+  assert.equal(records.length, 2);
+  assert.equal(records[1].snapshot.career.previousSeasonId, previous.seasonId);
+  assert.deepEqual(
+    [...records[1].snapshot.roster].sort(),
+    previous.worldcup.world.groups.flatMap((g) => g.teamIds).sort(),
+  );
+  assert.equal(w.document.querySelector(".tour-selection-intro"), null);
   click('[data-action="Tour.achievements"]');
   assert.equal(w.document.querySelectorAll(".tour-country-card").length, 39);
   click('[data-action="Tour.achievementTeam"]');
   assert.equal(
     w.document.querySelectorAll("[data-achievement-season]").length,
-    1,
+    2,
   );
   assert.equal(w.localStorage.getItem("volleyworld-v1"), null);
   if (preview) {
@@ -203,7 +238,7 @@ const fs = require("node:fs"),
   assert.equal(errors.length, 0, errors.map(String).join("\n"));
   dom.window.close();
   console.log(
-    "PASS production single-mode Tour: real Vite ESM/SDK, no standalone lobby/save, fixed original playoffs, per-set/forced editor, friendly team history, nine medals across three titles, team achievements and manual save",
+    "PASS local career Tour production bundle: real Vite ESM/SDK, no network writes, World Cup32, inherited next season, per-set/forced editor, nine medals and team history",
   );
 })().catch((e) => {
   console.error(e);

@@ -70,6 +70,7 @@ export interface Bracket {
   reset?: Match[];
 }
 export interface Tournament {
+  career?: true;
   setupConfirmed?: boolean;
   version: 1;
   playoffFormat?: PlayoffFormat;

@@ -21,6 +21,13 @@ export * from "./league";
 export * from "./world";
 export * from "./regional";
 export * from "./berths";
+export {
+  careerRegionEntrants,
+  careerRegionalLayout,
+  careerRegionalDone,
+  careerRegionalTotal,
+} from "../career/regionals";
+export { careerConfirmed, careerPlayinDone } from "../career/playin";
 import {
   newQualification,
   qualifierMatches,
@@ -66,8 +73,12 @@ export function fullMatches(s: FullSeason): Match[] {
       ...leagueMatches(s.regions[r]),
       ...(s.regions[r].decider ? [s.regions[r].decider!] : []),
       ...qualifierMatches(s.regions[r].playoff),
+      ...(s.regions[r].qualifierBranches?.flatMap(qualifierMatches) || []),
     ]),
     ...(s.intercontinental?.branches.flatMap(qualifierMatches) || []),
+    ...(s.career?.playin
+      ? [...s.career.playin.preliminary, ...s.career.playin.final]
+      : []),
     ...(s.world?.groups.flatMap(leagueMatches) || []),
     ...worldStages.flatMap((k) => s.world?.bracket?.[k] || []),
   ];

@@ -1,3 +1,4 @@
+import type { CareerQualification } from "../career/types";
 import type { Match, Region, TeamId } from "../types";
 export const regionOrder: Region[] = ["CEV", "AVC", "NORCECA", "CAVB", "CSV"];
 export const worldSlots: Record<Region, number> = {
@@ -18,6 +19,7 @@ export interface QualifierBracket {
   rounds: Match[][];
 }
 export interface RegionalLeague extends FullLeague {
+  qualifierBranches?: QualifierBracket[] | null;
   directSlots?: 1 | 2;
   playoff?: QualifierBracket | null;
   /** Rosters only: each fixture is stored once in the shared round calendar. */
@@ -41,7 +43,8 @@ export interface FullSeason {
   seasonId: string;
   seasonNumber: number;
   createdAt: string;
-  regionalFormat?: "groups-v1" | "qualification-v2" | "merit-v1";
+  regionalFormat?: "groups-v1" | "qualification-v2" | "merit-v1" | "career-v1";
+  career?: CareerQualification;
   automatic?: TeamId[] | null;
   intercontinental?: { pots: TeamId[][]; branches: QualifierBracket[] } | null;
   regions: Record<Region, RegionalLeague>;

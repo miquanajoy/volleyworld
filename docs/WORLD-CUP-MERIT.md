@@ -1,5 +1,7 @@
 # World Cup merit berths — feature branch
 
+Compatibility reference for existing `merit-v1` saves. New seasons now use [career32](TOUR-CAREER32.md).
+
 Status: implementation on `feature/world-cup-merit-berths`; no merge or production migration. Vercel Preview for this branch is local-only: no Supabase credentials, auth or cloud writes; browser progress uses `volleyworld-tour-merit-preview-guest`. Export/import remains available. Other branches and production keep their existing cloud configuration.
 
 ## Fixed allocation

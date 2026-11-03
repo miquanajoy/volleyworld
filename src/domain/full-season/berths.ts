@@ -1,3 +1,4 @@
+import { careerConfirmed } from "../career/playin";
 import { meritQualification, meritDirect } from "./merit";
 import { winner } from "../match/scoring";
 import { get } from "../../data/teams";
@@ -17,7 +18,7 @@ export interface WorldCupBerth {
 export interface WorldCupBerths {
   readonly teams: readonly WorldCupBerth[];
   readonly total: number;
-  readonly capacity: 24;
+  readonly capacity: 24 | 32;
 }
 // Result-identical clones (e.g. a League result) must not repeat qualification searches.
 // Include every ranking input so score corrections and historical views cannot use stale proof.
@@ -39,6 +40,30 @@ function directQualifiers(g: FullLeague, slots: number): readonly string[] {
 }
 /** Only mathematically confirmed berths count; a regional playoff place is not a WC berth. */
 export function worldCupBerths(s: FullSeason): WorldCupBerths {
+  if (s.regionalFormat === "career-v1") {
+    const p = s.career?.playin;
+    const teams = careerConfirmed(s).map((id) =>
+      Object.freeze({
+        id,
+        region: get(id).region,
+        route: (p?.challenger.includes(id)
+          ? "challenger"
+          : p?.league16.includes(id)
+            ? "league"
+            : "playin") as WorldCupBerth["route"],
+        label: p?.challenger.includes(id)
+          ? "Top 2 Challenger · Vé World Cup"
+          : p?.league16.includes(id)
+            ? "Playoff League · Vé World Cup"
+            : "Thắng World Cup Play-in",
+      }),
+    );
+    return Object.freeze({
+      teams: Object.freeze(teams),
+      total: teams.length,
+      capacity: 32,
+    });
+  }
   const entrants = new Map<string, WorldCupBerth>();
   const add = (id: string, route: WorldCupBerth["route"], label: string) => {
     if (!entrants.has(id))

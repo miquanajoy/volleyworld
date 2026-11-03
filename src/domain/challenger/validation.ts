@@ -25,7 +25,8 @@ export function validChallenger(value: unknown): value is ChallengerSeason {
       s.seasonNumber > 2147483647 ||
       typeof s.createdAt !== "string" ||
       !Number.isFinite(Date.parse(s.createdAt)) ||
-      !validChallengerRoster(roster) ||
+      (s.career !== undefined && s.career !== true) ||
+      !validChallengerRoster(roster, s.career === true) ||
       roster.some(
         (id, i) => i > 0 && get(roster[i - 1]).rank >= get(id).rank,
       ) ||

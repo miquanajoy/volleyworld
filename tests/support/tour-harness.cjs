@@ -2,7 +2,7 @@ const fs = require("node:fs"),
   vm = require("node:vm"),
   { JSDOM } = require("jsdom"),
   { deterministic } = require("./parity-harness.cjs");
-function ui(_version, seed = 1742, storage) {
+function ui(_version, seed = 1742, storage, config) {
   const html = fs
     .readFileSync("index.html", "utf8")
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");
@@ -22,10 +22,14 @@ function ui(_version, seed = 1742, storage) {
   w.HTMLDialogElement.prototype.close = function () {
     this.open = false;
   };
-  w.VOLLEY_CONFIG = {
-    supabaseUrl: "https://test.supabase.co",
-    supabaseKey: "sb_publishable_test",
-  };
+  w.VOLLEY_CONFIG =
+    config ||
+    (_version === "local" || _version === "career"
+      ? {}
+      : {
+          supabaseUrl: "https://test.supabase.co",
+          supabaseKey: "sb_publishable_test",
+        });
   if (storage)
     for (const [k, v] of Object.entries(storage)) w.localStorage.setItem(k, v);
   const run = (code) => vm.runInContext(code, dom.getInternalVMContext());

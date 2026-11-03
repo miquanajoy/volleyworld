@@ -15,6 +15,7 @@ import { team } from "../../components/team";
 import { editFullScore } from "../matches/editor";
 import { model, selected, clone, persist, backup, recordOf } from "./model";
 import { tourCloud as cloud } from "./cloud";
+import { configured } from "../account/model";
 import * as view from "./views";
 const render = () => renderApplication();
 const readonly = () =>
@@ -38,9 +39,9 @@ function mutate(action: (s: T.TourSeason) => void) {
   if (!T.validTour(s))
     throw Error("Tiến trình không hợp lệ. Bản lưu trước được giữ.");
   backup(row.snapshot);
-  Object.assign(row, recordOf(s, row.revision), { dirty: true });
+  Object.assign(row, recordOf(s, row.revision), { dirty: !T.career(s) });
   if (!persist()) toast("Chưa lưu được trên thiết bị. Hãy xuất tiến trình.");
-  cloud.queue(row);
+  if (!T.career(s)) cloud.queue(row);
   render();
 }
 export function enter() {
@@ -50,11 +51,25 @@ export function enter() {
   model.selected = null;
   model.group = null;
   model.setup = null;
+  model.reset = null;
   model.section = "journey";
   render();
 }
 export function create() {
   cloud.initialize();
+  if (configured && !__VOLLEY_CONFIG__.previewLocal) {
+    toast(
+      "Chế độ chuỗi mùa đang được thử nghiệm cục bộ. Hãy dùng bản chơi thử.",
+    );
+    return;
+  }
+  const latest = model.records.filter((r) => r.chain_id).at(-1);
+  if (latest) {
+    latest.status === "completed"
+      ? nextSeason(latest.season_id)
+      : open(latest.season_id);
+    return;
+  }
   model.setup = {
     ids: T.defaultRoster(),
     region: "CEV",
@@ -98,12 +113,11 @@ export function start() {
   run(() => {
     if (!T.validRoster(d.ids))
       throw Error("Cần đúng 7 Âu, 7 Á, 6 Nam Mỹ, 7 Bắc/Trung Mỹ và 5 Phi.");
-    const s = T.freshMeritTour(
-        Math.max(0, ...model.records.map((r) => r.season_number)) + 1,
-        d.ids,
-      ),
+    if (configured && !__VOLLEY_CONFIG__.previewLocal)
+      throw Error("Chuỗi mùa chỉ mở trong bản chơi thử cục bộ.");
+    const s = T.freshCareerTour(1, d.ids),
       r = recordOf(s);
-    r.dirty = true;
+    r.dirty = !T.career(s);
     model.records.push(r);
     model.selected = s.seasonId;
     model.setup = null;
@@ -111,9 +125,103 @@ export function start() {
     model.section = "journey";
     model.round = 0;
     if (!persist()) toast("Chưa lưu trên thiết bị. Hãy xuất file.");
-    cloud.queue(r);
+    if (!T.career(s)) cloud.queue(r);
     render();
   });
+}
+export function nextSeason(id = model.selected || "") {
+  run(() => {
+    if (configured && !__VOLLEY_CONFIG__.previewLocal)
+      throw Error("Chuỗi mùa chỉ mở trong bản chơi thử cục bộ.");
+    const previous = model.records.find((r) => r.season_id === id)?.snapshot;
+    if (!previous || !T.career(previous) || !T.complete(previous))
+      throw Error("Hoàn tất World Cup trước khi mở mùa tiếp theo.");
+    const existing = model.records.find(
+      (r) =>
+        r.previous_season_id === id ||
+        r.snapshot?.career?.previousSeasonId === id,
+    );
+    if (existing) {
+      open(existing.season_id);
+      return;
+    }
+    const s = T.nextCareerSeason(previous),
+      r = recordOf(s);
+    r.dirty = false;
+    model.records.push(r);
+    if (!persist()) {
+      model.records.pop();
+      throw Error("Chưa lưu được mùa mới. Hãy xuất lịch sử trước.");
+    }
+    open(s.seasonId);
+    model.section = "journey";
+    render();
+  });
+}
+export function requestReset(id = model.selected || "") {
+  const row = model.records.find(
+    (r) => r.season_id === id || r.chain_id === id,
+  );
+  const chainId = row?.chain_id || row?.snapshot?.career?.chainId;
+  if (!chainId) return;
+  model.reset = { chainId, scope: model.scope, token: model.token };
+  render();
+}
+export function cancelReset() {
+  model.reset = null;
+  render();
+}
+export async function confirmReset(mode = "discard") {
+  const request = model.reset;
+  if (
+    !request ||
+    request.scope !== model.scope ||
+    request.token !== model.token
+  )
+    return;
+  if (mode === "export" && !(await exportSeasons(false, request.chainId)))
+    return;
+  if (
+    request !== model.reset ||
+    request.scope !== model.scope ||
+    request.token !== model.token
+  )
+    return;
+  const remaining = model.records.filter(
+    (r) =>
+      r.chain_id !== request.chainId &&
+      r.snapshot?.career?.chainId !== request.chainId,
+  );
+  const original = model.records;
+  model.records = remaining;
+  if (!persist()) {
+    model.records = original;
+    toast("Chưa xóa được bản lưu trên thiết bị. Lịch sử được giữ nguyên.");
+    return;
+  }
+  try {
+    const key = model.scope + "-backups",
+      rows = JSON.parse(localStorage.getItem(key) || "[]");
+    localStorage.setItem(
+      key,
+      JSON.stringify(
+        rows.filter(
+          (r: { state?: T.TourSeason }) =>
+            r.state?.career?.chainId !== request.chainId,
+        ),
+      ),
+    );
+  } catch {}
+  model.reset = null;
+  model.selected = null;
+  model.setup = {
+    ids: T.defaultRoster(),
+    region: "CEV",
+    scope: model.scope,
+    token: model.token,
+  };
+  store.tab = "tour";
+  render();
 }
 function currentRound(s: T.TourSeason, stage: number): number {
   if ([0, 2, 4].includes(stage)) {
@@ -128,7 +236,7 @@ function currentRound(s: T.TourSeason, stage: number): number {
     return F.worldCurrentRound(s.worldcup.world);
   const g = s.worldcup.regions[model.region];
   const pending = g.rounds.findIndex((row) => row.some((m) => !m.sets));
-  return pending < 0 ? g.rounds.length - 1 : pending;
+  return Math.max(0, pending < 0 ? g.rounds.length - 1 : pending);
 }
 export function open(id: string) {
   if (!model.records.some((r) => r.season_id === id)) return;
@@ -274,9 +382,13 @@ export function simRound() {
 export function qualifierStage(prefix: string) {
   if (
     !active() ||
-    !(T.merit(selected()!.snapshot!) ? [6] : [1, 5]).includes(
-      selected()!.snapshot!.stage,
-    )
+    !(
+      T.career(selected()!.snapshot!)
+        ? [1, 5]
+        : T.merit(selected()!.snapshot!)
+          ? [6]
+          : [1, 5]
+    ).includes(selected()!.snapshot!.stage)
   )
     return;
   run(() =>
@@ -378,7 +490,12 @@ export function edit(id: string) {
 }
 function competitionMatches(s: T.TourSeason, id: string) {
   if ([0, 2, 4].includes(model.stage))
-    return s.league.rounds.slice(0, model.round + 1).flat();
+    return [
+      ...s.league.rounds.slice(0, model.round + 1).flat(),
+      ...(T.career(s) && model.stage === 4 && model.round === 30
+        ? s.league.playin || []
+        : []),
+    ];
   if (model.stage === T.leagueStage(s)) return V.matches(s.league);
   if (model.stage === 3 && s.challenger)
     return model.section === "playoff"
@@ -391,9 +508,19 @@ function competitionMatches(s: T.TourSeason, id: string) {
       ];
     return [
       ...g.rounds.slice(0, model.round + 1).flat(),
-      ...(model.section === "playoff" ? F.qualifierMatches(g.playoff) : []),
+      ...(model.section === "playoff"
+        ? [
+            ...F.qualifierMatches(g.playoff),
+            ...(g.qualifierBranches || []).flatMap(F.qualifierMatches),
+          ]
+        : []),
     ];
   }
+  if (T.career(s) && model.stage === 5)
+    return [
+      ...(s.worldcup.career?.playin?.preliminary || []),
+      ...(s.worldcup.career?.playin?.final || []),
+    ];
   if (model.stage === T.qualificationStage(s))
     return [
       ...F.regionOrder.flatMap((r) => [
@@ -461,11 +588,16 @@ export function showTeam(id: string) {
   if (!s || !V.get(id)) return;
   let source: import("../../domain/types").Match[];
   if ([0, 2, 4].includes(model.stage))
-    source = s.league.rounds.flatMap((row, i) =>
-      row.map((m) =>
-        i > model.round ? { ...m, sets: null, resultOrder: undefined } : m,
+    source = [
+      ...s.league.rounds.flatMap((row, i) =>
+        row.map((m) =>
+          i > model.round ? { ...m, sets: null, resultOrder: undefined } : m,
+        ),
       ),
-    );
+      ...(T.career(s) && model.stage === 4 && model.round === 30
+        ? s.league.playin || []
+        : []),
+    ];
   else if (model.stage === T.leagueStage(s)) source = V.matches(s.league);
   else if (model.stage === 3 && s.challenger)
     source =
@@ -482,7 +614,10 @@ export function showTeam(id: string) {
     const g = s.worldcup.regions[V.get(id).region];
     source =
       model.section === "playoff"
-        ? F.qualifierMatches(g.playoff)
+        ? [
+            ...F.qualifierMatches(g.playoff),
+            ...(g.qualifierBranches || []).flatMap(F.qualifierMatches),
+          ]
         : g.rounds.flatMap((row, i) =>
             row.map((m) =>
               i > model.round
@@ -490,7 +625,12 @@ export function showTeam(id: string) {
                 : m,
             ),
           );
-  } else if (model.stage === T.qualificationStage(s))
+  } else if (T.career(s) && model.stage === 5)
+    source = [
+      ...(s.worldcup.career?.playin?.preliminary || []),
+      ...(s.worldcup.career?.playin?.final || []),
+    ];
+  else if (model.stage === T.qualificationStage(s))
     source = [
       ...F.regionOrder.flatMap((r) =>
         F.qualifierMatches(s.worldcup.regions[r].playoff),
@@ -582,14 +722,17 @@ export function showTeam(id: string) {
     .join("");
   $("teamLeagueDialog").showModal();
 }
-export async function exportSeasons(one = false) {
+export async function exportSeasons(one = false, chainId?: string) {
   const scope = model.scope,
     token = model.token,
     id = model.selected;
   try {
     const seasons: T.TourSeason[] = [];
-    for (const r of model.records.filter((r) => !one || r.season_id === id)) {
-      const s = await cloud.load(r.season_id);
+    for (const r of model.records.filter(
+      (r) =>
+        (!one || r.season_id === id) && (!chainId || r.chain_id === chainId),
+    )) {
+      const s = r.snapshot || (await cloud.load(r.season_id));
       if (scope !== model.scope || token !== model.token) return;
       if (!s) throw Error("Chưa tải đủ dữ liệu.");
       seasons.push(clone(s));
@@ -611,8 +754,10 @@ export async function exportSeasons(one = false) {
     a.download = "volleyworld-tour.json";
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return true;
   } catch (e) {
     toast(e instanceof Error ? e.message : "Chưa xuất được.");
+    return false;
   }
 }
 export async function importSeasons(file?: File) {
@@ -632,18 +777,57 @@ export async function importSeasons(file?: File) {
       !d.seasons.every(T.validTour)
     )
       throw Error("File Tour không hợp lệ.");
-    if (!confirm(`Nhập ${d.seasons.length} mùa Tour mới?`)) return;
-    let n = Math.max(0, ...model.records.map((r) => r.season_number));
     for (const source of d.seasons as T.TourSeason[]) {
-      const s = clone(source);
-      s.seasonId = crypto.randomUUID();
-      s.seasonNumber = ++n;
-      s.createdAt = new Date().toISOString();
-      const r = recordOf(s);
-      r.dirty = true;
-      model.records.push(r);
-      cloud.queue(r);
+      if (!source.career?.previousSeasonId) continue;
+      const parent = (d.seasons as T.TourSeason[]).find(
+        (p) => p.seasonId === source.career!.previousSeasonId,
+      );
+      if (!parent) continue;
+      const roster =
+        parent.worldcup.world?.groups.flatMap((g) => g.teamIds) || [];
+      if (
+        !T.complete(parent) ||
+        parent.career?.chainId !== source.career.chainId ||
+        parent.seasonNumber + 1 !== source.seasonNumber ||
+        roster.length !== 32 ||
+        [...roster].sort().join() !== [...source.roster].sort().join()
+      )
+        throw Error(
+          "Chuỗi mùa trong file không nhất quán với World Cup mùa trước.",
+        );
     }
+    if (!confirm(`Nhập ${d.seasons.length} mùa Tour mới?`)) return;
+    const imported = d.seasons as T.TourSeason[];
+    if (
+      imported.some(T.career) &&
+      configured &&
+      !__VOLLEY_CONFIG__.previewLocal
+    )
+      throw Error("Chuỗi mùa chỉ nhập trong bản chơi thử cục bộ.");
+    const ids = new Map(imported.map((s) => [s.seasonId, crypto.randomUUID()])),
+      chains = new Map<string, string>();
+    for (const s of imported)
+      if (s.career && !chains.has(s.career.chainId))
+        chains.set(s.career.chainId, crypto.randomUUID());
+    if (new Set(imported.map((s) => s.seasonId)).size !== imported.length)
+      throw Error("File có mã mùa bị trùng.");
+    let n = Math.max(0, ...model.records.map((r) => r.season_number));
+    const rows = imported.map((source) => {
+      const s = clone(source);
+      s.seasonId = ids.get(source.seasonId)!;
+      if (s.career) {
+        s.career.chainId = chains.get(source.career!.chainId)!;
+        s.career.previousSeasonId = source.career!.previousSeasonId
+          ? ids.get(source.career!.previousSeasonId) ||
+            source.career!.previousSeasonId
+          : null;
+      } else s.seasonNumber = ++n;
+      const r = recordOf(s);
+      r.dirty = !T.career(s);
+      return r;
+    });
+    model.records.push(...rows);
+    for (const r of rows) if (!T.career(r.snapshot!)) cloud.queue(r);
     persist();
     model.selected = null;
     render();
@@ -785,9 +969,12 @@ export function renderTour() {
       }
       $("content").innerHTML =
         (__VOLLEY_CONFIG__.previewLocal
-          ? '<aside class="tour-preview-notice" data-preview-local role="note"><strong>Bản chơi thử · Vé World Cup mới</strong><span>Tiến trình lưu riêng trên trình duyệt này. Không đăng nhập hoặc ghi vào tài khoản thật. Bạn có thể xuất file để giữ bản sao.</span></aside>'
+          ? '<aside class="tour-preview-notice" data-preview-local role="note"><strong>Bản chơi thử · Chuỗi mùa World Cup 32 đội</strong><span>Tiến trình lưu riêng trên trình duyệt này. Không đăng nhập hoặc ghi vào tài khoản thật. Bạn có thể xuất file để giữ bản sao.</span></aside>'
           : "") +
         html +
+        (model.reset?.scope === model.scope && model.reset.token === model.token
+          ? '<section class="tour-reset-confirm panel" role="alertdialog" aria-modal="true" aria-labelledby="tourResetTitle"><span class="eyebrow">BẮT ĐẦU LẠI CHUỖI MÙA</span><h3 id="tourResetTitle">Xóa toàn bộ chuỗi mùa này?</h3><p>Các mùa, thành tích và bản khôi phục thuộc chuỗi này sẽ bị xóa trên thiết bị. Các chuỗi khác và mùa theo thể thức cũ được giữ lại.</p><div class="controls"><button data-action="Tour.cancelReset">Hủy</button><button data-action="Tour.confirmReset" data-arg="export">Xuất bản sao rồi bắt đầu lại</button><button data-action="Tour.confirmReset" data-arg="discard">Xóa và bắt đầu lại</button></div></section>'
+          : "") +
         '<input type="file" id="tourImport" accept="application/json" data-action="Tour.importFile" data-trigger="change" hidden>';
     },
   );

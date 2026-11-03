@@ -2,7 +2,7 @@ const assert = require("node:assert/strict"),
   T = require("../../.test-build/tour-engine.js"),
   V = require("../../.test-build/engine.js"),
   { ui } = require("../support/tour-harness.cjs");
-const t = ui("new", 81731),
+const t = ui("local", 81731),
   d = t.w.document,
   api = t.w.__tour;
 const click = (selector) => {
@@ -28,12 +28,10 @@ click(`[data-action="Tour.toggleTeam"][data-arg="${outgoing}"]`);
 assert(d.querySelector('[data-action="Tour.start"]').disabled);
 click(`[data-action="Tour.toggleTeam"][data-arg="${incoming}"]`);
 click('[data-action="Tour.start"]');
-// This suite preserves the previous Tour calendar as a loaded legacy snapshot.
-// The merit calendar is covered separately against the real production start flow.
-delete api.selected().snapshot.rules;
-api.selected().snapshot.worldcup.regionalFormat = "qualification-v2";
-delete api.selected().snapshot.worldcup.automatic;
-api.selected().total_matches = 964;
+// Legacy calendar regression fixture; new production start is covered by tour-career-ui.
+const legacyFixture = T.freshTour(1, [...api.selected().snapshot.roster]);
+api.model.records[0] = api.recordOf(legacyFixture);
+api.model.selected = legacyFixture.seasonId;
 api.section("journey");
 const id = api.selected().season_id;
 assert(api.selected().snapshot.roster.includes(incoming));
@@ -508,7 +506,7 @@ click('[data-action="Tour.achievementTeam"][data-arg=""]');
 assert.equal(d.querySelectorAll(".tour-country-card").length, 39);
 const data = t.data();
 t.close();
-const reload = ui("new", 81732, data),
+const reload = ui("local", 81732, data),
   restored = reload.w.__tour;
 restored.enter();
 restored.open(id);

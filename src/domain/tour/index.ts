@@ -1,3 +1,21 @@
+import {
+  career,
+  careerCalendar,
+  careerAutomaticBerths,
+  careerStageDone,
+  nextCareerStage,
+  careerBatch,
+  advanceCareer,
+  validCareerTour,
+} from "../career/tour";
+import type { CareerChain } from "../career/types";
+export {
+  freshCareerTour,
+  nextCareerSeason,
+  career,
+  careerStatus,
+  careerRegionalSlots,
+} from "../career/tour";
 import * as V from "../index";
 import * as C from "../challenger/index";
 import * as F from "../full-season/index";
@@ -23,7 +41,8 @@ export const stages = [
 ] as const;
 export interface TourSeason {
   version: 1;
-  rules?: "merit-v1";
+  rules?: "merit-v1" | "career-v1";
+  career?: CareerChain;
   mode: "tour";
   seasonId: string;
   seasonNumber: number;
@@ -87,19 +106,22 @@ export const canonicalStage = (s: TourSeason, n: number) =>
 export const leagueStage = (s: TourSeason) => (merit(s) ? 5 : 6);
 export const qualificationStage = (s: TourSeason) => (merit(s) ? 6 : 5);
 export const calendar = (s: TourSeason) =>
-  merit(s)
-    ? [
-        stages[0],
-        ["Vòng bảng khu vực", "100 đội · Phân suất tạm tính"],
-        stages[2],
-        stages[3],
-        stages[4],
-        stages[6],
-        ["Chốt vé World Cup", "Playoff khu vực · Play-in 17 đội · 3 vé"],
-        stages[7],
-      ]
-    : stages;
+  career(s)
+    ? careerCalendar
+    : merit(s)
+      ? [
+          stages[0],
+          ["Vòng bảng khu vực", "100 đội · Phân suất tạm tính"],
+          stages[2],
+          stages[3],
+          stages[4],
+          stages[6],
+          ["Chốt vé World Cup", "Playoff khu vực · Play-in 17 đội · 3 vé"],
+          stages[7],
+        ]
+      : stages;
 export function automaticBerths(s: TourSeason) {
+  if (career(s)) return careerAutomaticBerths(s);
   const c = s.challenger?.bracket?.final[0],
     l = s.league.bracket?.final[0];
   const challenger = c?.sets ? V.winner(c) : null,
@@ -127,7 +149,7 @@ export function automaticBerths(s: TourSeason) {
 }
 /** Safe upgrade: only unplayed knockout fixtures may change under the original rules. */
 export function useOriginalPlayoff(s: TourSeason): boolean {
-  if (merit(s) || !V.expandedSingle(s.league)) return false;
+  if (career(s) || merit(s) || !V.expandedSingle(s.league)) return false;
   if (
     s.stage > 6 ||
     (s.stage === 6 &&
@@ -155,6 +177,7 @@ export const seasonTotal = (s: TourSeason) =>
 export const phaseBounds = (stage: number) =>
   stage === 0 ? [0, 10] : stage === 2 ? [10, 20] : [20, 31];
 export function stageDone(s: TourSeason, stage = s.stage): boolean {
+  if (career(s)) return careerStageDone(s, stage);
   if (stage === 8) return true;
   if ([0, 2, 4].includes(stage)) {
     const [a, b] = phaseBounds(stage);
@@ -176,6 +199,10 @@ export function stageDone(s: TourSeason, stage = s.stage): boolean {
   return F.worldComplete(s.worldcup);
 }
 export function nextStage(s: TourSeason) {
+  if (career(s)) {
+    nextCareerStage(s);
+    return;
+  }
   if (complete(s) || !stageDone(s))
     throw Error("Hoàn tất chặng hiện tại trước khi tiếp tục.");
   s.stage++;
@@ -194,6 +221,7 @@ function remainingRound(rounds: Match[][]): Match[] {
 }
 /** A single matchday per competition; generated later rounds stay locked. */
 export function batch(s: TourSeason): Match[] {
+  if (career(s)) return careerBatch(s);
   if (complete(s) || stageDone(s)) return [];
   if ([0, 2, 4].includes(s.stage)) {
     const [a, b] = phaseBounds(s.stage);
@@ -242,6 +270,10 @@ export function batch(s: TourSeason): Match[] {
   return [];
 }
 export function advance(s: TourSeason) {
+  if (career(s)) {
+    advanceCareer(s);
+    return;
+  }
   V.stampResults(s.league);
   if (s.stage === 1 || s.stage === qualificationStage(s)) {
     F.advanceRegions(s.worldcup);
@@ -322,6 +354,7 @@ export const podium = (s: TourSeason) =>
 export function validTour(input: unknown): input is TourSeason {
   try {
     const s = input as TourSeason;
+    if (s?.rules === "career-v1") return validCareerTour(s);
     if (
       s?.version !== 1 ||
       s.mode !== "tour" ||

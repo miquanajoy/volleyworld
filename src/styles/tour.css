@@ -2674,3 +2674,85 @@
 .tour-preview-notice > strong {
   font-size: 12px;
 }
+
+.tour-career-status {
+  margin: 20px 0;
+  border-color: #bdcdb9;
+  background: linear-gradient(115deg, #fff, #f2f6ed);
+}
+.tour-career-status h3 {
+  margin: 5px 0 8px;
+}
+.tour-career-movement {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.tour-career-movement details {
+  background: #fff;
+  border: 1px solid #dce4d8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.tour-career-movement summary {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.tour-career-movement summary b {
+  font-size: 28px;
+  color: #174f40;
+}
+.tour-career-movement .is-promoted summary b {
+  color: #337b44;
+}
+.tour-career-movement .is-relegated summary b {
+  color: #b05e38;
+}
+.tour-career-movement details > div {
+  border-top: 1px solid #e7ece3;
+  padding: 10px 16px;
+  display: grid;
+  gap: 10px;
+}
+.tour-career-movement details > div > span {
+  min-width: 0;
+}
+.tour-career-playin {
+  margin: 18px 0;
+}
+.tour-career-playin h4 {
+  margin: 24px 0 12px;
+}
+.tour-reset-confirm {
+  position: fixed;
+  z-index: 1200;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, calc(100vw - 32px));
+  box-shadow:
+    0 0 0 100vmax #102b2499,
+    0 20px 80px #102b2444;
+  padding: 28px;
+}
+.tour-reset-confirm p {
+  line-height: 1.7;
+  color: #637269;
+}
+.tour-reset-confirm .controls {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+@media (max-width: 640px) {
+  .tour-career-movement {
+    grid-template-columns: 1fr;
+  }
+  .tour-career-status .section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,3 +1,4 @@
+const { startMeritFixture } = require("../support/tour-fixtures.cjs");
 const assert = require("node:assert/strict"),
   F = require("../../.test-build/tour-engine.js"),
   { ui } = require("../support/tour-harness.cjs");
@@ -114,14 +115,14 @@ function meta(r) {
     d = t.w.document;
   full.enter();
   full.create();
-  full.start();
+  startMeritFixture(full);
   const guest = t.w.localStorage.getItem("volleyworld-tour-guest");
   assert(guest);
   await full.tourCloud.switchAccount(service("A"), "A");
   assert.equal(full.model.records.length, 0);
   assert.equal(t.w.localStorage.getItem("volleyworld-tour-guest"), guest);
   full.create();
-  full.start();
+  startMeritFixture(full);
   let row = full.model.records[0],
     id = row.season_id;
   let saved = await full.tourCloud.saveNow();
@@ -194,7 +195,7 @@ function meta(r) {
   assert.equal(remote.get("B").size, 1);
   // A write already in flight for B does not acknowledge or replace C's progress.
   full.create();
-  full.start();
+  startMeritFixture(full);
   let unblock;
   delayedWrite = new Promise((r) => (unblock = r));
   const writing = full.tourCloud.saveNow();
@@ -207,7 +208,7 @@ function meta(r) {
   assert.equal(full.model.records.length, 0);
   // Number collisions at creation are rebased on a refresh rather than overwriting a season.
   full.create();
-  full.start();
+  startMeritFixture(full);
   row = full.model.records[0];
   const other = F.freshTour(1);
   remote.set(

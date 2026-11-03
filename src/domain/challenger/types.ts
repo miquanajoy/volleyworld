@@ -1,6 +1,7 @@
 import type { Match, TeamId } from "../types";
 import type { WorldStage } from "../full-season/types";
 export interface ChallengerSeason {
+  career?: true;
   version: 1;
   mode: "challenger";
   seasonId: string;

@@ -1,3 +1,4 @@
+import { careerWorldPairs } from "../career/world";
 import { newQualification, qualificationEntrants } from "./qualification";
 import { get } from "../../data/teams";
 import { leagueRoundSnapshot } from "../league/round-standings";
@@ -76,6 +77,7 @@ export function drawWorld(s: FullSeason) {
   };
 }
 export function worldThirds(w: WorldCup) {
+  if (w.groups.length === 8) return [];
   return w.groups
     .map((g, i) => ({ ...fullStandings(g)[2], group: i }))
     .sort((a, b) => compareThirds(a, b, w.tie));
@@ -83,6 +85,12 @@ export function worldThirds(w: WorldCup) {
 export function worldEntrants(w: WorldCup) {
   if (!w.groups.every(fullLeagueDone))
     throw Error("Cần hoàn tất 6 bảng thế giới.");
+  if (w.groups.length === 8)
+    return w.groups.flatMap((g) =>
+      fullStandings(g)
+        .slice(0, 2)
+        .map((t) => t.id),
+    );
   return [
     ...w.groups.flatMap((g) =>
       fullStandings(g)
@@ -101,6 +109,21 @@ export function drawWorldPlayoff(s: FullSeason) {
   const w = s.world;
   if (!w || w.bracket) throw Error("Chưa thể bốc thăm playoff.");
   worldEntrants(w);
+  if (w.groups.length === 8) {
+    w.bracket = {
+      r16: careerWorldPairs(w).map(([a, b], i) => ({
+        id: `WR${i}`,
+        a,
+        b,
+        sets: null,
+      })),
+      qf: [],
+      sf: [],
+      bronze: [],
+      final: [],
+    };
+    return;
+  }
   const groupOf = (id: string) =>
       w.groups.findIndex((g) => g.teamIds.includes(id)),
     winners = shuffle(w.groups.map((g) => fullStandings(g)[0].id)),
@@ -202,10 +225,17 @@ export function worldPlacements(
   const thirds = worldThirds(w);
   for (const t of thirds.slice(4))
     out[t.id] = { from: 17, to: 18, stage: "Hạng ba vòng bảng" };
+  if (w.groups.length === 8)
+    for (const g of w.groups)
+      out[fullStandings(g)[2].id] = {
+        from: 17,
+        to: 24,
+        stage: "Hạng ba vòng bảng",
+      };
   for (const g of w.groups)
     out[fullStandings(g)[3].id] = {
-      from: 19,
-      to: 24,
+      from: w.groups.length === 8 ? 25 : 19,
+      to: w.groups.length === 8 ? 32 : 24,
       stage: "Hạng tư vòng bảng",
     };
   for (const [key, from, to, stage] of [
