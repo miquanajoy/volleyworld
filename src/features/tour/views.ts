@@ -540,7 +540,7 @@ function rulesHtml(s: T.TourSeason) {
 function careerStatusHtml(s: T.TourSeason) {
   const state = T.careerStatus(s),
     settled = state.qualified.length === 32;
-  return `<section class="panel tour-career-status" data-career-status><div class="section-head"><div><span class="eyebrow">CHUỖI MÙA · ĐỘI HÌNH KẾ THỪA</span><h3>${settled ? "Đội hình mùa sau đã chốt" : "Đường đến mùa tiếp theo"}</h3><p class="sub">${s.career?.previousSeasonId ? "32 đội từ World Cup mùa trước · Không chọn lại đội" : "Mùa đầu tiên · Đội hình bạn đã chọn"}</p></div>${T.complete(s) ? `<button class="primary" data-action="Tour.nextSeason" data-arg="${s.seasonId}">Bắt đầu mùa ${s.seasonNumber + 1} →</button>` : `<span class="badge">${state.tickets}/32 VÉ WORLD CUP</span>`}</div>${
+  return `<section class="panel tour-career-status" data-career-status aria-label="Đội hình mùa tiếp theo"><div class="tour-career-heading"><div class="tour-career-intro"><span class="eyebrow">HÀNH TRÌNH MÙA ${s.seasonNumber + 1}</span><h3>${settled ? "Đội hình mùa sau đã chốt" : "Đường đến mùa tiếp theo"}</h3><p>32 đội dự World Cup sẽ góp mặt ở League và Challenger mùa sau.</p></div><div class="tour-career-ticket"><span>VÉ WORLD CUP ĐÃ CHỐT</span><div><strong>${state.tickets}</strong><span>/ 32 đội</span></div><div class="tour-career-meter" role="progressbar" aria-label="Vé World Cup đã chốt" aria-valuemin="0" aria-valuemax="32" aria-valuenow="${state.tickets}"><i style="width:${(state.tickets / 32) * 100}%"></i></div></div></div>${
     settled
       ? `<div class="tour-career-movement">${(
           [
@@ -554,8 +554,8 @@ function careerStatusHtml(s: T.TourSeason) {
               `<details class="is-${key}"><summary><b>${state[key].length}</b><span>${label}</span></summary><div>${state[key].map((id) => `<span>${team(id)}</span>`).join("") || "<p>Không có đội</p>"}</div></details>`,
           )
           .join("")}</div>`
-      : '<p class="sub">16 đội playoff League và hai đội chung kết Challenger được ưu tiên; Play-in quyết định các suất còn lại. 32 đội World Cup sẽ dự League và Challenger mùa sau.</p>'
-  }</section>`;
+      : '<div class="tour-career-routes"><div><span class="tour-career-route-icon" aria-hidden="true">01</span><span><b>League</b><small>16 đội vào playoff có vé</small></span></div><div><span class="tour-career-route-icon" aria-hidden="true">02</span><span><b>Challenger</b><small>Hai đội chung kết có vé sớm</small></span></div><div><span class="tour-career-route-icon" aria-hidden="true">03</span><span><b>World Cup Play-in</b><small>Quyết định các suất còn lại</small></span></div></div>'
+  }${T.complete(s) ? `<div class="tour-career-footer"><span>Đội hình được kế thừa tự động · Không cần chọn lại</span><button class="primary" data-action="Tour.nextSeason" data-arg="${s.seasonId}">Bắt đầu mùa ${s.seasonNumber + 1} →</button></div>` : ""}</section>`;
 }
 function careerRegionalHtml(
   s: T.TourSeason,
