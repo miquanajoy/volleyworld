@@ -89,7 +89,12 @@ const draft = () =>
     : null;
 export function setupRegion(r: string) {
   const d = draft();
-  if (d && F.regionOrder.includes(r as Region)) {
+  if (
+    d &&
+    (d.regionalIds
+      ? T.regionalTourKeys.some((k) => k === r)
+      : F.regionOrder.includes(r as Region))
+  ) {
     d.region = r as Region;
     render();
   }
@@ -97,34 +102,70 @@ export function setupRegion(r: string) {
 export function toggleTeam(id: string) {
   const d = draft();
   if (!d || !V.get(id)) return;
+  if (d.regionalIds) {
+    const choice = T.regionalTourChoices(d.ids, draftNumber(d.parent)).find(
+      (x) => x.pool.includes(id),
+    );
+    if (!choice) return;
+    if (d.regionalIds.includes(id))
+      d.regionalIds = d.regionalIds.filter((x) => x !== id);
+    else if (
+      d.regionalIds.filter((x) => choice.pool.includes(x)).length < choice.count
+    )
+      d.regionalIds.push(id);
+    render();
+    return;
+  }
   d.ids = d.ids.includes(id) ? d.ids.filter((x) => x !== id) : [...d.ids, id];
   render();
 }
 export function resetRoster() {
   const d = draft();
   if (d) {
-    d.ids = T.defaultRoster();
+    if (d.regionalIds)
+      d.regionalIds = T.defaultRegionalSelection(d.ids, draftNumber(d.parent));
+    else d.ids = T.defaultRoster();
     render();
   }
 }
+const draftNumber = (parent?: string) =>
+  parent
+    ? (model.records.find((r) => r.season_id === parent)?.season_number || 0) +
+      1
+    : 1;
 export function start() {
   const d = draft();
   if (!d) return;
   run(() => {
-    if (!T.validRoster(d.ids))
+    if (!d.parent && !T.validRoster(d.ids))
       throw Error("Cần đúng 7 Âu, 7 Á, 6 Nam Mỹ, 7 Bắc/Trung Mỹ và 5 Phi.");
     if (configured && !__VOLLEY_CONFIG__.previewLocal)
       throw Error("Chuỗi mùa chỉ mở trong bản chơi thử cục bộ.");
-    const s = T.freshCareerTour(1, d.ids),
+    if (!d.regionalIds) {
+      d.regionalIds = T.defaultRegionalSelection(d.ids, 1);
+      d.region = "CEV";
+      render();
+      return;
+    }
+    const previous = model.records.find(
+      (r) => r.season_id === d.parent,
+    )?.snapshot;
+    if (d.parent && !previous) throw Error("Không tìm thấy mùa trước.");
+    const s = previous
+        ? T.nextCareerSeason(previous, d.regionalIds)
+        : T.freshCareerTour(1, d.ids, d.regionalIds),
       r = recordOf(s);
     r.dirty = !T.career(s);
     model.records.push(r);
+    if (!persist()) {
+      model.records.pop();
+      throw Error("Chưa lưu được mùa mới. Hãy xuất lịch sử trước.");
+    }
     model.selected = s.seasonId;
     model.setup = null;
     model.stage = 0;
     model.section = "journey";
     model.round = 0;
-    if (!persist()) toast("Chưa lưu trên thiết bị. Hãy xuất file.");
     if (!T.career(s)) cloud.queue(r);
     render();
   });
@@ -145,16 +186,15 @@ export function nextSeason(id = model.selected || "") {
       open(existing.season_id);
       return;
     }
-    const s = T.nextCareerSeason(previous),
-      r = recordOf(s);
-    r.dirty = false;
-    model.records.push(r);
-    if (!persist()) {
-      model.records.pop();
-      throw Error("Chưa lưu được mùa mới. Hãy xuất lịch sử trước.");
-    }
-    open(s.seasonId);
-    model.section = "journey";
+    const ids = previous.worldcup.world!.groups.flatMap((g) => g.teamIds);
+    model.setup = {
+      ids,
+      regionalIds: T.defaultRegionalSelection(ids, previous.seasonNumber + 1),
+      parent: id,
+      region: "CEV",
+      scope: model.scope,
+      token: model.token,
+    };
     render();
   });
 }
@@ -224,17 +264,28 @@ export async function confirmReset(mode = "discard") {
   render();
 }
 function currentRound(s: T.TourSeason, stage: number): number {
-  if ([0, 2, 4].includes(stage)) {
-    const [a, b] = T.phaseBounds(stage);
+  const canonical = T.canonicalStage(s, stage);
+  if ([0, 2, 4].includes(canonical)) {
+    const [a, b] = T.phaseBounds(canonical);
     const r = s.league.rounds
       .slice(a, b)
       .findIndex((row) => row.some((m) => !m.sets));
     return r < 0 ? b - 1 : a + r;
   }
-  if (stage === 3) return Math.max(0, (s.challenger?.rounds.length || 1) - 1);
-  if (stage === 7 && s.worldcup.world)
+  if (stage === T.stageFor(s, 3))
+    return Math.max(0, (s.challenger?.rounds.length || 1) - 1);
+  if (stage === T.lastStage(s) && s.worldcup.world)
     return F.worldCurrentRound(s.worldcup.world);
   const g = s.worldcup.regions[model.region];
+  if (T.regionalFormat(s) && (stage === 1 || stage === 3)) {
+    const split = T.regionalTourSplit(g),
+      start = stage === 1 ? 0 : split,
+      end = stage === 1 ? split : g.rounds.length;
+    const pending = g.rounds
+      .slice(start, end)
+      .findIndex((row) => row.some((m) => !m.sets));
+    return Math.max(0, pending < 0 ? end - 1 : start + pending);
+  }
   const pending = g.rounds.findIndex((row) => row.some((m) => !m.sets));
   return Math.max(0, pending < 0 ? g.rounds.length - 1 : pending);
 }
@@ -244,7 +295,7 @@ export function open(id: string) {
   model.selected = id;
   const snapshot = selected()?.snapshot;
   model.section = snapshot && !T.complete(snapshot) ? "matches" : "journey";
-  model.stage = Math.min(7, snapshot?.stage || 0);
+  model.stage = snapshot ? Math.min(T.lastStage(snapshot), snapshot.stage) : 0;
   model.group = null;
   if (snapshot) model.round = currentRound(snapshot, model.stage);
   store.tab = "tour";
@@ -266,10 +317,12 @@ export function section(key: string) {
   const oldStage = model.stage;
   model.section = key;
   const s = selected()?.snapshot;
-  if (s && key === "journey") model.stage = Math.min(s.stage, 7);
+  if (s && key === "journey") model.stage = Math.min(s.stage, T.lastStage(s));
   if (s && key === "qualifiers")
     model.stage =
-      [1, T.qualificationStage(s), 7].filter((n) => n <= s.stage).at(-1) ?? 1;
+      T.competitionStages(s)
+        .worldcup.filter((n) => n <= s.stage)
+        .at(-1) ?? 1;
   if (s && model.stage !== oldStage) model.round = currentRound(s, model.stage);
   render();
 }
@@ -277,11 +330,7 @@ export function competition(key: string) {
   const s = selected()?.snapshot;
   if (!s || !["league", "challenger", "worldcup"].includes(key)) return;
   const phases =
-    key === "league"
-      ? [0, 2, 4, T.leagueStage(s)]
-      : key === "challenger"
-        ? [3]
-        : [1, T.qualificationStage(s), 7];
+    T.competitionStages(s)[key as "league" | "challenger" | "worldcup"];
   model.stage = phases.filter((n) => n <= s.stage).at(-1) ?? phases[0];
   model.group = null;
   model.round = currentRound(s, model.stage);
@@ -296,7 +345,7 @@ export function competition(key: string) {
 export function resume() {
   const s = selected()?.snapshot;
   if (!s) return;
-  model.stage = Math.min(7, s.stage);
+  model.stage = Math.min(T.lastStage(s), s.stage);
   model.group = null;
   model.round = currentRound(s, model.stage);
   model.section = T.complete(s) ? "journey" : "matches";
@@ -305,7 +354,8 @@ export function resume() {
 export function viewStage(value: string, targetSection?: string) {
   const n = Number(value),
     s = selected()?.snapshot;
-  if (!s || !Number.isInteger(n) || n < 0 || n > 7 || n > s.stage) return;
+  if (!s || !Number.isInteger(n) || n < 0 || n > T.lastStage(s) || n > s.stage)
+    return;
   model.stage = n;
   model.group = null;
   model.round = currentRound(s, n);
@@ -323,15 +373,20 @@ export function round(value: string) {
 }
 export function region(value: string) {
   if (!F.regionOrder.includes(value as Region)) return;
-  model.region = value as Region;
-  model.group = null;
   const s = selected()?.snapshot;
+  model.region =
+    s && T.regionalFormat(s) && value === "CSV" ? "NORCECA" : (value as Region);
+  model.group = null;
   if (s) model.round = currentRound(s, model.stage);
   render();
 }
 export function group(value: string, targetSection?: string) {
   const s = selected()?.snapshot;
-  if (!s || ![1, 7].includes(model.stage)) return;
+  if (
+    !s ||
+    !(T.regionalStage(s, model.stage) || model.stage === T.lastStage(s))
+  )
+    return;
   if (value === "all") {
     model.group = null;
     render();
@@ -339,7 +394,7 @@ export function group(value: string, targetSection?: string) {
   }
   const index = Number(value),
     groups =
-      model.stage === 7
+      model.stage === T.lastStage(s)
         ? s.worldcup.world?.groups || []
         : s.worldcup.regions[model.region].groups || [
             s.worldcup.regions[model.region].teamIds,
@@ -363,7 +418,7 @@ export function next() {
       throw Error("Hoàn tất chặng hiện tại trước khi tiếp tục.");
     mutate(T.nextStage);
     const fresh = selected()!.snapshot!;
-    model.stage = Math.min(7, fresh.stage);
+    model.stage = Math.min(T.lastStage(fresh), fresh.stage);
     model.group = null;
     model.round = currentRound(fresh, model.stage);
     model.section = T.complete(fresh) ? "journey" : "matches";
@@ -374,7 +429,9 @@ export function simRound() {
   if (!active()) return;
   run(() => {
     mutate((s) =>
-      s.stage === 1 ? T.simulateRegion(s, model.region) : T.simulateBatch(s),
+      T.regionalStage(s, s.stage)
+        ? T.simulateRegion(s, model.region)
+        : T.simulateBatch(s),
     );
     const s = selected()!.snapshot!;
     model.round = currentRound(s, s.stage);
@@ -407,15 +464,17 @@ export function qualifierStage(prefix: string) {
 export function stage(key: string) {
   if (
     !active() ||
-    ![3, T.leagueStage(selected()!.snapshot!), 7].includes(
-      selected()!.snapshot!.stage,
-    )
+    ![
+      T.stageFor(selected()!.snapshot!, 3),
+      T.leagueStage(selected()!.snapshot!),
+      T.lastStage(selected()!.snapshot!),
+    ].includes(selected()!.snapshot!.stage)
   )
     return;
   run(() =>
     mutate((s) => {
       const b =
-        s.stage === 3
+        s.stage === T.stageFor(s, 3)
           ? s.challenger!.bracket
           : s.stage === T.leagueStage(s)
             ? s.league.bracket
@@ -433,17 +492,18 @@ export function stage(key: string) {
 }
 export function finishStage() {
   if (!active()) return;
-  const regional = selected()!.snapshot!.stage === 1;
+  const snapshot = selected()!.snapshot!;
+  const regional = T.regionalStage(snapshot, snapshot.stage);
   if (
     confirm(
       regional
-        ? `Mô phỏng các trận còn lại của khu vực ${names[model.region]}?`
+        ? `Mô phỏng các trận còn lại của khu vực ${(T.regionalFormat(snapshot) && T.regionalTourName(model.region)) || names[model.region]}?`
         : "Mô phỏng các trận còn lại của chặng này?",
     )
   )
     run(() => {
       mutate((s) =>
-        s.stage === 1
+        T.regionalStage(s, s.stage)
           ? T.simulateRegion(s, model.region, true)
           : T.finishStage(s),
       );
@@ -458,7 +518,7 @@ export function finish() {
     run(() => {
       mutate(T.finishTour);
       model.section = "journey";
-      model.stage = 7;
+      model.stage = T.lastStage(selected()!.snapshot!);
       render();
     });
 }
@@ -501,20 +561,39 @@ export function edit(id: string) {
     commit: (sets) => mutate((d) => T.recordScore(d, id, sets)),
   });
 }
+function regionalHistory(s: T.TourSeason, region: Region) {
+  const g = s.worldcup.regions[region];
+  return model.stage === 6
+    ? [
+        ...g.rounds.flat(),
+        ...(s.worldcup.career!.regionalTour!.brackets[region]?.rounds.flat() ||
+          []),
+      ]
+    : g.rounds
+        .slice(
+          0,
+          Math.min(
+            model.round + 1,
+            model.stage === 1 ? T.regionalTourSplit(g) : g.rounds.length,
+          ),
+        )
+        .flat();
+}
 function competitionMatches(s: T.TourSeason, id: string) {
-  if ([0, 2, 4].includes(model.stage))
+  if ([0, 2, T.stageFor(s, 4)].includes(model.stage))
     return [
       ...s.league.rounds.slice(0, model.round + 1).flat(),
-      ...(T.career(s) && model.stage === 4 && model.round === 30
+      ...(T.career(s) && model.stage === T.stageFor(s, 4) && model.round === 30
         ? s.league.playin || []
         : []),
     ];
   if (model.stage === T.leagueStage(s)) return V.matches(s.league);
-  if (model.stage === 3 && s.challenger)
+  if (model.stage === T.stageFor(s, 3) && s.challenger)
     return model.section === "playoff"
       ? C.challengerMatches(s.challenger)
       : s.challenger.rounds.slice(0, model.round + 1).flat();
-  if (model.stage === 1) {
+  if (T.regionalStage(s, model.stage)) {
+    if (T.regionalFormat(s)) return regionalHistory(s, model.region);
     const g =
       s.worldcup.regions[
         V.get(T.matches(s).find((m) => m.id === id)?.a || s.roster[0]).region
@@ -529,7 +608,7 @@ function competitionMatches(s: T.TourSeason, id: string) {
         : []),
     ];
   }
-  if (T.career(s) && model.stage === 5)
+  if (T.career(s) && model.stage === T.qualificationStage(s))
     return [
       ...(s.worldcup.career?.playin?.preliminary || []),
       ...(s.worldcup.career?.playin?.final || []),
@@ -569,7 +648,7 @@ export function showMatch(id: string) {
   $("playoffMatchTitle").textContent = "Chi tiết trận · VolleyWorld Tour";
   $("playoffMatchBody").innerHTML = seasonMatchDetailHtml(m, !editable(id), {
     edition: `TOUR · MÙA ${s.seasonNumber}`,
-    label: T.calendar(s)[Math.min(model.stage, 7)][0],
+    label: T.calendar(s)[Math.min(model.stage, T.lastStage(s))][0],
     prefix: "Tour",
     renderTeam: (id) => seasonTeam(id, competitionMatches(s, m.id)),
     lockMessage: "Kết quả đã được chốt hoặc trận chưa đến lịch thi đấu.",
@@ -600,19 +679,19 @@ export function showTeam(id: string) {
   const s = selected()?.snapshot;
   if (!s || !V.get(id)) return;
   let source: import("../../domain/types").Match[];
-  if ([0, 2, 4].includes(model.stage))
+  if ([0, 2, T.stageFor(s, 4)].includes(model.stage))
     source = [
       ...s.league.rounds.flatMap((row, i) =>
         row.map((m) =>
           i > model.round ? { ...m, sets: null, resultOrder: undefined } : m,
         ),
       ),
-      ...(T.career(s) && model.stage === 4 && model.round === 30
+      ...(T.career(s) && model.stage === T.stageFor(s, 4) && model.round === 30
         ? s.league.playin || []
         : []),
     ];
   else if (model.stage === T.leagueStage(s)) source = V.matches(s.league);
-  else if (model.stage === 3 && s.challenger)
+  else if (model.stage === T.stageFor(s, 3) && s.challenger)
     source =
       model.section === "playoff"
         ? C.challengerMatches(s.challenger)
@@ -623,7 +702,9 @@ export function showTeam(id: string) {
                 : m,
             ),
           );
-  else if (model.stage === 1) {
+  else if (T.regionalStage(s, model.stage) && T.regionalFormat(s))
+    source = regionalHistory(s, model.region);
+  else if (T.regionalStage(s, model.stage)) {
     const g = s.worldcup.regions[V.get(id).region];
     source =
       model.section === "playoff"
@@ -638,7 +719,7 @@ export function showTeam(id: string) {
                 : m,
             ),
           );
-  } else if (T.career(s) && model.stage === 5)
+  } else if (T.career(s) && model.stage === T.qualificationStage(s))
     source = [
       ...(s.worldcup.career?.playin?.preliminary || []),
       ...(s.worldcup.career?.playin?.final || []),
@@ -671,17 +752,17 @@ export function showTeam(id: string) {
   const played = ms.filter((m) => m.sets),
     wins = played.filter((m) => V.winner(m) === id).length;
   const form = F.fullForm(ms, id);
-  const edition = [0, 2, 4, T.leagueStage(s)].includes(model.stage)
+  const edition = T.competitionStages(s).league.includes(model.stage)
     ? "World League"
-    : model.stage === 3
+    : model.stage === T.stageFor(s, 3)
       ? "Challenger"
-      : model.stage === 1
+      : T.regionalStage(s, model.stage)
         ? "Vòng loại khu vực"
         : model.stage === T.qualificationStage(s)
           ? "World Cup Play-in"
           : "World Cup";
   $("teamLeagueSummary").innerHTML =
-    `<div class="tour-team-stats"><span><b>${played.length}<small>/${ms.length}</small></b>ĐÃ ĐẤU</span><span class="is-win"><b>${wins}</b>THẮNG</span><span class="is-loss"><b>${played.length - wins}</b>THUA</span></div><div class="tour-team-context"><p class="sub">Mùa ${s.seasonNumber} · ${edition}${[0, 2, 4, 3, 7].includes(model.stage) && model.section !== "playoff" ? ` · Đến vòng ${model.round + 1}` : ""}</p><div class="team-league-form"><span class="form-strip" aria-label="5 trận gần nhất, cũ đến mới">${Array.from({ length: 5 - form.length }, () => '<span class="form-dot empty">–</span>').join("")}${form.map((f) => `<span class="form-dot ${f.win ? "form-win" : "form-loss"}" title="${esc(f.opponent)}">${f.win ? "W" : "L"}</span>`).join("")}</span><span class="sub">5 trận gần nhất · cũ → mới</span></div></div>`;
+    `<div class="tour-team-stats"><span><b>${played.length}<small>/${ms.length}</small></b>ĐÃ ĐẤU</span><span class="is-win"><b>${wins}</b>THẮNG</span><span class="is-loss"><b>${played.length - wins}</b>THUA</span></div><div class="tour-team-context"><p class="sub">Mùa ${s.seasonNumber} · ${edition}${[0, 2, T.stageFor(s, 4), T.stageFor(s, 3), T.lastStage(s)].includes(model.stage) && model.section !== "playoff" ? ` · Đến vòng ${model.round + 1}` : ""}</p><div class="team-league-form"><span class="form-strip" aria-label="5 trận gần nhất, cũ đến mới">${Array.from({ length: 5 - form.length }, () => '<span class="form-dot empty">–</span>').join("")}${form.map((f) => `<span class="form-dot ${f.win ? "form-win" : "form-loss"}" title="${esc(f.opponent)}">${f.win ? "W" : "L"}</span>`).join("")}</span><span class="sub">5 trận gần nhất · cũ → mới</span></div></div>`;
   const label = (m: import("../../domain/types").Match): string => {
     let round = s.league.rounds.findIndex((row) =>
       row.some((x) => x.id === m.id),
@@ -861,7 +942,10 @@ export function restore() {
     if (!b) throw Error("Chưa có bản sao trước.");
     if (confirm("Khôi phục bản lưu Tour trước đó?")) {
       mutate((s) => Object.assign(s, clone(b.state)));
-      model.stage = Math.min(7, selected()!.snapshot!.stage);
+      model.stage = Math.min(
+        T.lastStage(selected()!.snapshot!),
+        selected()!.snapshot!.stage,
+      );
       model.section = "journey";
       render();
     }
@@ -932,9 +1016,14 @@ export async function sync() {
 const loading = new Set<string>();
 export function renderTour() {
   cloud.initialize();
+  const snapshot = selected()?.snapshot;
+  const branchScope =
+    snapshot && T.regionalFormat(snapshot) && model.stage === 6
+      ? model.region
+      : "";
   preserveBracketScroll(
     $("content"),
-    `tour:${model.scope}:${model.selected || "library"}`,
+    `tour:${model.scope}:${model.selected || "library"}:${branchScope}`,
     () => {
       const row = selected(),
         s = row?.snapshot;
@@ -952,8 +1041,17 @@ export function renderTour() {
           model.achievementCompetition,
         );
         ensureAchievementHistory();
-      } else if (draft()) html += view.setupHtml(draft()!.ids, draft()!.region);
-      else if (!row) html += view.libraryHtml(model.records);
+      } else if (draft()) {
+        const d = draft()!;
+        html += d.regionalIds
+          ? view.regionalSetupHtml(
+              d.ids,
+              d.regionalIds,
+              d.region,
+              draftNumber(d.parent),
+            )
+          : view.setupHtml(d.ids, d.region);
+      } else if (!row) html += view.libraryHtml(model.records);
       else if (!s) {
         html +=
           '<section class="panel full-empty"><h3>Đang tải mùa Tour…</h3><button data-action="Tour.enter">← Các mùa</button></section>';
@@ -966,7 +1064,10 @@ export function renderTour() {
             .then(() => {
               if (token === model.token) {
                 if (model.selected === row.season_id)
-                  model.stage = Math.min(7, selected()?.snapshot?.stage || 0);
+                  model.stage = Math.min(
+                    T.lastStage(selected()!.snapshot!),
+                    selected()!.snapshot!.stage,
+                  );
                 render();
               }
             })
@@ -977,7 +1078,7 @@ export function renderTour() {
             .finally(() => loading.delete(key));
         }
       } else {
-        model.stage = Math.max(0, Math.min(model.stage, 7));
+        model.stage = Math.max(0, Math.min(model.stage, T.lastStage(s)));
         html += view.seasonHtml(s, model, readonly());
       }
       $("content").innerHTML =

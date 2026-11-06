@@ -1,3 +1,11 @@
+import {
+  regionalTourChoices,
+  regionalTourQuota,
+  regionalTourSeeds,
+  regionalTourStatus,
+  validRegionalSelection,
+} from "./regional-tour";
+import { regionalDoublePlan, regionalDoubleRound } from "./regional-double";
 import { get } from "../../data/teams";
 import type {
   FullSeason,
@@ -147,112 +155,211 @@ export function validCareerFull(input: unknown): input is FullSeason {
       }
       return true;
     }
-    for (const r of regionOrder) {
-      const g = s.regions[r],
-        expected = outsideCareerTeams(c.leagueRoster, r),
-        q = c.slots[r];
+    if (c.regionalTour) {
+      const chosen = regionOrder.flatMap((r) => s.regions[r].teamIds);
       if (
-        !g ||
-        !sameCareerSet(g.teamIds, expected) ||
-        !sameCareerSet(g.tie, expected) ||
-        g.playoff !== undefined ||
-        g.decider !== undefined ||
-        g.directSlots !== undefined ||
-        !Array.isArray(g.groups) ||
-        !sameCareerSet(g.groups.flat(), expected)
+        !validRegionalSelection(c.leagueRoster, s.seasonNumber, chosen) ||
+        s.regions.CSV.teamIds.length ||
+        s.regions.CSV.rounds.length ||
+        s.regions.CSV.groups?.length ||
+        s.regions.CSV.tie.length
       )
         return false;
-      if (!q || q === expected.length) {
+      const branches = c.regionalTour.brackets;
+      const choices = regionalTourChoices(c.leagueRoster, s.seasonNumber);
+      if (
+        Object.keys(branches).some((r) => !choices.some((x) => x.region === r))
+      )
+        return false;
+      for (const { region: r, count } of choices) {
+        const g = s.regions[r],
+          q = regionalTourQuota(s, r),
+          active = count > q;
         if (
-          g.rounds.length ||
-          g.pots !== undefined ||
-          !Array.isArray(g.qualifierBranches) ||
-          g.qualifierBranches.length ||
-          g.groups.length !== (expected.length ? 1 : 0)
+          !sameCareerSet(g.tie, g.teamIds) ||
+          g.playoff ||
+          g.decider ||
+          g.qualifierBranches !== undefined ||
+          g.groups?.length !== (active ? (r === "CEV" ? 2 : 1) : 0)
         )
           return false;
-        continue;
-      }
-      const count = Math.ceil(expected.length / 6);
-      if (
-        g.groups.length !== count ||
-        !Array.isArray(g.pots) ||
-        g.pots.length !== Math.ceil(expected.length / count)
-      )
-        return false;
-      for (let i = 0; i < g.pots.length; i++)
         if (
-          !sameCareerSet(
-            g.pots[i],
-            expected.slice(i * count, (i + 1) * count),
-          ) ||
-          g.groups.some(
-            (group) => group.filter((id) => g.pots![i].includes(id)).length > 1,
+          active &&
+          (!sameCareerSet(g.groups!.flat(), g.teamIds) ||
+            g.groups!.some(
+              (group) => group.length !== count / g.groups!.length,
+            ))
+        )
+          return false;
+        if (
+          g.rounds.length !==
+          (active ? g.groups![0].length - 1 + (g.groups![0].length % 2) : 0)
+        )
+          return false;
+        let pending = false;
+        for (const row of g.rounds) {
+          if (
+            (pending && row.some((m) => m.sets)) ||
+            row.some(
+              (m) =>
+                !g.groups!.some(
+                  (ids) => ids.includes(m.a) && ids.includes(m.b),
+                ),
+            )
           )
-        )
-          return false;
-      if (
-        g.groups.some(
-          (group, i) =>
-            group.length !== Math.ceil((expected.length - i) / count),
-        )
-      )
-        return false;
-      const nRounds = Math.max(
-        ...g.groups.map((group) =>
-          group.length % 2 ? group.length : group.length - 1,
-        ),
-      );
-      if (!Array.isArray(g.rounds) || g.rounds.length !== nRounds) return false;
-      for (let r0 = 0; r0 < g.rounds.length; r0++) {
-        const expectedCount = g.groups.reduce(
-          (n, group) =>
-            n +
-            (r0 < (group.length % 2 ? group.length : group.length - 1)
-              ? Math.floor(group.length / 2)
-              : 0),
-          0,
-        );
-        if (
-          !Array.isArray(g.rounds[r0]) ||
-          g.rounds[r0].length !== expectedCount ||
-          g.rounds[r0].some(
-            (m) =>
-              !g.groups!.some(
-                (group) => group.includes(m.a) && group.includes(m.b),
-              ),
-          )
-        )
-          return false;
-      }
-      for (let i = 0; i < g.groups.length; i++)
-        if (!league(regionalGroup(g, i), g.groups[i], `${r}G${i}`))
-          return false;
-      let pending = false;
-      for (const row of g.rounds) {
-        if (!Array.isArray(row) || (pending && row.some((m) => m.sets)))
-          return false;
-        if (row.some((m) => !m.sets)) pending = true;
-      }
-      if (!fullLeagueDone(g)) {
-        if (g.qualifierBranches !== null) return false;
-      } else {
-        const seeds = careerRegionalBranchSeeds(s, r);
-        if (
-          !Array.isArray(g.qualifierBranches) ||
-          g.qualifierBranches.length !== careerRegionalLayout(s, r).remaining
-        )
-          return false;
-        for (let i = 0; i < seeds.length; i++)
-          if (!bracket(g.qualifierBranches[i], seeds[i], `${r}B${i}`))
             return false;
+          if (row.some((m) => !m.sets)) pending = true;
+        }
+        for (const [i, ids] of g.groups!.entries())
+          if (!league(regionalGroup(g, i), ids, r + "T" + i)) return false;
+        const b = branches[r];
+        if (b) {
+          if (!active || !fullLeagueDone(g)) return false;
+          const seeds = regionalTourSeeds(g),
+            prefix = r + "D";
+          const plan = regionalDoublePlan(seeds, prefix);
+          if (!b.rounds.length || b.rounds.length > plan.length) return false;
+          const replay = { rounds: [] as Match[][] };
+          const shadow = {
+            ...s,
+            career: { ...c, regionalTour: { brackets: { [r]: replay } } },
+          };
+          for (const [i, row] of b.rounds.entries()) {
+            if (regionalTourStatus(shadow, r).done) return false;
+            const expected = regionalDoubleRound(seeds, prefix, replay, i);
+            if (
+              row.length !== expected.length ||
+              row.some(
+                (m, j) =>
+                  !match(m, seeds, expected[j].id) ||
+                  m.a !== expected[j].a ||
+                  m.b !== expected[j].b,
+              ) ||
+              (i < b.rounds.length - 1 && row.some((m) => !m.sets))
+            )
+              return false;
+            replay.rounds.push(row);
+          }
+          if (
+            !regionalTourStatus(s, r).done &&
+            !b.rounds.at(-1)?.some((m) => !m.sets)
+          )
+            return false;
+        }
       }
-    }
+    } else
+      for (const r of regionOrder) {
+        const g = s.regions[r],
+          expected = outsideCareerTeams(c.leagueRoster, r),
+          q = c.slots[r];
+        if (
+          !g ||
+          !sameCareerSet(g.teamIds, expected) ||
+          !sameCareerSet(g.tie, expected) ||
+          g.playoff !== undefined ||
+          g.decider !== undefined ||
+          g.directSlots !== undefined ||
+          !Array.isArray(g.groups) ||
+          !sameCareerSet(g.groups.flat(), expected)
+        )
+          return false;
+        if (!q || q === expected.length) {
+          if (
+            g.rounds.length ||
+            g.pots !== undefined ||
+            !Array.isArray(g.qualifierBranches) ||
+            g.qualifierBranches.length ||
+            g.groups.length !== (expected.length ? 1 : 0)
+          )
+            return false;
+          continue;
+        }
+        const count = Math.ceil(expected.length / 6);
+        if (
+          g.groups.length !== count ||
+          !Array.isArray(g.pots) ||
+          g.pots.length !== Math.ceil(expected.length / count)
+        )
+          return false;
+        for (let i = 0; i < g.pots.length; i++)
+          if (
+            !sameCareerSet(
+              g.pots[i],
+              expected.slice(i * count, (i + 1) * count),
+            ) ||
+            g.groups.some(
+              (group) =>
+                group.filter((id) => g.pots![i].includes(id)).length > 1,
+            )
+          )
+            return false;
+        if (
+          g.groups.some(
+            (group, i) =>
+              group.length !== Math.ceil((expected.length - i) / count),
+          )
+        )
+          return false;
+        const nRounds = Math.max(
+          ...g.groups.map((group) =>
+            group.length % 2 ? group.length : group.length - 1,
+          ),
+        );
+        if (!Array.isArray(g.rounds) || g.rounds.length !== nRounds)
+          return false;
+        for (let r0 = 0; r0 < g.rounds.length; r0++) {
+          const expectedCount = g.groups.reduce(
+            (n, group) =>
+              n +
+              (r0 < (group.length % 2 ? group.length : group.length - 1)
+                ? Math.floor(group.length / 2)
+                : 0),
+            0,
+          );
+          if (
+            !Array.isArray(g.rounds[r0]) ||
+            g.rounds[r0].length !== expectedCount ||
+            g.rounds[r0].some(
+              (m) =>
+                !g.groups!.some(
+                  (group) => group.includes(m.a) && group.includes(m.b),
+                ),
+            )
+          )
+            return false;
+        }
+        for (let i = 0; i < g.groups.length; i++)
+          if (!league(regionalGroup(g, i), g.groups[i], `${r}G${i}`))
+            return false;
+        let pending = false;
+        for (const row of g.rounds) {
+          if (!Array.isArray(row) || (pending && row.some((m) => m.sets)))
+            return false;
+          if (row.some((m) => !m.sets)) pending = true;
+        }
+        if (!fullLeagueDone(g)) {
+          if (g.qualifierBranches !== null) return false;
+        } else {
+          const seeds = careerRegionalBranchSeeds(s, r);
+          if (
+            !Array.isArray(g.qualifierBranches) ||
+            g.qualifierBranches.length !== careerRegionalLayout(s, r).remaining
+          )
+            return false;
+          for (let i = 0; i < seeds.length; i++)
+            if (!bracket(g.qualifierBranches[i], seeds[i], `${r}B${i}`))
+              return false;
+        }
+      }
     if (c.playin !== null) {
       const p = c.playin;
       if (
         !p ||
-        !regionOrder.every((r) => careerRegionalDone(s.regions[r])) ||
+        !regionOrder.every((r) =>
+          c.regionalTour
+            ? regionalTourStatus(s, r).done
+            : careerRegionalDone(s.regions[r]),
+        ) ||
         !sameCareerSet(p.league16, [...p.league16]) ||
         p.league16.length !== 16 ||
         p.league16.some((id) => !c.leagueRoster.includes(id)) ||

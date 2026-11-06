@@ -25,7 +25,8 @@ export function createCareerPlayin(
 ) {
   if (
     f.career!.playin ||
-    !regionOrder.every((r) => careerRegionalDone(f.regions[r]))
+    (!f.career!.regionalTour &&
+      !regionOrder.every((r) => careerRegionalDone(f.regions[r])))
   )
     throw Error("Chưa thể bốc thăm World Cup Play-in.");
   const extra = challenger.filter((id) => !league16.includes(id)),

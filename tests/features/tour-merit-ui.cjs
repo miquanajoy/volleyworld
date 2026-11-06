@@ -15,6 +15,7 @@ const tab = (key) => click(`[data-action="Tour.section"][data-arg="${key}"]`);
 click('[data-action="Tour.enter"]');
 click('[data-action="Tour.create"]');
 click('[data-action="Tour.start"]');
+click('[data-action="Tour.start"]');
 const meritFixture = T.freshMeritTour(1, [...api.selected().snapshot.roster]);
 api.model.records[0] = api.recordOf(meritFixture);
 api.model.selected = meritFixture.seasonId;

@@ -28,6 +28,7 @@ click(`[data-action="Tour.toggleTeam"][data-arg="${outgoing}"]`);
 assert(d.querySelector('[data-action="Tour.start"]').disabled);
 click(`[data-action="Tour.toggleTeam"][data-arg="${incoming}"]`);
 click('[data-action="Tour.start"]');
+click('[data-action="Tour.start"]');
 // Legacy calendar regression fixture; new production start is covered by tour-career-ui.
 const legacyFixture = T.freshTour(1, [...api.selected().snapshot.roster]);
 api.model.records[0] = api.recordOf(legacyFixture);

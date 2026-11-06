@@ -1,3 +1,4 @@
+import { regionalTourStatus, regionalTourTotal } from "./regional-tour";
 import { get } from "../../data/teams";
 import { shuffle } from "../shared/random";
 import type { Region } from "../types";
@@ -146,6 +147,10 @@ export const careerRegionalDone = (g: RegionalLeague) =>
   Array.isArray(g.qualifierBranches) &&
   g.qualifierBranches.every((b) => !!qualifierWinner(b));
 export function careerRegionEntrants(s: FullSeason, r: Region) {
+  if (s.career?.regionalTour) {
+    const status = regionalTourStatus(s, r);
+    return status.done ? status.entrants : [];
+  }
   if (!careerRegionalDone(s.regions[r])) return [];
   return [
     ...careerRegionalDirect(s, r),
@@ -153,6 +158,7 @@ export function careerRegionEntrants(s: FullSeason, r: Region) {
   ];
 }
 export function careerRegionalTotal(s: FullSeason) {
+  if (s.career?.regionalTour) return regionalTourTotal(s);
   return regionOrder.reduce((n, r) => {
     const g = s.regions[r],
       l = careerRegionalLayout(s, r);

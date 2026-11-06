@@ -135,7 +135,9 @@ const fs = require("node:fs"),
   }
   assert(w.document.querySelector(".tour-selection-intro"));
   click('[data-action="Tour.start"]');
-  assert.equal(w.document.querySelectorAll(".tour-journey-card").length, 8);
+  assert(w.document.querySelector("[data-regional-setup]"));
+  click('[data-action="Tour.start"]');
+  assert.equal(w.document.querySelectorAll(".tour-journey-card").length, 10);
   click('[data-action="Tour.viewStage"][data-arg="0"]');
   click('[data-action="Tour.edit"]');
   assert(w.document.getElementById("editor").open);
@@ -207,6 +209,8 @@ const fs = require("node:fs"),
   assert.equal(w.document.querySelectorAll("[data-medal-place]").length, 9);
   const previous = record.snapshot;
   click('[data-action="Tour.nextSeason"]');
+  assert(w.document.querySelector("[data-regional-setup]"));
+  click('[data-action="Tour.start"]');
   const records = JSON.parse(w.localStorage.getItem(storageKey));
   assert.equal(records.length, 2);
   assert.equal(records[1].snapshot.career.previousSeasonId, previous.seasonId);

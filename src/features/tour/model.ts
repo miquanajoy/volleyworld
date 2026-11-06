@@ -33,6 +33,8 @@ export const model = {
   swissView: "tree" as "tree" | "matches",
   setup: null as null | {
     ids: string[];
+    regionalIds?: string[];
+    parent?: string;
     region: Region;
     scope: string;
     token: number;

@@ -15,6 +15,13 @@ const assert = require("node:assert/strict"),
   api.create();
   assert(api.model.setup, "First season opens team selection");
   api.start();
+  api.start();
+  // Exercise a saved season from the previous eight-stage career.
+  const old = T.freshCareerTour(1, T.defaultRoster());
+  api.model.records[0] = api.recordOf(old);
+  api.model.records[0].dirty = false;
+  api.model.selected = old.seasonId;
+  api.resume();
   const first = api.selected().season_id,
     chain = api.selected().snapshot.career.chainId;
   assert(T.career(api.selected().snapshot));
@@ -175,7 +182,12 @@ const assert = require("node:assert/strict"),
   assert.equal(status.qualified.length, 32);
   assert.equal(status.retained.length + status.promoted.length, 32);
   api.nextSeason(first);
-  assert.equal(api.model.setup, null, "No team re-selection for later seasons");
+  assert(
+    d.querySelector("[data-regional-setup]"),
+    "Only regional selection is required",
+  );
+  api.start();
+  assert.equal(api.model.setup, null);
   const second = api.selected().season_id;
   assert.notEqual(first, second);
   assert.equal(api.selected().snapshot.career.chainId, chain);

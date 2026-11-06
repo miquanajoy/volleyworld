@@ -1,3 +1,4 @@
+import { regionalTourMatches } from "../career/regional-tour";
 import { regionTeams } from "../../data/teams";
 import { simulate } from "../match/simulation";
 import type { Match, SetScore } from "../types";
@@ -75,6 +76,7 @@ export function fullMatches(s: FullSeason): Match[] {
       ...qualifierMatches(s.regions[r].playoff),
       ...(s.regions[r].qualifierBranches?.flatMap(qualifierMatches) || []),
     ]),
+    ...regionalTourMatches(s),
     ...(s.intercontinental?.branches.flatMap(qualifierMatches) || []),
     ...(s.career?.playin
       ? [...s.career.playin.preliminary, ...s.career.playin.final]

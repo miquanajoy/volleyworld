@@ -3,6 +3,7 @@ for (const file of [
   "tour",
   "tour-career",
   "tour-career-ui",
+  "tour-regional",
   "tour-merit",
   "tour-merit-ui",
   "tour-ui",

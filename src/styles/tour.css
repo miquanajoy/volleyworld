@@ -2905,3 +2905,32 @@
     flex-direction: column;
   }
 }
+
+.regional-double-columns {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(210px, 1fr);
+  gap: 32px;
+  min-width: max-content;
+}
+.regional-double-nodes {
+  display: grid;
+  min-width: 210px;
+}
+.regional-double-nodes .team,
+.regional-tour-fixtures .team {
+  min-width: 0;
+}
+.regional-tour-fixtures {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.regional-tour-berths {
+  margin: 16px 0;
+}
+.regional-tour-berths .qualification-names > span {
+  display: grid;
+  gap: 4px;
+}

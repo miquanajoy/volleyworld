@@ -1,3 +1,10 @@
+import {
+  advanceRegionalTour,
+  setupRegionalTour,
+  regionalTourKeys,
+  regionalTourSplit,
+  regionalTourStatus,
+} from "./regional-tour";
 import * as V from "../index";
 import * as C from "../challenger/index";
 import * as F from "../full-season/index";
@@ -20,6 +27,23 @@ import { drawCareerWorld, careerWorldPots } from "./world";
 import { sameCareerSet, validCareerFull } from "./validation";
 export const career = (s: TourSeason) => s.rules === "career-v1";
 export const careerRegionalSlots = (s: TourSeason) => s.worldcup.career!.slots;
+export const regionalFormat = (s: TourSeason) =>
+  !!s.worldcup.career?.regionalTour;
+export const careerIndex = (s: TourSeason, base: number) =>
+  regionalFormat(s) ? [0, 1, 2, 4, 5, 7, 8, 9, 10][base] : base;
+export const careerBaseStage = (s: TourSeason, stage: number) =>
+  regionalFormat(s) ? [0, 1, 2, 1, 3, 4, 1, 5, 6, 7, 8][stage] : stage;
+export const regionalStage = (s: TourSeason, stage: number) =>
+  career(s) && regionalFormat(s) ? [1, 3, 6].includes(stage) : stage === 1;
+function regionalRows(
+  s: TourSeason,
+  r: (typeof regionalTourKeys)[number],
+  stage: number,
+) {
+  const g = s.worldcup.regions[r],
+    split = regionalTourSplit(g);
+  return stage === 1 ? g.rounds.slice(0, split) : g.rounds.slice(split);
+}
 const bounds = (stage: number) =>
   stage === 0 ? [0, 10] : stage === 2 ? [10, 20] : [20, 31];
 function buildCareer(
@@ -27,6 +51,7 @@ function buildCareer(
   roster: string[],
   chainId: string,
   previousSeasonId: string | null,
+  regional?: string[],
 ): TourSeason {
   if (!validCareerRoster(roster))
     throw Error(
@@ -35,6 +60,8 @@ function buildCareer(
   const league = V.fresh(roster, "single", true);
   league.setupConfirmed = true;
   league.seasonNumber = number;
+  const worldcup = freshCareerQualification(roster, number);
+  if (regional) setupRegionalTour(worldcup, regional);
   return {
     version: 1,
     rules: "career-v1",
@@ -47,10 +74,14 @@ function buildCareer(
     stage: 0,
     league,
     challenger: null,
-    worldcup: freshCareerQualification(roster, number),
+    worldcup,
   };
 }
-export function freshCareerTour(number = 1, roster?: string[]): TourSeason {
+export function freshCareerTour(
+  number = 1,
+  roster?: string[],
+  regional?: string[],
+): TourSeason {
   if (number !== 1) throw Error("Chuỗi mới phải bắt đầu từ mùa 1.");
   const selected =
     roster ||
@@ -70,7 +101,7 @@ export function freshCareerTour(number = 1, roster?: string[]): TourSeason {
     throw Error(
       "Mùa đầu cần đúng hạn ngạch 7 Âu, 7 Á, 7 Bắc Mỹ, 5 Phi, 6 Nam Mỹ.",
     );
-  return buildCareer(1, selected, crypto.randomUUID(), null);
+  return buildCareer(1, selected, crypto.randomUUID(), null, regional);
 }
 export function careerAutomaticBerths(s: TourSeason) {
   const c = s.challenger?.bracket?.final[0],
@@ -122,13 +153,22 @@ export function careerStatus(s: TourSeason) {
       16 - challenger.filter((id) => !league16.includes(id)).length,
   };
 }
-export function nextCareerSeason(s: TourSeason): TourSeason {
-  if (!career(s) || s.stage !== 8 || !validCareerTour(s))
+export function nextCareerSeason(
+  s: TourSeason,
+  regional?: string[],
+): TourSeason {
+  if (!career(s) || s.stage !== careerIndex(s, 8) || !validCareerTour(s))
     throw Error("Hoàn tất World Cup hiện tại trước khi mở mùa sau.");
   const ids = s.worldcup
     .world!.groups.flatMap((g) => g.teamIds)
     .sort((a, b) => get(a).rank - get(b).rank);
-  return buildCareer(s.seasonNumber + 1, ids, s.career!.chainId, s.seasonId);
+  return buildCareer(
+    s.seasonNumber + 1,
+    ids,
+    s.career!.chainId,
+    s.seasonId,
+    regional,
+  );
 }
 export const careerCalendar = [
   ["League · Phase 1", "Vòng 1–10"],
@@ -140,7 +180,29 @@ export const careerCalendar = [
   ["League · Phase 4", "Playoff 16 đội · Xếp pot World Cup"],
   ["World Cup", "32 đội · 8 bảng · Chỉ top 2 đi tiếp"],
 ];
+export const regionalCalendar = [
+  careerCalendar[0],
+  ["Vòng loại khu vực · Đợt 1", "League khu vực · Mở màn vòng tròn"],
+  careerCalendar[2],
+  ["Vòng loại khu vực · Đợt 2", "Chốt BXH, vé sớm và hạt giống"],
+  careerCalendar[3],
+  careerCalendar[4],
+  [
+    "Vòng loại khu vực · Nhánh thắng–thua",
+    "Chốt các suất World Cup Play-in còn lại",
+  ],
+  ...careerCalendar.slice(5),
+];
 export function careerStageDone(s: TourSeason, stage = s.stage): boolean {
+  if (regionalFormat(s) && regionalStage(s, stage))
+    return regionalTourKeys.every((r) =>
+      stage === 6
+        ? regionalTourStatus(s.worldcup, r).done
+        : regionalRows(s, r, stage)
+            .flat()
+            .every((m) => !!m.sets),
+    );
+  stage = careerBaseStage(s, stage);
   if (stage === 8) return true;
   if ([0, 2, 4].includes(stage)) {
     const [a, b] = bounds(stage);
@@ -168,19 +230,28 @@ const pending = (rounds: Match[][]) =>
   rounds.find((row) => row.some((m) => !m.sets)) || [];
 export function careerBatch(s: TourSeason): Match[] {
   if (careerStageDone(s)) return [];
-  if ([0, 2, 4].includes(s.stage)) {
-    const [a, b] = bounds(s.stage),
+  if (regionalFormat(s) && regionalStage(s, s.stage))
+    return regionalTourKeys.flatMap((r) =>
+      s.stage === 6
+        ? regionalTourStatus(s.worldcup, r).done
+          ? []
+          : pending(s.worldcup.career!.regionalTour!.brackets[r]?.rounds || [])
+        : pending(regionalRows(s, r, s.stage)),
+    );
+  const stage = careerBaseStage(s, s.stage);
+  if ([0, 2, 4].includes(stage)) {
+    const [a, b] = bounds(stage),
       row = pending(s.league.rounds.slice(a, b));
-    return row.length ? row : s.stage === 4 ? s.league.playin || [] : [];
+    return row.length ? row : stage === 4 ? s.league.playin || [] : [];
   }
-  if (s.stage === 1)
+  if (stage === 1)
     return F.regionOrder.flatMap((r) => {
       const g = s.worldcup.regions[r];
       return F.fullLeagueDone(g)
         ? g.qualifierBranches?.flatMap((b) => pending(b.rounds)) || []
         : pending(g.rounds);
     });
-  if (s.stage === 3) {
+  if (stage === 3) {
     const c = s.challenger!;
     if (!C.swissDone(c)) return c.rounds.at(-1)!;
     return (
@@ -189,11 +260,11 @@ export function careerBatch(s: TourSeason): Match[] {
         .find((ms) => ms.some((m) => !m.sets)) || []
     );
   }
-  if (s.stage === 5) {
+  if (stage === 5) {
     const p = s.worldcup.career!.playin!;
     return p.preliminary.some((m) => !m.sets) ? p.preliminary : p.final;
   }
-  if (s.stage === 6)
+  if (stage === 6)
     return (
       V.playoffOrder(s.league)
         .map(({ key }) => s.league.bracket?.[key] || [])
@@ -210,8 +281,11 @@ export function careerBatch(s: TourSeason): Match[] {
 }
 export function advanceCareer(s: TourSeason) {
   V.stampResults(s.league);
-  if (s.stage === 1) advanceCareerRegions(s.worldcup);
-  if (s.stage === 3) {
+  if (regionalFormat(s)) {
+    if (s.stage === 6) advanceRegionalTour(s.worldcup);
+  } else if (s.stage === 1) advanceCareerRegions(s.worldcup);
+
+  if (careerBaseStage(s, s.stage) === 3) {
     const c = s.challenger!;
     C.advanceChallenger(c);
     C.stampChallenger(c);
@@ -219,17 +293,17 @@ export function advanceCareer(s: TourSeason) {
       C.drawSwissRound(c);
     if (C.swissDone(c) && !c.bracket) C.drawChallengerPlayoff(c);
   }
-  if (s.stage === 4 && V.leagueDone(s.league)) {
+  if (careerBaseStage(s, s.stage) === 4 && V.leagueDone(s.league)) {
     if (!s.league.playin) V.startPlayin(s.league);
     if (s.league.playin!.every((m) => m.sets) && !s.league.bracket)
       V.draw(s.league);
   }
-  if (s.stage === 5) advanceCareerPlayin(s.worldcup);
-  if (s.stage === 6) {
+  if (careerBaseStage(s, s.stage) === 5) advanceCareerPlayin(s.worldcup);
+  if (careerBaseStage(s, s.stage) === 6) {
     V.advance(s.league);
     V.stampResults(s.league);
   }
-  if (s.stage === 7) {
+  if (careerBaseStage(s, s.stage) === 7) {
     const f = s.worldcup;
     if (f.world!.groups.every(F.fullLeagueDone) && !f.world!.bracket)
       F.drawWorldPlayoff(f);
@@ -238,16 +312,17 @@ export function advanceCareer(s: TourSeason) {
   F.stampFull(s.worldcup);
 }
 export function nextCareerStage(s: TourSeason) {
-  if (s.stage === 8 || !careerStageDone(s))
+  if (s.stage === careerIndex(s, 8) || !careerStageDone(s))
     throw Error("Hoàn tất chặng hiện tại trước khi tiếp tục.");
   s.stage++;
-  if (s.stage === 3)
+  if (regionalFormat(s) && s.stage === 6) advanceRegionalTour(s.worldcup);
+  if (careerBaseStage(s, s.stage) === 3)
     s.challenger = C.freshChallenger(s.seasonNumber, s.roster, true);
-  if (s.stage === 5) {
+  if (careerBaseStage(s, s.stage) === 5) {
     const status = careerStatus(s);
     createCareerPlayin(s.worldcup, status.league16, status.challenger);
   }
-  if (s.stage === 7) drawCareerWorld(s.worldcup, s.league);
+  if (careerBaseStage(s, s.stage) === 7) drawCareerWorld(s.worldcup, s.league);
 }
 export function validCareerTour(s: TourSeason): boolean {
   try {
@@ -265,7 +340,7 @@ export function validCareerTour(s: TourSeason): boolean {
       !Number.isFinite(Date.parse(s.createdAt)) ||
       !Number.isInteger(s.stage) ||
       s.stage < 0 ||
-      s.stage > 8 ||
+      s.stage > careerIndex(s, 8) ||
       !validCareerRoster(s.roster)
     )
       return false;
@@ -299,15 +374,26 @@ export function validCareerTour(s: TourSeason): boolean {
     )
       return false;
     if (
-      s.stage >= 3 !== !!s.challenger ||
+      s.stage >= careerIndex(s, 3) !== !!s.challenger ||
       (s.challenger &&
         (!C.validChallenger(s.challenger) ||
           s.challenger.career !== true ||
           !sameCareerSet(s.challenger.roster, s.roster)))
     )
       return false;
+    if (
+      regionalFormat(s) &&
+      s.stage >= 6 &&
+      regionalTourKeys.some(
+        (r) =>
+          s.worldcup.regions[r].rounds.length &&
+          !s.worldcup.career!.regionalTour!.brackets[r],
+      )
+    )
+      return false;
     for (let i = 0; i < s.stage; i++) if (!careerStageDone(s, i)) return false;
-    const last = s.stage < 2 ? 10 : s.stage < 4 ? 20 : 31;
+    const last =
+      s.stage < careerIndex(s, 2) ? 10 : s.stage < careerIndex(s, 4) ? 20 : 31;
     if (
       s.league.rounds
         .slice(last)
@@ -320,16 +406,34 @@ export function validCareerTour(s: TourSeason): boolean {
       if (waiting && row.some((m) => m.sets)) return false;
       if (row.some((m) => !m.sets)) waiting = true;
     }
+    if (
+      regionalFormat(s) &&
+      (regionalTourKeys.some(
+        (r) =>
+          s.worldcup.regions[r].rounds
+            .slice(
+              s.stage < 1
+                ? 0
+                : s.stage < 3
+                  ? regionalTourSplit(s.worldcup.regions[r])
+                  : undefined,
+            )
+            .some((row) => row.some((m) => m.sets)) && s.stage < 3,
+      ) ||
+        (s.stage < 6 &&
+          Object.keys(s.worldcup.career!.regionalTour!.brackets).length))
+    )
+      return false;
     if (s.stage === 0 && F.fullMatches(s.worldcup).some((m) => m.sets))
       return false;
     const leagueDone = V.leagueDone(s.league);
     if (
-      s.stage < 4
+      s.stage < careerIndex(s, 4)
         ? !!s.league.playin || !!s.league.bracket
         : leagueDone !== !!s.league.playin
     )
       return false;
-    if (s.stage === 4) {
+    if (s.stage === careerIndex(s, 4)) {
       const ready = !!s.league.playin?.every((m) => m.sets);
       if (
         ready !== !!s.league.bracket ||
@@ -338,9 +442,13 @@ export function validCareerTour(s: TourSeason): boolean {
       )
         return false;
     }
-    if (s.stage < 6 && s.league.bracket?.r16.some((m) => m.sets)) return false;
+    if (
+      s.stage < careerIndex(s, 6) &&
+      s.league.bracket?.r16.some((m) => m.sets)
+    )
+      return false;
     const p = s.worldcup.career!.playin;
-    if (s.stage >= 5 !== !!p) return false;
+    if (s.stage >= careerIndex(s, 5) !== !!p) return false;
     if (p) {
       const status = careerStatus(s);
       if (
@@ -349,7 +457,7 @@ export function validCareerTour(s: TourSeason): boolean {
       )
         return false;
     }
-    if (s.stage >= 7 !== !!s.worldcup.world) return false;
+    if (s.stage >= careerIndex(s, 7) !== !!s.worldcup.world) return false;
     if (s.worldcup.world) {
       const expected = careerWorldPots(s.worldcup, s.league);
       if (expected.some((p, i) => !sameCareerSet(s.worldcup.world!.pots[i], p)))

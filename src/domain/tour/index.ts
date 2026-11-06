@@ -1,6 +1,23 @@
+export {
+  regionalTourChoices,
+  defaultRegionalSelection,
+  validRegionalSelection,
+  regionalTourKeys,
+  regionalTourSplit,
+  regionalTourStatus,
+  regionalTourSeeds,
+  regionalTourQuota,
+  regionalTourName,
+} from "../career/regional-tour";
+export { regionalFormat, regionalStage } from "../career/tour";
 import {
   career,
   careerCalendar,
+  regionalCalendar,
+  regionalFormat,
+  regionalStage,
+  careerIndex,
+  careerBaseStage,
   careerAutomaticBerths,
   careerStageDone,
   nextCareerStage,
@@ -102,12 +119,20 @@ export function freshMeritTour(
 export const merit = (s: TourSeason) => s.rules === "merit-v1";
 /** UI adapters retain the legacy competition semantics without rewriting old calendars. */
 export const canonicalStage = (s: TourSeason, n: number) =>
-  merit(s) && [5, 6].includes(n) ? 11 - n : n;
-export const leagueStage = (s: TourSeason) => (merit(s) ? 5 : 6);
-export const qualificationStage = (s: TourSeason) => (merit(s) ? 6 : 5);
+  career(s)
+    ? careerBaseStage(s, n)
+    : merit(s) && [5, 6].includes(n)
+      ? 11 - n
+      : n;
+export const leagueStage = (s: TourSeason) =>
+  career(s) ? careerIndex(s, 6) : merit(s) ? 5 : 6;
+export const qualificationStage = (s: TourSeason) =>
+  career(s) ? careerIndex(s, 5) : merit(s) ? 6 : 5;
 export const calendar = (s: TourSeason) =>
   career(s)
-    ? careerCalendar
+    ? regionalFormat(s)
+      ? regionalCalendar
+      : careerCalendar
     : merit(s)
       ? [
           stages[0],
@@ -163,7 +188,19 @@ export function useOriginalPlayoff(s: TourSeason): boolean {
   }
   return true;
 }
-export const complete = (s: TourSeason) => s.stage === 8;
+export const complete = (s: TourSeason) => s.stage === calendar(s).length;
+export const lastStage = (s: TourSeason) => calendar(s).length - 1;
+export const stageFor = (s: TourSeason, n: number) =>
+  career(s) ? careerIndex(s, n) : n;
+export const competitionStages = (s: TourSeason) => ({
+  league: [0, 2, stageFor(s, 4), leagueStage(s)],
+  challenger: [stageFor(s, 3)],
+  worldcup: [
+    ...(regionalFormat(s) ? [1, 3, 6] : [1]),
+    qualificationStage(s),
+    lastStage(s),
+  ],
+});
 export const matches = (s: TourSeason): Match[] => [
   ...V.matches(s.league),
   ...(s.challenger ? C.challengerMatches(s.challenger) : []),
@@ -333,7 +370,7 @@ export function simulateMatches(s: TourSeason, ids: string[]) {
 }
 /** The selected region progresses independently; other regions keep their scores. */
 export function regionalBatch(s: TourSeason, region: Region): Match[] {
-  if (s.stage !== 1 || !F.regionOrder.includes(region)) return [];
+  if (!regionalStage(s, s.stage) || !F.regionOrder.includes(region)) return [];
   const ids = new Set(s.worldcup.regions[region].teamIds);
   return batch(s).filter((m) => ids.has(m.a) && ids.has(m.b) && !m.sets);
 }
