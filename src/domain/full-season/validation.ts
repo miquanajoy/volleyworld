@@ -1,3 +1,5 @@
+import { validCareerFull } from "../career/validation";
+import { meritQualification, meritPlayoffSeeds } from "./merit";
 import {
   newQualification,
   qualificationGroups,
@@ -31,6 +33,7 @@ const sameSet = (a: TeamId[], b: TeamId[]) =>
 export function validFullSeason(input: unknown): input is FullSeason {
   try {
     const s = input as FullSeason;
+    if (s?.regionalFormat === "career-v1") return validCareerFull(s);
     if (
       !s ||
       s.version !== 1 ||
@@ -106,14 +109,22 @@ export function validFullSeason(input: unknown): input is FullSeason {
       }
       return pairs.size === (n * (n - 1)) / 2;
     }
-    function knockout(b: QualifierBracket, expected: TeamId[], prefix: string) {
+    function knockout(
+      b: QualifierBracket,
+      expected: TeamId[],
+      prefix: string,
+      advanceSlots = 1,
+    ) {
       if (
         !b ||
-        Object.keys(b).sort().join() !== "rounds,seeds" ||
+        Object.keys(b).sort().join() !==
+          (advanceSlots === 4 ? "advanceSlots,rounds,seeds" : "rounds,seeds") ||
+        (advanceSlots === 4 && b.advanceSlots !== 4) ||
         !Array.isArray(b.seeds) ||
         b.seeds.join() !== expected.join() ||
         !Array.isArray(b.rounds) ||
-        b.rounds.length !== Math.ceil(Math.log2(expected.length))
+        b.rounds.length !==
+          Math.ceil(Math.log2(expected.length)) - Math.log2(advanceSlots)
       )
         return false;
       for (let r = 0; r < b.rounds.length; r++) {
@@ -139,7 +150,26 @@ export function validFullSeason(input: unknown): input is FullSeason {
       }
       return true;
     }
-    const modern = newQualification(s);
+    const modern = newQualification(s),
+      merit = meritQualification(s);
+    if (merit) {
+      if (
+        s.automatic !== null &&
+        (!Array.isArray(s.automatic) ||
+          s.automatic.length !== 2 ||
+          new Set(s.automatic).size !== 2 ||
+          s.automatic.some(
+            (id) =>
+              !regionOrder.some((r) => s.regions[r]?.teamIds.includes(id)),
+          ))
+      )
+        return false;
+      if (
+        s.automatic &&
+        !regionOrder.every((r) => fullLeagueDone(s.regions[r]))
+      )
+        return false;
+    } else if (s.automatic !== undefined) return false;
     if (
       s.regionalFormat !== undefined &&
       s.regionalFormat !== "groups-v1" &&
@@ -225,6 +255,21 @@ export function validFullSeason(input: unknown): input is FullSeason {
           return false;
       if (modern) {
         if (g.decider !== undefined) return false;
+        if (merit) {
+          if (
+            s.automatic
+              ? !g.playoff ||
+                !knockout(
+                  g.playoff,
+                  meritPlayoffSeeds(s, r),
+                  r,
+                  ["CEV", "AVC"].includes(r) ? 4 : 1,
+                )
+              : g.playoff !== null
+          )
+            return false;
+          continue;
+        }
         if (
           fullLeagueDone(g)
             ? !g.playoff || !knockout(g.playoff, regionalPlayoffSeeds(g), r)
@@ -262,13 +307,13 @@ export function validFullSeason(input: unknown): input is FullSeason {
           !b ||
           Object.keys(b).sort().join() !== "branches,pots" ||
           !Array.isArray(b.pots) ||
-          b.pots.length !== 9 ||
+          b.pots.length !== (merit ? 6 : 9) ||
           !Array.isArray(b.branches) ||
           b.branches.length !== 3
         )
           return false;
         const pool = intercontinentalPool(s);
-        for (let i = 0; i < 9; i++)
+        for (let i = 0; i < (merit ? 6 : 9); i++)
           if (
             !Array.isArray(b.pots[i]) ||
             b.pots[i].join() !== pool.slice(i * 3, i * 3 + 3).join()
@@ -283,7 +328,9 @@ export function validFullSeason(input: unknown): input is FullSeason {
           return false;
         for (const [i, branch] of b.branches.entries())
           if (
-            branch.seeds.length !== 9 ||
+            (merit
+              ? ![5, 6].includes(branch.seeds.length)
+              : branch.seeds.length !== 9) ||
             branch.seeds.some((id, j) => !b.pots[j].includes(id)) ||
             !knockout(branch, branch.seeds, `IC${i}`)
           )

@@ -33,9 +33,17 @@ if (url) {
     }
   }
 }
+const previewLocal =
+  process.env.VOLLEY_PREVIEW_LOCAL === "1" ||
+  (process.env.VERCEL_ENV === "preview" &&
+    process.env.VERCEL_GIT_COMMIT_REF === "feature/world-cup-merit-berths");
 export default defineConfig({
   define: {
-    __VOLLEY_CONFIG__: JSON.stringify({ supabaseUrl: url, supabaseKey: key }),
+    __VOLLEY_CONFIG__: JSON.stringify({
+      supabaseUrl: previewLocal ? "" : url,
+      supabaseKey: previewLocal ? "" : key,
+      previewLocal,
+    }),
   },
   build: { target: "es2022" },
 });

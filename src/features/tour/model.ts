@@ -12,10 +12,15 @@ export interface TourHonours {
 export interface TourRecord extends ArchiveRecord<T.TourSeason> {
   honours?: TourHonours;
   total_matches?: number;
+  chain_id?: string;
+  previous_season_id?: string | null;
 }
 export const clone = <S>(s: S): S => JSON.parse(JSON.stringify(s));
+export const tourStoragePrefix = __VOLLEY_CONFIG__.previewLocal
+  ? "volleyworld-tour-merit-preview"
+  : "volleyworld-tour";
 export const model = {
-  scope: "volleyworld-tour-guest",
+  scope: `${tourStoragePrefix}-guest`,
   loadedScope: "",
   token: 0,
   records: [] as TourRecord[],
@@ -28,6 +33,8 @@ export const model = {
   swissView: "tree" as "tree" | "matches",
   setup: null as null | {
     ids: string[];
+    regionalIds?: string[];
+    parent?: string;
     region: Region;
     scope: string;
     token: number;
@@ -35,6 +42,7 @@ export const model = {
   achievementRegion: "CEV" as Region,
   achievementTeam: null as string | null,
   achievementCompetition: "all" as "all" | "league" | "challenger" | "worldcup",
+  reset: null as null | { chainId: string; scope: string; token: number },
   loading: false,
   error: "",
 };
@@ -45,6 +53,12 @@ export function recordOf(source: T.TourSeason, revision = 0): TourRecord {
     upgraded = T.useOriginalPlayoff(s);
   return {
     ...(upgraded ? { dirty: true } : {}),
+    ...(T.career(s)
+      ? {
+          chain_id: s.career!.chainId,
+          previous_season_id: s.career!.previousSeasonId,
+        }
+      : {}),
     season_id: s.seasonId,
     season_number: s.seasonNumber,
     created_at: s.createdAt,
@@ -73,13 +87,20 @@ export function validRecord(input: unknown): input is TourRecord {
       ["active", "completed"].includes(r.status) &&
       Number.isSafeInteger(r.played) &&
       r.played >= 0 &&
-      r.played <= 968 &&
+      r.played <= 2000 &&
       Number.isSafeInteger(r.revision) &&
       r.revision >= 0 &&
       Array.isArray(r.podium) &&
       r.podium.length === (r.status === "completed" ? 3 : 0) &&
       (r.dirty === undefined || typeof r.dirty === "boolean") &&
-      (r.total_matches === undefined || [964, 968].includes(r.total_matches)) &&
+      (r.chain_id === undefined || /^[a-zA-Z0-9-]{1,100}$/.test(r.chain_id)) &&
+      (r.previous_season_id === undefined ||
+        r.previous_season_id === null ||
+        /^[a-zA-Z0-9-]{1,100}$/.test(r.previous_season_id)) &&
+      (r.total_matches === undefined ||
+        (Number.isSafeInteger(r.total_matches) &&
+          r.total_matches > 0 &&
+          r.total_matches <= 2000)) &&
       (r.honours === undefined ||
         [r.honours.league, r.honours.challenger, r.honours.worldcup].every(
           (ids) =>
@@ -94,6 +115,9 @@ export function validRecord(input: unknown): input is TourRecord {
           r.snapshot.seasonNumber === r.season_number &&
           r.snapshot.createdAt === r.created_at &&
           T.played(r.snapshot) === r.played &&
+          (!r.chain_id || r.snapshot.career?.chainId === r.chain_id) &&
+          (r.total_matches === undefined ||
+            T.seasonTotal(r.snapshot) === r.total_matches) &&
           T.complete(r.snapshot) === (r.status === "completed")))
     );
   } catch {
@@ -106,6 +130,23 @@ export function readScope(key: string): TourRecord[] {
     return Array.isArray(rows)
       ? rows
           .filter(validRecord)
+          .filter((r, _, records) => {
+            const s = r.snapshot;
+            if (!s?.career?.previousSeasonId) return true;
+            const previous = records.find(
+              (p) => p.season_id === s.career!.previousSeasonId,
+            )?.snapshot;
+            if (!previous) return true;
+            const roster =
+              previous.worldcup.world?.groups.flatMap((g) => g.teamIds) || [];
+            return (
+              T.complete(previous) &&
+              previous.career?.chainId === s.career.chainId &&
+              previous.seasonNumber + 1 === s.seasonNumber &&
+              roster.length === 32 &&
+              [...roster].sort().join() === [...s.roster].sort().join()
+            );
+          })
           .map((r) =>
             r.snapshot &&
             V.expandedSingle(r.snapshot.league) &&
@@ -134,7 +175,10 @@ export function persist() {
       JSON.stringify(
         model.records.map((r) => ({
           ...r,
-          snapshot: r.dirty || cached.has(r.season_id) ? r.snapshot : undefined,
+          snapshot:
+            r.chain_id || r.dirty || cached.has(r.season_id)
+              ? r.snapshot
+              : undefined,
           phase: undefined,
           remoteRevision: undefined,
         })),

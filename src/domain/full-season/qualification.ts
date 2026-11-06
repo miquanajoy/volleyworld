@@ -1,3 +1,10 @@
+import {
+  meritQualification,
+  advanceMerit,
+  drawMeritIntercontinental,
+  meritEntrants,
+  meritIntercontinentalPool,
+} from "./merit";
 import { get } from "../../data/teams";
 import { winner } from "../match/scoring";
 import { shuffle } from "../shared/random";
@@ -18,7 +25,7 @@ export const qualificationGroups: Record<Region, number> = {
   CSV: 1,
 };
 export const newQualification = (s: FullSeason) =>
-  s.regionalFormat === "qualification-v2";
+  s.regionalFormat === "qualification-v2" || meritQualification(s);
 export function seedSlots(n: number): number[] {
   let slots = [1, 2];
   while (slots.length < n) {
@@ -79,7 +86,11 @@ export function createQualifier(
   return b;
 }
 export const qualifierWinner = (b: QualifierBracket | null | undefined) =>
-  b?.rounds.at(-1)?.[0]?.sets ? winner(b.rounds.at(-1)![0]) : null;
+  b?.seeds.length === 1 && b.rounds.length === 0
+    ? b.seeds[0]
+    : !b?.advanceSlots && b?.rounds.at(-1)?.[0]?.sets
+      ? winner(b.rounds.at(-1)![0])
+      : null;
 export const qualifierMatches = (
   b: QualifierBracket | null | undefined,
 ): Match[] => b?.rounds.flat() || [];
@@ -125,6 +136,10 @@ export function regionalPlayoffSeeds(g: RegionalLeague): TeamId[] {
     .map((t) => t.id);
 }
 export function advanceQualification(s: FullSeason) {
+  if (meritQualification(s)) {
+    advanceMerit(s);
+    return;
+  }
   if (!newQualification(s)) return;
   for (const r of regionOrder) {
     const g = s.regions[r];
@@ -136,6 +151,7 @@ export function advanceQualification(s: FullSeason) {
   s.intercontinental?.branches.forEach((b, i) => advanceQualifier(b, `IC${i}`));
 }
 export function intercontinentalPool(s: FullSeason) {
+  if (meritQualification(s)) return meritIntercontinentalPool(s);
   if (
     !newQualification(s) ||
     !regionOrder.every((r) => regionalDone(s.regions[r]))
@@ -161,6 +177,10 @@ const permutations = [
 ];
 export function drawIntercontinental(s: FullSeason) {
   if (s.intercontinental) throw Error("Play-in đã được bốc thăm.");
+  if (meritQualification(s)) {
+    drawMeritIntercontinental(s);
+    return;
+  }
   const seeds = intercontinentalPool(s);
   if (seeds.length !== 27) throw Error("Play-in cần đúng 27 đội.");
   const pots = Array.from({ length: 9 }, (_, i) =>
@@ -194,6 +214,7 @@ export const intercontinentalDone = (s: FullSeason) =>
   !!s.intercontinental &&
   s.intercontinental.branches.every((b) => !!qualifierWinner(b));
 export function qualificationEntrants(s: FullSeason) {
+  if (meritQualification(s)) return meritEntrants(s);
   if (!intercontinentalDone(s))
     throw Error("Cần hoàn tất cả ba nhánh Play-in liên khu vực.");
   return [

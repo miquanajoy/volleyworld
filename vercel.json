@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "npm run check",
+  "buildCommand": "if [ \"$VERCEL_ENV\" = \"preview\" ]; then VOLLEY_PREVIEW_LOCAL=1 npm run check; else npm run check; fi",
   "outputDirectory": "dist",
   "cleanUrls": true
 }

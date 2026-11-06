@@ -1,0 +1,66 @@
+import { catalog, get, regionTeams } from "../../data/teams";
+import type { Region } from "../types";
+import { regionOrder } from "../full-season/types";
+export function validCareerRoster(ids: string[]): boolean {
+  return (
+    Array.isArray(ids) &&
+    ids.length === 32 &&
+    new Set(ids).size === 32 &&
+    ids.every((id) => !!get(id)) &&
+    regionOrder.every(
+      (r) => ids.filter((id) => get(id).region === r).length <= 16,
+    )
+  );
+}
+/** Bounded proportional apportionment: 16 places, minimum one where capacity allows.
+ * The cap applies to the entire candidate population, not just eventual winners.
+ */
+export function allocateCareerSlots(
+  roster: string[],
+  season = 1,
+): Record<Region, number> {
+  if (!validCareerRoster(roster))
+    throw Error("League cần 32 đội khác nhau, tối đa 16 đội mỗi khu vực.");
+  const rows = regionOrder.map((r, i) => {
+    const inside = roster.filter((id) => get(id).region === r).length,
+      n = regionTeams(r).length - inside;
+    const cap = Math.min(n, 16 - inside);
+    return { r, i, n, cap, min: cap > 0 ? 1 : 0 };
+  });
+  let low = 0,
+    high = 16;
+  const value = (x: (typeof rows)[number], scale: number) =>
+    Math.max(x.min, Math.min(x.cap, scale * x.n));
+  for (let i = 0; i < 80; i++) {
+    const mid = (low + high) / 2;
+    if (rows.reduce((s, x) => s + value(x, mid), 0) < 16) low = mid;
+    else high = mid;
+  }
+  const values = rows.map((x) => value(x, (low + high) / 2)),
+    slots = values.map((v, i) => Math.min(rows[i].cap, Math.floor(v + 1e-9)));
+  const ranked = rows
+    .map((x, i) => ({ ...x, rem: values[i] - slots[i] }))
+    .sort(
+      (a, b) =>
+        b.rem - a.rem ||
+        b.n - a.n ||
+        ((a.i + season) % 5) - ((b.i + season) % 5),
+    );
+  let left = 16 - slots.reduce((a, b) => a + b, 0);
+  for (const x of ranked) {
+    if (left && slots[x.i] < x.cap) {
+      slots[x.i]++;
+      left--;
+    }
+  }
+  if (left !== 0 || slots.some((q, i) => q < rows[i].min || q > rows[i].cap))
+    throw Error("Không thể phân đủ 16 suất tuyển chọn.");
+  return Object.fromEntries(rows.map((x, i) => [x.r, slots[i]])) as Record<
+    Region,
+    number
+  >;
+}
+export const outsideCareerTeams = (roster: string[], r: Region) =>
+  catalog
+    .filter((t) => t.region === r && !roster.includes(t.id))
+    .map((t) => t.id);

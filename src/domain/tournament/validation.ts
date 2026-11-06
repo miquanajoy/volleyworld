@@ -38,7 +38,8 @@ export function validState(input: unknown): input is Tournament {
     const slots = entrySlots(s);
     if (
       s?.version !== 1 ||
-      !validRoster(ids(s)) ||
+      (s.career !== undefined && s.career !== true) ||
+      !validRoster(ids(s), s.career === true) ||
       !Array.isArray(s.rounds) ||
       s.rounds.length !== 31 ||
       !Array.isArray(s.tie) ||

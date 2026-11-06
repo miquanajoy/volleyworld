@@ -1,5 +1,6 @@
 import type { SeasonRecord, SeasonTournament } from "../domain/types";
 export interface CloudConfiguration {
+  previewLocal?: boolean;
   supabaseUrl?: string;
   supabaseKey?: string;
 }

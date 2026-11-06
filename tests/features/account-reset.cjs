@@ -61,6 +61,7 @@ const assert = require("node:assert/strict"),
   tour.enter();
   tour.create();
   tour.start();
+  tour.start();
   let requests = 0;
   const cloud = {
     from() {
@@ -87,6 +88,7 @@ const assert = require("node:assert/strict"),
   };
   await tour.tourCloud.switchAccount(cloud, "A");
   tour.create();
+  tour.start();
   tour.start();
   const token = tour.model.token;
   tour.tourCloud.suspend();

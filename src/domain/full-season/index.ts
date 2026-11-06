@@ -1,3 +1,4 @@
+import { regionalTourMatches } from "../career/regional-tour";
 import { regionTeams } from "../../data/teams";
 import { simulate } from "../match/simulation";
 import type { Match, SetScore } from "../types";
@@ -21,6 +22,13 @@ export * from "./league";
 export * from "./world";
 export * from "./regional";
 export * from "./berths";
+export {
+  careerRegionEntrants,
+  careerRegionalLayout,
+  careerRegionalDone,
+  careerRegionalTotal,
+} from "../career/regionals";
+export { careerConfirmed, careerPlayinDone } from "../career/playin";
 import {
   newQualification,
   qualifierMatches,
@@ -29,6 +37,7 @@ import {
   intercontinentalDone,
 } from "./qualification";
 export * from "./qualification";
+export * from "./merit";
 import { freshRegion, advanceRegions } from "./regional";
 export function freshFullSeason(
   number = 1,
@@ -65,8 +74,13 @@ export function fullMatches(s: FullSeason): Match[] {
       ...leagueMatches(s.regions[r]),
       ...(s.regions[r].decider ? [s.regions[r].decider!] : []),
       ...qualifierMatches(s.regions[r].playoff),
+      ...(s.regions[r].qualifierBranches?.flatMap(qualifierMatches) || []),
     ]),
+    ...regionalTourMatches(s),
     ...(s.intercontinental?.branches.flatMap(qualifierMatches) || []),
+    ...(s.career?.playin
+      ? [...s.career.playin.preliminary, ...s.career.playin.final]
+      : []),
     ...(s.world?.groups.flatMap(leagueMatches) || []),
     ...worldStages.flatMap((k) => s.world?.bracket?.[k] || []),
   ];

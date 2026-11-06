@@ -1,3 +1,4 @@
+const { startMeritFixture } = require("../support/tour-fixtures.cjs");
 const assert = require("node:assert/strict"),
   F = require("../../.test-build/tour-engine.js"),
   { ui } = require("../support/tour-harness.cjs");
@@ -114,14 +115,14 @@ function meta(r) {
     d = t.w.document;
   full.enter();
   full.create();
-  full.start();
+  startMeritFixture(full);
   const guest = t.w.localStorage.getItem("volleyworld-tour-guest");
   assert(guest);
   await full.tourCloud.switchAccount(service("A"), "A");
   assert.equal(full.model.records.length, 0);
   assert.equal(t.w.localStorage.getItem("volleyworld-tour-guest"), guest);
   full.create();
-  full.start();
+  startMeritFixture(full);
   let row = full.model.records[0],
     id = row.season_id;
   let saved = await full.tourCloud.saveNow();
@@ -155,7 +156,7 @@ function meta(r) {
   await full.tourCloud.resolve(true);
   row = full.model.records[0];
   assert.equal(row.status, "completed");
-  assert.equal(row.played, 964);
+  assert.equal(row.played, 948);
   assert.equal(row.revision, 3);
   assert(!row.dirty);
   assert(F.validTour(row.snapshot));
@@ -194,7 +195,7 @@ function meta(r) {
   assert.equal(remote.get("B").size, 1);
   // A write already in flight for B does not acknowledge or replace C's progress.
   full.create();
-  full.start();
+  startMeritFixture(full);
   let unblock;
   delayedWrite = new Promise((r) => (unblock = r));
   const writing = full.tourCloud.saveNow();
@@ -207,7 +208,7 @@ function meta(r) {
   assert.equal(full.model.records.length, 0);
   // Number collisions at creation are rebased on a refresh rather than overwriting a season.
   full.create();
-  full.start();
+  startMeritFixture(full);
   row = full.model.records[0];
   const other = F.freshTour(1);
   remote.set(
@@ -278,6 +279,26 @@ function meta(r) {
   await tick();
   assert.equal(full.model.records.length, 0);
   assert.equal(full.model.scope, "volleyworld-tour-user-I");
+  full.create();
+  full.start();
+  full.start();
+  const localCareer = full.selected().snapshot;
+  assert(F.regionalFormat(localCareer));
+  full.resume();
+  full.simRound();
+  const careerSave = await full.tourCloud.saveNow();
+  assert.equal(careerSave.status, "local");
+  assert(!remote.get("I")?.has(localCareer.seasonId));
+  await full.tourCloud.reload();
+  assert.equal(full.selected().snapshot.seasonId, localCareer.seasonId);
+  await full.tourCloud.switchAccount(service("H"), "H");
+  assert(!full.model.records.some((r) => r.season_id === localCareer.seasonId));
+  await full.tourCloud.switchAccount(service("I"), "I");
+  assert(
+    full.model.records.some(
+      (r) => r.season_id === localCareer.seasonId && r.played === 16,
+    ),
+  );
   t.close();
   console.log(
     "PASS Tour cloud: account-scoped guest retention, CAS/offline retry, explicit conflict/immutable remote history, lazy snapshots, cross-account stale reads/writes, import as new seasons and creation-number collisions",

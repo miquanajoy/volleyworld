@@ -13,7 +13,7 @@ import type { ChallengerSeason } from "./types";
 export * from "./types";
 export const challengerRoster = () =>
   [...defaultIds].sort((a, b) => get(a).rank - get(b).rank);
-export function validChallengerRoster(ids: string[]): boolean {
+export function validChallengerRoster(ids: string[], career = false): boolean {
   if (
     !Array.isArray(ids) ||
     ids.length !== 32 ||
@@ -23,7 +23,7 @@ export function validChallengerRoster(ids: string[]): boolean {
     return false;
   return Object.entries(limits).every(([region, limit]) => {
     const n = ids.filter((id) => get(id).region === region).length;
-    return n >= limit.min && n <= Math.min(limit.max, 16);
+    return career ? n <= 16 : n >= limit.min && n <= Math.min(limit.max, 16);
   });
 }
 /** Bipartite matching keeps both seed protection and regional separation. */
@@ -51,14 +51,16 @@ function openingOpponents(roster: TeamId[]) {
 export function freshChallenger(
   number = 1,
   selected = challengerRoster(),
+  career = false,
 ): ChallengerSeason {
-  if (!validChallengerRoster(selected))
+  if (!validChallengerRoster(selected, career))
     throw Error("Chọn đủ 32 đội và đúng giới hạn khu vực.");
   const roster = [...selected].sort((a, b) => get(a).rank - get(b).rank),
     lower = openingOpponents(roster);
   return {
     version: 1,
     mode: "challenger",
+    ...(career ? { career: true as const } : {}),
     seasonId: crypto.randomUUID(),
     seasonNumber: number,
     createdAt: new Date().toISOString(),

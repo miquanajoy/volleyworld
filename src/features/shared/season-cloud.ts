@@ -66,6 +66,7 @@ interface CloudConfig<S extends SeasonIdentity, R extends ArchiveRecord<S>> {
     revision: number,
   ) => ReturnType<typeof writeFullSeason>;
   sameSlot?: (a: R, b: R) => boolean;
+  localOnly?: (row: R) => boolean;
   parentId?: (s: S) => string | null;
 }
 /** Shared CAS, offline retry and account isolation for multi-season modes. */
@@ -139,7 +140,14 @@ export function createSeasonCloud<
     if (uid) await reload();
   }
   function writerFor(row: R) {
-    if (!client || !uid || !ready || row.phase === "conflict") return null;
+    if (
+      config.localOnly?.(row) ||
+      !client ||
+      !uid ||
+      !ready ||
+      row.phase === "conflict"
+    )
+      return null;
     const existing = writers.get(row.season_id);
     if (existing && !existing.paused) return existing;
     existing?.close();
@@ -228,6 +236,7 @@ export function createSeasonCloud<
         ...model.records.map((r) => r.season_number),
       );
       for (const row of model.records) {
+        if (config.localOnly?.(row)) continue;
         const online = remote.find((r) => r.season_id === row.season_id);
         const sameSlot =
           !online &&
@@ -304,7 +313,7 @@ export function createSeasonCloud<
   }
   async function resolve(useRemote: boolean) {
     const row = selectedFull();
-    if (!row || !uid || !client) return;
+    if (!row || config.localOnly?.(row) || !uid || !client) return;
     const token = model.token,
       scope = model.scope,
       { data, error } = await config.fetch(
@@ -362,6 +371,15 @@ export function createSeasonCloud<
     initialize();
     const local = persistFull(),
       token = model.token;
+    const active = selectedFull();
+    if (active && config.localOnly?.(active)) {
+      toast(
+        local
+          ? `Đã lưu ${config.label} trên thiết bị. Dùng Xuất mùa để giữ bản sao.`
+          : `Chưa lưu được. Hãy xuất file ${config.label}.`,
+      );
+      return { local, online: false, status: local ? "local" : "error" };
+    }
     if (!uid) {
       toast(
         local

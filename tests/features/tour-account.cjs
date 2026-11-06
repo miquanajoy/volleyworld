@@ -1,3 +1,4 @@
+const { startMeritFixture } = require("../support/tour-fixtures.cjs");
 const assert = require("node:assert/strict"),
   { ui } = require("../support/tour-harness.cjs");
 const tick = () => new Promise((r) => setTimeout(r, 10));
@@ -48,7 +49,7 @@ const tick = () => new Promise((r) => setTimeout(r, 10));
   await account.switchUser({ id: "A", email: "a@example.invalid" });
   assert.equal(api.model.scope, "volleyworld-tour-user-A");
   api.create();
-  api.start();
+  startMeritFixture(api);
   await account.manualSave();
   assert.equal(writes.length, 1);
   assert.equal(writes[0].uid, "A");
@@ -72,7 +73,7 @@ const tick = () => new Promise((r) => setTimeout(r, 10));
   assert.equal(api.model.records.length, 0);
   assert(!state.resetPending);
   api.create();
-  api.start();
+  startMeritFixture(api);
   await account.manualSave();
   assert.equal(writes.at(-1).uid, "B");
   assert.notEqual(writes.at(-1).id, oldId);

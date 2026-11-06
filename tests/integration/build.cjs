@@ -37,6 +37,7 @@ const fs = require("node:fs"),
   w.HTMLDialogElement.prototype.close = function () {
     this.open = false;
   };
+  const networkCalls = [];
   Object.assign(w, {
     TextEncoder,
     TextDecoder,
@@ -44,7 +45,8 @@ const fs = require("node:fs"),
     Request,
     Response,
     AbortController,
-    fetch: async () => {
+    fetch: async (...args) => {
+      networkCalls.push(args[0]);
       throw Error("Unexpected network in guest build test");
     },
   });
@@ -110,7 +112,9 @@ const fs = require("node:fs"),
   click('[data-action="Tour.create"]');
   assert(w.document.querySelector(".tour-selection-intro"));
   click('[data-action="Tour.start"]');
-  assert.equal(w.document.querySelectorAll(".tour-journey-card").length, 8);
+  assert(w.document.querySelector("[data-regional-setup]"));
+  click('[data-action="Tour.start"]');
+  assert.equal(w.document.querySelectorAll(".tour-journey-card").length, 10);
   click('[data-action="Tour.viewStage"][data-arg="0"]');
   click('[data-action="Tour.edit"]');
   assert(w.document.getElementById("editor").open);
@@ -126,13 +130,33 @@ const fs = require("node:fs"),
     .getElementById("scoreForm")
     .dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
   assert(!w.document.getElementById("editor").open);
-  let record = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
+  const preview = !!w.document.querySelector("[data-preview-local]");
+  if (process.env.VOLLEY_PREVIEW_LOCAL === "1")
+    assert(preview, "Preview build must display local-only notice");
+  const storageKey = preview
+    ? "volleyworld-tour-merit-preview-guest"
+    : "volleyworld-tour-guest";
+  if (preview) {
+    click('[data-action="Cloud.open"]');
+    assert(
+      !w.document.querySelector("#loginForm"),
+      "Preview has no login or real account writes",
+    );
+    assert(
+      w.document
+        .querySelector("#cloudContent")
+        .textContent.includes("chơi thử độc lập"),
+    );
+    w.document.getElementById("cloudDialog").close();
+  }
+  let record = JSON.parse(w.localStorage.getItem(storageKey))[0];
   assert.equal(record.played, 1);
   assert.equal(record.snapshot.league.playoffEntry, undefined);
   click('[data-action="Tour.simRound"]');
-  record = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
+  record = JSON.parse(w.localStorage.getItem(storageKey))[0];
   assert.equal(record.played, 16);
-  assert.equal(record.total_matches, 964);
+  assert(record.snapshot.career);
+  assert(record.total_matches > 0);
   click('[data-action="Tour.section"][data-arg="table"]');
   assert.equal(
     w.document.querySelectorAll(".tour-standings tbody tr").length,
@@ -151,26 +175,51 @@ const fs = require("node:fs"),
   await new Promise((r) => setTimeout(r, 10));
   assert(w.document.getElementById("toast").textContent.includes("Tour"));
   click('[data-action="Tour.finish"]');
-  record = JSON.parse(w.localStorage.getItem("volleyworld-tour-guest"))[0];
-  assert.equal(record.played, 964);
+  record = JSON.parse(w.localStorage.getItem(storageKey))[0];
+  assert.equal(record.played, record.total_matches);
+  assert.equal(record.snapshot.worldcup.world.groups.length, 8);
   assert.equal(record.status, "completed");
   assert.equal(
     w.document.querySelectorAll(".tour-champions > section").length,
     3,
   );
   assert.equal(w.document.querySelectorAll("[data-medal-place]").length, 9);
+  const previous = record.snapshot;
+  click('[data-action="Tour.nextSeason"]');
+  assert(w.document.querySelector("[data-regional-setup]"));
+  click('[data-action="Tour.start"]');
+  const records = JSON.parse(w.localStorage.getItem(storageKey));
+  assert.equal(records.length, 2);
+  assert.equal(records[1].snapshot.career.previousSeasonId, previous.seasonId);
+  assert.deepEqual(
+    [...records[1].snapshot.roster].sort(),
+    previous.worldcup.world.groups.flatMap((g) => g.teamIds).sort(),
+  );
+  assert.equal(w.document.querySelector(".tour-selection-intro"), null);
   click('[data-action="Tour.achievements"]');
   assert.equal(w.document.querySelectorAll(".tour-country-card").length, 39);
   click('[data-action="Tour.achievementTeam"]');
   assert.equal(
     w.document.querySelectorAll("[data-achievement-season]").length,
-    1,
+    2,
   );
   assert.equal(w.localStorage.getItem("volleyworld-v1"), null);
+  if (preview) {
+    assert.equal(
+      networkCalls.length,
+      0,
+      "Preview never connects to auth or production database",
+    );
+    assert.equal(
+      w.localStorage.getItem("volleyworld-tour-guest"),
+      null,
+      "Preview does not use production guest storage",
+    );
+  }
   assert.equal(errors.length, 0, errors.map(String).join("\n"));
   dom.window.close();
   console.log(
-    "PASS production single-mode Tour: real Vite ESM/SDK, no standalone lobby/save, fixed original playoffs, per-set/forced editor, friendly team history, nine medals across three titles, team achievements and manual save",
+    "PASS local career Tour production bundle: real Vite ESM/SDK, no network writes, World Cup32, inherited next season, per-set/forced editor, nine medals and team history",
   );
 })().catch((e) => {
   console.error(e);

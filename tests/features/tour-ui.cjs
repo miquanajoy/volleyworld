@@ -2,7 +2,7 @@ const assert = require("node:assert/strict"),
   T = require("../../.test-build/tour-engine.js"),
   V = require("../../.test-build/engine.js"),
   { ui } = require("../support/tour-harness.cjs");
-const t = ui("new", 81731),
+const t = ui("local", 81731),
   d = t.w.document,
   api = t.w.__tour;
 const click = (selector) => {
@@ -28,6 +28,12 @@ click(`[data-action="Tour.toggleTeam"][data-arg="${outgoing}"]`);
 assert(d.querySelector('[data-action="Tour.start"]').disabled);
 click(`[data-action="Tour.toggleTeam"][data-arg="${incoming}"]`);
 click('[data-action="Tour.start"]');
+click('[data-action="Tour.start"]');
+// Legacy calendar regression fixture; new production start is covered by tour-career-ui.
+const legacyFixture = T.freshTour(1, [...api.selected().snapshot.roster]);
+api.model.records[0] = api.recordOf(legacyFixture);
+api.model.selected = legacyFixture.seasonId;
+api.section("journey");
 const id = api.selected().season_id;
 assert(api.selected().snapshot.roster.includes(incoming));
 assert(!api.selected().snapshot.roster.includes(outgoing));
@@ -393,7 +399,14 @@ for (let stage = 0; stage < 8; stage++) {
     );
   }
   if (api.model.section === "journey") select("matches");
-  click('[data-action="Tour.finishStage"]');
+  if (api.selected().snapshot.stage === 1) {
+    const previousRegion = api.model.region;
+    for (const region of ["CEV", "AVC", "NORCECA", "CAVB", "CSV"]) {
+      api.region(region);
+      api.finishStage();
+    }
+    api.region(previousRegion);
+  } else api.finishStage();
   assert(T.stageDone(api.selected().snapshot));
   assert(T.validTour(api.selected().snapshot));
   if (stage === 1) {
@@ -501,7 +514,7 @@ click('[data-action="Tour.achievementTeam"][data-arg=""]');
 assert.equal(d.querySelectorAll(".tour-country-card").length, 39);
 const data = t.data();
 t.close();
-const reload = ui("new", 81732, data),
+const reload = ui("local", 81732, data),
   restored = reload.w.__tour;
 restored.enter();
 restored.open(id);

@@ -1,4 +1,5 @@
 import type { TourRecord } from "./model";
+import * as T from "../../domain/tour/index";
 import type { TourSeason } from "../../domain/tour/index";
 import * as V from "../../domain/index";
 import * as C from "../../domain/challenger/index";
@@ -90,6 +91,20 @@ export function resultFor(
   }
   const w = s.worldcup.world;
   if (!w) {
+    if (T.career(s)) {
+      const state = T.careerStatus(s);
+      return state.qualified.length === 32 && !state.qualified.includes(id)
+        ? { kind: "absent", description: "Không giành vé World Cup" }
+        : {
+            kind: "pending",
+            description:
+              state.automatic.includes(id) || state.qualified.includes(id)
+                ? "Đã giành vé World Cup"
+                : s.stage >= 1
+                  ? "Đang vòng loại"
+                  : "Chưa khởi tranh",
+          };
+    }
     if (
       F.intercontinentalDone(s.worldcup) &&
       !F.qualificationEntrants(s.worldcup).includes(id)

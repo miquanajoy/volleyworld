@@ -6,7 +6,13 @@ Tour combines World League, Challenger and World Cup into one independently save
 
 Before creating a season, choose exactly 32 national teams: Europe 7, Asia/Oceania 7, South America 6, North/Central America/Caribbean 7, Africa 5. Defaults use the catalog's highest regional ranks. League and Challenger share this roster for the entire season. World Cup qualification still includes all 100 catalog teams, including countries outside this selection.
 
-## Calendar
+## New seasons: World Cup 32 career
+
+New seasons on `feature/world-cup-merit-berths` use `rules: "career-v1"`: Challenger finalists and all 16 League playoff entrants qualify, a capped outside-League regional path feeds World Cup Play-in, and World Cup expands to eight groups with top-two qualification only. Its 32 entrants become the next League/Challenger roster. See [the complete career rules](TOUR-CAREER32.md). First-season totals are 833 matches; later totals vary with regional rosters. Preview remains local-only, with export/import and no production database writes.
+
+Existing `merit-v1` seasons retain the prior [24-team merit rules](WORLD-CUP-MERIT.md). Saves without a marker retain the legacy calendar below. The shared roster selection described above applies to the first career season only.
+
+## Legacy calendar
 
 | Stage | Competition                      | Completion gate                                                                    |
 | ----- | -------------------------------- | ---------------------------------------------------------------------------------- |

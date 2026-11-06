@@ -1,3 +1,5 @@
+import { careerConfirmed } from "../career/playin";
+import { meritQualification, meritDirect } from "./merit";
 import { winner } from "../match/scoring";
 import { get } from "../../data/teams";
 import type { Region } from "../types";
@@ -9,13 +11,14 @@ import { qualifierWinner } from "./qualification";
 export interface WorldCupBerth {
   readonly id: string;
   readonly region: Region;
-  readonly route: "group" | "regional-playoff" | "playin";
+  readonly route:
+    "group" | "regional-playoff" | "playin" | "league" | "challenger";
   readonly label: string;
 }
 export interface WorldCupBerths {
   readonly teams: readonly WorldCupBerth[];
   readonly total: number;
-  readonly capacity: 24;
+  readonly capacity: 24 | 32;
 }
 // Result-identical clones (e.g. a League result) must not repeat qualification searches.
 // Include every ranking input so score corrections and historical views cannot use stale proof.
@@ -37,6 +40,30 @@ function directQualifiers(g: FullLeague, slots: number): readonly string[] {
 }
 /** Only mathematically confirmed berths count; a regional playoff place is not a WC berth. */
 export function worldCupBerths(s: FullSeason): WorldCupBerths {
+  if (s.regionalFormat === "career-v1") {
+    const p = s.career?.playin;
+    const teams = careerConfirmed(s).map((id) =>
+      Object.freeze({
+        id,
+        region: get(id).region,
+        route: (p?.challenger.includes(id)
+          ? "challenger"
+          : p?.league16.includes(id)
+            ? "league"
+            : "playin") as WorldCupBerth["route"],
+        label: p?.challenger.includes(id)
+          ? "Top 2 Challenger · Vé World Cup"
+          : p?.league16.includes(id)
+            ? "Playoff League · Vé World Cup"
+            : "Thắng World Cup Play-in",
+      }),
+    );
+    return Object.freeze({
+      teams: Object.freeze(teams),
+      total: teams.length,
+      capacity: 32,
+    });
+  }
   const entrants = new Map<string, WorldCupBerth>();
   const add = (id: string, route: WorldCupBerth["route"], label: string) => {
     if (!entrants.has(id))
@@ -45,6 +72,14 @@ export function worldCupBerths(s: FullSeason): WorldCupBerths {
         Object.freeze({ id, region: get(id).region, route, label }),
       );
   };
+  if (meritQualification(s))
+    s.automatic?.forEach((id, i) =>
+      add(
+        id,
+        i === 0 ? "league" : "challenger",
+        i === 0 ? "Vô địch League · Vé đặc cách" : "Vé đặc cách Challenger",
+      ),
+    );
   for (const r of regionOrder) {
     const region = s.regions[r],
       groups = region.groups
@@ -54,13 +89,15 @@ export function worldCupBerths(s: FullSeason): WorldCupBerths {
       region.directSlots ||
       (region.groups ? groupDirectSlots[r] : worldSlots[r]);
     groups.forEach((g, i) => {
-      for (const id of directQualifiers(g, slots))
+      for (const id of meritQualification(s) && s.automatic
+        ? meritDirect(s, r).filter((id) => g.teamIds.includes(id))
+        : directQualifiers(g, slots))
         add(
           id,
           "group",
           r === "CSV"
             ? `Top ${slots} Nam Mỹ · Vé trực tiếp`
-            : `${slots === 1 ? "Nhất" : "Top " + slots} bảng ${String.fromCharCode(65 + i)} · Vé trực tiếp`,
+            : `${slots === 1 ? (meritQualification(s) ? "Suất" : "Nhất") : "Top " + slots} bảng ${String.fromCharCode(65 + i)} · Vé trực tiếp`,
         );
     });
     const decider = region.decider && winner(region.decider);

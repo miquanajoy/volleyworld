@@ -13,7 +13,7 @@ export const quotas = (list: TeamId[]): RegionQuotas =>
     ]),
   ) as RegionQuotas;
 
-export function validRoster(list: string[]): boolean {
+export function validRoster(list: string[], career = false): boolean {
   if (
     !Array.isArray(list) ||
     list.length !== 32 ||
@@ -22,6 +22,7 @@ export function validRoster(list: string[]): boolean {
   )
     return false;
   let q = quotas(list);
+  if (career) return (Object.keys(limits) as Region[]).every((r) => q[r] <= 16);
   return (Object.keys(limits) as Region[]).every(
     (r) => q[r] >= limits[r].min && q[r] <= limits[r].max,
   );

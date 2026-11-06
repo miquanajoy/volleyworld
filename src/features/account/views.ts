@@ -1,12 +1,13 @@
 import { esc } from "../../shared/dom";
-import { accountState, configured, el } from "./model";
+import { accountState, configured, el, cfg } from "./model";
 import { login } from "./controller";
 import { model } from "../tour/model";
 export function draw() {
   const target = el("cloudContent");
   if (!configured) {
-    target.innerHTML =
-      '<p class="cloud-message">Bạn đang chơi trên thiết bị. Có thể xuất file để giữ bản sao mùa giải.</p>';
+    target.innerHTML = cfg.previewLocal
+      ? '<p class="cloud-message">Đây là bản chơi thử độc lập. Tiến trình chỉ lưu trong trình duyệt này, không đăng nhập hay đồng bộ với tài khoản thật. Dùng Xuất tiến độ để giữ bản sao hoặc chuyển sang thiết bị khác.</p>'
+      : '<p class="cloud-message">Bạn đang chơi trên thiết bị. Có thể xuất file để giữ bản sao mùa giải.</p>';
     return;
   }
   if (!accountState.client) {

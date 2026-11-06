@@ -8,10 +8,11 @@ import { validRoster } from "./roster";
 export function fresh(
   selected: string[] = defaultIds,
   playoffFormat: PlayoffFormat = "single",
+  career = false,
 ): SeasonTournament {
   if (!["single", "double"].includes(playoffFormat))
     throw Error("Thể thức playoff không hợp lệ.");
-  if (!validRoster(selected))
+  if (!validRoster(selected, career))
     throw Error("Danh sách cần đủ 32 đội, không trùng, đúng giới hạn khu vực.");
   let ring = shuffle(selected),
     rounds = [];
@@ -25,6 +26,7 @@ export function fresh(
   return ensureSeason(
     {
       version: 1,
+      ...(career ? { career: true as const } : {}),
       playoffFormat,
       teamIds: [...selected],
       rounds,
