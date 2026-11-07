@@ -248,7 +248,13 @@ const assert = require("node:assert/strict"),
   restored.w.__tour.open(second);
   assert(restored.w.__tour.selected().snapshot);
   restored.close();
-  api.requestReset(first);
+  api.enter();
+  const restart = d.querySelector(
+    '.tour-hero [data-action="Tour.requestReset"]',
+  );
+  assert(restart, "Restart is visible on the Tour home page");
+  assert(!restart.closest("details"), "Restart is not hidden inside a menu");
+  restart.click();
   assert(d.querySelector('[role="alertdialog"]'));
   api.cancelReset();
   assert.equal(api.model.records.length, 2);
@@ -280,6 +286,20 @@ const assert = require("node:assert/strict"),
     "Reset clears all Tour seasons, including legacy history",
   );
   assert(api.model.setup, "Reset returns to first-season selection");
+  api.cancelSetup();
+  assert(
+    !d.querySelector('[data-action="Tour.requestReset"]'),
+    "Empty history has no restart button",
+  );
+  api.model.records.push(legacy);
+  api.persist();
+  api.enter();
+  d.querySelector('.tour-hero [data-action="Tour.requestReset"]').click();
+  assert(
+    d.querySelector('[role="alertdialog"]'),
+    "Legacy-only history can also be reset",
+  );
+  await api.confirmReset("discard");
   assert.equal(
     JSON.parse(t.w.localStorage.getItem(api.model.scope) || "[]").length,
     0,
