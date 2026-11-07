@@ -3,6 +3,7 @@ import {
   listTourSeasons,
   fetchTourSeason,
   writeTourSeason,
+  deleteTourSeasons,
 } from "../../data/repositories/tour-seasons";
 import { validTour, complete } from "../../domain/tour/index";
 import {
@@ -32,4 +33,5 @@ export const tourCloud = createSeasonCloud({
   list: listTourSeasons,
   fetch: fetchTourSeason,
   write: writeTourSeason,
+  deleteAll: deleteTourSeasons,
 });
