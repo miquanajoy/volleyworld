@@ -17,6 +17,17 @@ function service(uid) {
       const filters = {};
       let columns = "";
       const q = {
+        delete() {
+          return {
+            async eq(key, value) {
+              assert.equal(key, "user_id");
+              assert.equal(value, uid);
+              if (offline) return { error: { message: "offline" } };
+              remote.delete(uid);
+              return { error: null };
+            },
+          };
+        },
         select(s) {
           columns = s;
           return q;
@@ -299,6 +310,65 @@ function meta(r) {
       (r) => r.season_id === localCareer.seasonId && r.played === 16,
     ),
   );
+  // Restart clears every Tour season, including old cloud honours, only for this account.
+  const oldArchive = F.freshTour(9);
+  F.finishTour(oldArchive);
+  remote.set(
+    "I",
+    new Map([
+      [
+        oldArchive.seasonId,
+        {
+          state: oldArchive,
+          revision: 1,
+          updated_at: new Date().toISOString(),
+        },
+      ],
+    ]),
+  );
+  await full.tourCloud.reload();
+  const beforeReset = t.w.localStorage.getItem(full.model.scope);
+  full.requestReset(localCareer.seasonId);
+  offline = true;
+  await full.confirmReset("discard");
+  assert.equal(
+    full.model.records.length,
+    2,
+    "Failed remote deletion preserves history",
+  );
+  assert.equal(t.w.localStorage.getItem(full.model.scope), beforeReset);
+  assert(full.model.reset, "Failed reset remains retryable");
+  offline = false;
+  await full.confirmReset("discard");
+  assert.equal(full.model.records.length, 0);
+  assert.equal(full.model.setup.ids.length, 32);
+  assert.equal(full.model.selected, null);
+  assert.equal(t.w.localStorage.getItem(full.model.scope + "-backups"), null);
+  await full.tourCloud.reload();
+  assert.equal(
+    full.model.records.length,
+    0,
+    "Old honours do not reappear on sync",
+  );
+  assert.equal(remote.get("H").size, 8, "Other accounts remain intact");
+  assert.equal(t.w.localStorage.getItem("volleyworld-tour-guest"), guest);
+
+  // An in-flight write finishes before deletion and cannot recreate the cleared archive.
+  await full.tourCloud.switchAccount(service("J"), "J");
+  full.create();
+  startMeritFixture(full);
+  let releaseSave;
+  delayedWrite = new Promise((resolve) => (releaseSave = resolve));
+  const saving = full.tourCloud.saveNow();
+  const resetting = full.tourCloud.resetAll();
+  await tick();
+  releaseSave();
+  await Promise.all([saving, resetting]);
+  delayedWrite = null;
+  assert(!remote.get("J")?.size);
+  assert.equal(full.model.records.length, 0);
+  await full.tourCloud.reload();
+  assert.equal(full.model.records.length, 0);
   t.close();
   console.log(
     "PASS Tour cloud: account-scoped guest retention, CAS/offline retry, explicit conflict/immutable remote history, lazy snapshots, cross-account stale reads/writes, import as new seasons and creation-number collisions",

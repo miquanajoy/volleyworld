@@ -33,3 +33,5 @@ export const writeTourSeason = (
     p_state: state,
     p_expected_revision: revision,
   });
+export const deleteTourSeasons = (client: SupabaseClient, uid: string) =>
+  client.from("volleyworld_tour_seasons").delete().eq("user_id", uid);
