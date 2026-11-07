@@ -106,7 +106,7 @@ export function regionalDoublePreview(
       if (round === plan.length - 1) {
         const final = bracket.rounds[round - 1]?.[0];
         if (!final?.sets || winner(final) === final.a) {
-          slots.set(id, [undefined, undefined]);
+          slots.set(id, sides);
           continue;
         }
       }

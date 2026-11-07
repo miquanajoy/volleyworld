@@ -100,20 +100,20 @@ export function regionalTourHtml(s: T.TourSeason, v: TourViewState) {
           .map((pair, j) => {
             const id = stage.id + "-" + j,
               m = bracket?.rounds[i]?.find((x) => x.id === id) || null;
-            const route = pair
-              .map((source) =>
-                typeof source === "object" && source
-                  ? (source.loss ? "Thua " : "Thắng ") + code(source.id)
-                  : source
-                    ? V.get(source).name
-                    : "Miễn đấu",
-              )
-              .join(" × ");
+            const routes = pair.map((source) =>
+              typeof source === "object" && source
+                ? (source.loss ? "Thua " : "Thắng ") + code(source.id)
+                : source
+                  ? V.get(source).name
+                  : "Miễn đấu",
+            );
+            const route = routes.join(" × ");
             const tile = fixture(
               m,
               `${code(id)} · BO5`,
-              decided || (!!bracket?.rounds[i] && !m),
+              decided,
               preview.get(id),
+              routes,
             );
             const classes = kind === "upper" ? "tree-node" : "lower-tree-node";
             const links =
@@ -133,7 +133,7 @@ export function regionalTourHtml(s: T.TourSeason, v: TourViewState) {
     nav +
     capacityNote +
     namesPanel +
-    `<div class="double-overview" data-regional-double>${panel("upper", "Nhánh thắng", "Thua lần đầu chuyển xuống nhánh thua.")}${panel("lower", "Nhánh thua", decided ? "Đã chốt đủ đại diện. Các trận không cần thiết không được mở." : "Thua lần hai bị loại. Cùng vòng bị loại thì xét BXH Phase 1.")}${!decided || plan.some((p, i) => p.kind === "grand" && bracket?.rounds[i]?.length) ? panel("grand", "Chung kết tổng", "Chỉ mở nếu vẫn cần phân định vé.") : ""}</div>`
+    `<div class="double-overview" data-regional-double>${panel("upper", "Nhánh thắng", "Thua lần đầu chuyển xuống nhánh thua.")}${panel("lower", "Nhánh thua", decided ? "Đã chốt đủ đại diện. Các trận không cần thiết không được mở." : "Thua lần hai bị loại. Cùng vòng bị loại thì xét BXH Phase 1.")}${panel("grand", "Cặp đấu cuối", "Chỉ diễn ra nếu vẫn cần phân định vé.")}</div>`
   );
 }
 function fixture(
@@ -141,9 +141,10 @@ function fixture(
   label: string,
   closed: boolean,
   known?: [string | null | undefined, string | null | undefined],
+  routes?: string[],
 ) {
   if (!m)
-    return `<div class="bracket-match is-waiting" aria-disabled="true"><span class="bracket-match-head"><span>${label}</span><span class="bracket-state">${closed ? "Không cần thi đấu" : known?.every((id) => !!id) ? "Chờ lịch thi đấu" : "Chờ đối thủ"}</span></span>${(known || [undefined, undefined]).map((id) => `<span class="bracket-team-line"><span class="bracket-team-name">${id ? team(id) : `<span class="waiting-team-icon">?</span><span>${id === null ? "Miễn đấu" : "Chờ kết quả"}</span>`}</span><b class="bracket-set-score">–</b></span>`).join("")}</div>`;
+    return `<div class="bracket-match is-waiting ${closed ? "is-cancelled" : ""}" aria-disabled="true"><span class="bracket-match-head"><span>${label}</span><span class="bracket-state">${closed ? "Cặp đấu không diễn ra" : known?.some((id) => id === null) ? "Miễn đấu" : known?.every((id) => !!id) ? "Chờ lịch thi đấu" : "Chờ đối thủ"}</span></span>${(known || [undefined, undefined]).map((id, i) => `<span class="bracket-team-line"><span class="bracket-team-name">${id ? team(id) : `<span class="waiting-team-icon">?</span><span>${id === null ? "Miễn đấu" : routes?.[i] || "Chờ kết quả"}</span>`}</span><b class="bracket-set-score">${closed ? "X" : "–"}</b></span>`).join("")}</div>`;
   const points = V.score(m),
     win = m.sets && V.winner(m);
   return `<button class="bracket-match ${m.sets ? "is-finished" : ""}" data-action="Tour.match" data-arg="${m.id}"><span class="bracket-match-head"><span>${label}</span><span class="bracket-state">${m.sets ? "✓ Đã đấu" : "Chi tiết ↗"}</span></span>${[m.a, m.b].map((id, i) => `<span class="bracket-team-line ${win === id ? "is-winner" : win ? "is-loser" : ""}"><span class="bracket-team-name">${team(id)}</span><b class="bracket-set-score">${m.sets ? points[i] : "–"}</b></span>`).join("")}</button>`;

@@ -2980,3 +2980,17 @@
   display: grid;
   gap: 4px;
 }
+
+/* Qualification stops leave visible routes without inventing match results. */
+.regional-double-nodes .bracket-match.is-cancelled {
+  background: #f2f3ef;
+  border-style: dashed;
+  box-shadow: none;
+}
+.regional-double-nodes .is-cancelled .bracket-state {
+  color: #778174;
+}
+.regional-double-nodes .is-cancelled .bracket-set-score {
+  color: #91988c;
+  font-size: 13px;
+}

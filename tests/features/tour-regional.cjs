@@ -159,7 +159,7 @@ for (let stage = 0; stage < 10; stage++) {
       "Known loser appears in lower bracket immediately",
     );
     assert(
-      pending.textContent.includes("Chờ kết quả"),
+      pending.textContent.includes("Thua U1-2"),
       "Unresolved opponent stays pending",
     );
     assert(
@@ -191,6 +191,36 @@ for (let stage = 0; stage < 10; stage++) {
     for (const r of T.regionalTourKeys) {
       api.region(r);
       api.finishStage();
+      if (stage === 6) {
+        const frozen = JSON.stringify(api.selected().snapshot);
+        api.section("playoff");
+        const cancelled = [
+          ...d.querySelectorAll(".bracket-match.is-cancelled"),
+        ];
+        assert(cancelled.length > 0);
+        for (const slot of cancelled) {
+          assert(slot.textContent.includes("Cặp đấu không diễn ra"));
+          assert.deepEqual(
+            [...slot.querySelectorAll(".bracket-set-score")].map(
+              (x) => x.textContent,
+            ),
+            ["X", "X"],
+          );
+          assert(!slot.hasAttribute("data-action"));
+        }
+        const knownClosed = cancelled.find(
+          (slot) => slot.querySelectorAll(".team").length === 2,
+        );
+        assert(
+          knownClosed,
+          "Known participants remain visible in an unused pair",
+        );
+        assert.equal(JSON.stringify(api.selected().snapshot), frozen);
+        assert(
+          d.querySelector(".bracket-match.is-finished"),
+          "Played matches retain their actual results",
+        );
+      }
     }
   } else api.finishStage();
   api.next();
