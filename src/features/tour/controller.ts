@@ -208,41 +208,28 @@ export async function confirmReset(mode = "discard") {
     request.token !== model.token
   )
     return;
-  if (mode === "export" && !(await exportSeasons(false, request.chainId)))
-    return;
+  if (mode === "export" && !(await exportSeasons(false))) return;
   if (
     request !== model.reset ||
     request.scope !== model.scope ||
     request.token !== model.token
   )
     return;
-  const remaining = model.records.filter(
-    (r) =>
-      r.chain_id !== request.chainId &&
-      r.snapshot?.career?.chainId !== request.chainId,
-  );
-  const original = model.records;
-  model.records = remaining;
-  if (!persist()) {
-    model.records = original;
-    toast("Chưa xóa được bản lưu trên thiết bị. Lịch sử được giữ nguyên.");
+  if (!(await cloud.resetAll())) {
+    if (request === model.reset && request.scope === model.scope) {
+      model.reset = { ...request, token: model.token };
+      render();
+    }
     return;
   }
-  try {
-    const key = model.scope + "-backups",
-      rows = JSON.parse(localStorage.getItem(key) || "[]");
-    localStorage.setItem(
-      key,
-      JSON.stringify(
-        rows.filter(
-          (r: { state?: T.TourSeason }) =>
-            r.state?.career?.chainId !== request.chainId,
-        ),
-      ),
-    );
-  } catch {}
+  if (request !== model.reset || request.scope !== model.scope) return;
   model.reset = null;
   model.selected = null;
+  model.section = "journey";
+  model.achievementTeam = null;
+  model.group = null;
+  model.stage = 0;
+  model.round = 0;
   model.setup = {
     ids: T.defaultRoster(),
     region: "CEV",
@@ -1072,7 +1059,7 @@ export function renderTour() {
             : "") +
         html +
         (model.reset?.scope === model.scope && model.reset.token === model.token
-          ? '<section class="tour-reset-confirm panel" role="alertdialog" aria-modal="true" aria-labelledby="tourResetTitle"><span class="eyebrow">BẮT ĐẦU LẠI CHUỖI MÙA</span><h3 id="tourResetTitle">Xóa toàn bộ chuỗi mùa này?</h3><p>Các mùa, thành tích và bản khôi phục thuộc chuỗi này sẽ bị xóa trên thiết bị. Các chuỗi khác và mùa theo thể thức cũ được giữ lại.</p><div class="controls"><button data-action="Tour.cancelReset">Hủy</button><button data-action="Tour.confirmReset" data-arg="export">Xuất bản sao rồi bắt đầu lại</button><button data-action="Tour.confirmReset" data-arg="discard">Xóa và bắt đầu lại</button></div></section>'
+          ? '<section class="tour-reset-confirm panel" role="alertdialog" aria-modal="true" aria-labelledby="tourResetTitle"><span class="eyebrow">BẮT ĐẦU LẠI CHUỖI MÙA</span><h3 id="tourResetTitle">Xóa toàn bộ tiến trình Tour?</h3><p>Toàn bộ mùa Tour, lịch sử, thành tích và bản khôi phục sẽ bị xóa trên thiết bị và khỏi tài khoản đang đăng nhập. Sau đó bạn chọn đội để bắt đầu lại từ Mùa 1.</p><div class="controls"><button data-action="Tour.cancelReset">Hủy</button><button data-action="Tour.confirmReset" data-arg="export">Xuất bản sao rồi bắt đầu lại</button><button data-action="Tour.confirmReset" data-arg="discard">Xóa và bắt đầu lại</button></div></section>'
           : "") +
         '<input type="file" id="tourImport" accept="application/json" data-action="Tour.importFile" data-trigger="change" hidden>';
     },
