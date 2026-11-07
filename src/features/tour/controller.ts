@@ -191,8 +191,9 @@ export function requestReset(id = model.selected || "") {
   const row = model.records.find(
     (r) => r.season_id === id || r.chain_id === id,
   );
-  const chainId = row?.chain_id || row?.snapshot?.career?.chainId;
-  if (!chainId) return;
+  if (!row) return;
+  const chainId =
+    row.chain_id || row.snapshot?.career?.chainId || row.season_id;
   model.reset = { chainId, scope: model.scope, token: model.token };
   render();
 }
