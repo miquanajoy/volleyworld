@@ -68,6 +68,12 @@ interface CloudConfig<S extends SeasonIdentity, R extends ArchiveRecord<S>> {
   sameSlot?: (a: R, b: R) => boolean;
   localOnly?: (row: R) => boolean;
   parentId?: (s: S) => string | null;
+  deleteAll?: (
+    client: SupabaseClient,
+    uid: string,
+  ) => PromiseLike<{
+    error: { message: string } | null;
+  }>;
 }
 /** Shared CAS, offline retry and account isolation for multi-season modes. */
 export function createSeasonCloud<
@@ -87,6 +93,7 @@ export function createSeasonCloud<
     uid: string | null = null,
     ready = false;
   const writers = new Map<string, CloudWriter<S>>();
+  let resetting = false;
   const accountWaiters = new Set<() => void>();
   function redraw() {
     if (store.tab === config.tab) renderApplication();
@@ -204,9 +211,11 @@ export function createSeasonCloud<
     return writer;
   }
   function queue(row: R) {
+    if (resetting) return;
     if (row.snapshot) writerFor(row)?.enqueue(row.snapshot);
   }
   async function reload() {
+    if (resetting) return;
     initialize();
     if (!uid || !client) {
       ready = true;
@@ -421,7 +430,7 @@ export function createSeasonCloud<
 
   let manualBusy = false;
   async function saveNow() {
-    if (manualBusy) return { status: "busy" };
+    if (manualBusy || resetting) return { status: "busy" };
     manualBusy = true;
     const button = document.getElementById("saveProgress");
     if (button) {
@@ -439,6 +448,52 @@ export function createSeasonCloud<
     }
   }
 
+  /** Reset this mode only; invalidate reads and drain writes before deleting online. */
+  async function resetAll() {
+    if (resetting) return false;
+    initialize();
+    resetting = true;
+    const scope = model.scope,
+      token = ++model.token,
+      service = client,
+      user = uid;
+    const running = [...writers.values()].map((w) => {
+      w.close();
+      return w.running;
+    });
+    writers.clear();
+    try {
+      await Promise.all(running);
+      if (scope !== model.scope || token !== model.token) return false;
+      // Check local storage before deleting the remote history.
+      if (!persistFull()) throw Error("Chưa ghi được bản lưu trên thiết bị.");
+      if (user) {
+        if (!service || !config.deleteAll)
+          throw Error("Cần kết nối tài khoản để xóa lịch sử Tour online.");
+        const { error } = await config.deleteAll(service, user);
+        if (error)
+          throw Error("Chưa xóa được lịch sử Tour online. Hãy thử lại.");
+      }
+      if (scope !== model.scope || token !== model.token) return false;
+      model.records = [];
+      model.selected = null;
+      model.error = "";
+      model.loading = false;
+      localStorage.removeItem(scope + "-backups");
+      persistFull();
+      ready = true;
+      return true;
+    } catch (e) {
+      if (scope === model.scope && token === model.token) {
+        persistFull();
+        toast(e instanceof Error ? e.message : "Chưa bắt đầu lại được Tour.");
+      }
+      return false;
+    } finally {
+      resetting = false;
+    }
+  }
+
   return {
     initialize,
     suspend,
@@ -449,5 +504,6 @@ export function createSeasonCloud<
     resolve,
     saveNow,
     pending,
+    resetAll,
   };
 }
