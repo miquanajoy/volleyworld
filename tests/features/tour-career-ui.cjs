@@ -274,16 +274,15 @@ const assert = require("node:assert/strict"),
   api.persist();
   api.requestReset(first);
   await api.confirmReset("discard");
-  assert.equal(api.model.records.length, 1);
   assert.equal(
-    api.model.records[0].season_id,
-    legacy.season_id,
-    "Reset preserves unrelated legacy seasons",
+    api.model.records.length,
+    0,
+    "Reset clears all Tour seasons, including legacy history",
   );
   assert(api.model.setup, "Reset returns to first-season selection");
   assert.equal(
     JSON.parse(t.w.localStorage.getItem(api.model.scope) || "[]").length,
-    1,
+    0,
   );
   const backups = JSON.parse(
     t.w.localStorage.getItem(api.model.scope + "-backups") || "[]",
