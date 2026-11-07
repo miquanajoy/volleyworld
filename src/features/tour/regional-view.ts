@@ -1,7 +1,10 @@
 import * as T from "../../domain/tour/index";
 import * as F from "../../domain/full-season/index";
 import * as V from "../../domain/index";
-import { regionalDoublePlan } from "../../domain/career/regional-double";
+import {
+  regionalDoublePlan,
+  regionalDoublePreview,
+} from "../../domain/career/regional-double";
 import { team } from "../../components/team";
 import { names } from "../../shared/dom";
 import type { Region } from "../../domain/types";
@@ -69,6 +72,11 @@ export function regionalTourHtml(s: T.TourSeason, v: TourViewState) {
   if (v.section === "table") return nav + capacityNote + table;
   const seeds = T.regionalTourSeeds(g),
     plan = regionalDoublePlan(seeds, r + "D");
+  const preview = regionalDoublePreview(
+    seeds,
+    r + "D",
+    bracket || { rounds: [] },
+  );
   const decided = status.done;
   const namesPanel = `<section class="panel tour-regional-group regional-tour-berths"><div class="section-head"><h3>Vé World Cup Play-in</h3><span class="badge">${status.entrants.length}/${quota} ĐÃ CHỐT</span></div><div class="qualification-names">${status.entrants.map((id) => `<span>${team(id)} <small>${status.early.includes(id) ? "Vé sớm" : "Qua nhánh"}</small></span>`).join("")}</div></section>`;
   const panel = (
@@ -105,6 +113,7 @@ export function regionalTourHtml(s: T.TourSeason, v: TourViewState) {
               m,
               `${code(id)} · BO5`,
               decided || (!!bracket?.rounds[i] && !m),
+              preview.get(id),
             );
             const classes = kind === "upper" ? "tree-node" : "lower-tree-node";
             const links =
@@ -113,7 +122,7 @@ export function regionalTourHtml(s: T.TourSeason, v: TourViewState) {
               (next && next.pairs.length < stage.pairs.length && j % 2 === 0
                 ? " join-upper"
                 : "");
-            return `<div class="${classes}${kind === "grand" ? "" : links}" style="grid-row:${j * span + 1} / span ${span}">${kind === "upper" ? tile : `<div>${tile}<p class="double-route">${route}</p></div>`}</div>`;
+            return `<div data-regional-slot="${id}" class="${classes}${kind === "grand" ? "" : links}" style="grid-row:${j * span + 1} / span ${span}">${kind === "upper" ? tile : `<div>${tile}<p class="double-route">${route}</p></div>`}</div>`;
           })
           .join("")}</div></section>`;
       })
@@ -131,9 +140,10 @@ function fixture(
   m: import("../../domain/types").Match | null,
   label: string,
   closed: boolean,
+  known?: [string | null | undefined, string | null | undefined],
 ) {
   if (!m)
-    return `<div class="bracket-match is-waiting"><span class="bracket-match-head">${label}</span><span class="bracket-team-line">${closed ? "Không cần thi đấu" : "Chờ kết quả vòng trước"}</span></div>`;
+    return `<div class="bracket-match is-waiting" aria-disabled="true"><span class="bracket-match-head"><span>${label}</span><span class="bracket-state">${closed ? "Không cần thi đấu" : known?.every((id) => !!id) ? "Chờ lịch thi đấu" : "Chờ đối thủ"}</span></span>${(known || [undefined, undefined]).map((id) => `<span class="bracket-team-line"><span class="bracket-team-name">${id ? team(id) : `<span class="waiting-team-icon">?</span><span>${id === null ? "Miễn đấu" : "Chờ kết quả"}</span>`}</span><b class="bracket-set-score">–</b></span>`).join("")}</div>`;
   const points = V.score(m),
     win = m.sets && V.winner(m);
   return `<button class="bracket-match ${m.sets ? "is-finished" : ""}" data-action="Tour.match" data-arg="${m.id}"><span class="bracket-match-head"><span>${label}</span><span class="bracket-state">${m.sets ? "✓ Đã đấu" : "Chi tiết ↗"}</span></span>${[m.a, m.b].map((id, i) => `<span class="bracket-team-line ${win === id ? "is-winner" : win ? "is-loser" : ""}"><span class="bracket-team-name">${team(id)}</span><b class="bracket-set-score">${m.sets ? points[i] : "–"}</b></span>`).join("")}</button>`;

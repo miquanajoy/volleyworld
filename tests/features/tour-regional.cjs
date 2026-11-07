@@ -144,6 +144,38 @@ for (let stage = 0; stage < 10; stage++) {
   api.resume();
   assert.equal(api.selected().snapshot.stage, stage);
   if (stage === 6) {
+    api.region("AVC");
+    const snapshot = api.selected().snapshot;
+    const opening =
+      snapshot.worldcup.career.regionalTour.brackets.AVC.rounds[0][0];
+    api.simMatch(opening.id);
+    const updated = api.selected().snapshot;
+    const scored = T.matches(updated).find((m) => m.id === opening.id);
+    const loser = V.loser(scored);
+    const before = JSON.stringify(updated);
+    const pending = d.querySelector('[data-regional-slot="AVCDL1-0"]');
+    assert(
+      pending.textContent.includes(V.get(loser).name),
+      "Known loser appears in lower bracket immediately",
+    );
+    assert(
+      pending.textContent.includes("Chờ kết quả"),
+      "Unresolved opponent stays pending",
+    );
+    assert(
+      !pending.querySelector('[data-action="Tour.match"]'),
+      "Preview is not a playable fixture",
+    );
+    assert.equal(
+      updated.worldcup.career.regionalTour.brackets.AVC.rounds.length,
+      1,
+    );
+    api.section("playoff");
+    assert.equal(
+      JSON.stringify(api.selected().snapshot),
+      before,
+      "Rendering does not change saved matches",
+    );
     assert(
       d.querySelector('[data-regional-double] [aria-label="Nhánh thắng"]'),
     );

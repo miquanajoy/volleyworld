@@ -84,3 +84,40 @@ export function regionalDoubleRound(
   }
   return [];
 }
+
+/** Read-only participant projection. Undefined is an unresolved result; null is a bye. */
+export function regionalDoublePreview(
+  seeds: string[],
+  prefix: string,
+  bracket: RegionalDouble,
+) {
+  type Side = string | null | undefined;
+  const outcomes = new Map<string, [Side, Side]>();
+  const slots = new Map<string, [Side, Side]>();
+  const plan = regionalDoublePlan(seeds, prefix);
+  const source = (s: Source): Side =>
+    typeof s === "object" && s !== null
+      ? outcomes.get(s.id)?.[s.loss ? 1 : 0]
+      : s;
+  for (const [round, stage] of plan.entries()) {
+    for (const [index, pair] of stage.pairs.entries()) {
+      const id = `${stage.id}-${index}`;
+      const sides: [Side, Side] = [source(pair[0]), source(pair[1])];
+      if (round === plan.length - 1) {
+        const final = bracket.rounds[round - 1]?.[0];
+        if (!final?.sets || winner(final) === final.a) {
+          slots.set(id, [undefined, undefined]);
+          continue;
+        }
+      }
+      slots.set(id, sides);
+      const match = bracket.rounds[round]?.find((m) => m.id === id);
+      if (match?.sets) outcomes.set(id, [winner(match), loser(match)]);
+      else if (sides[0] === null && sides[1] !== undefined)
+        outcomes.set(id, [sides[1], null]);
+      else if (sides[1] === null && sides[0] !== undefined)
+        outcomes.set(id, [sides[0], null]);
+    }
+  }
+  return slots;
+}

@@ -5,3 +5,4 @@ export * from "./playin";
 export * from "./world";
 export * from "./tour";
 export * from "./validation";
+export * from "./regional-double";
