@@ -8,16 +8,18 @@ import {
   type WorldCup,
 } from "../full-season/types";
 import type { SeasonTournament } from "../types";
-import { careerConfirmed, careerPlayinDone } from "./playin";
+import {
+  careerConfirmed,
+  careerPlayinDone,
+  careerPlayinWinners,
+} from "./playin";
 export function careerWorldPots(f: FullSeason, l: SeasonTournament) {
   if (!careerPlayinDone(f) || !l.bracket?.final[0]?.sets)
     throw Error(
       "Hoàn tất Play-in World Cup và playoff League trước khi chia bảng.",
     );
   const p = f.career!.playin!,
-    ic = p.final
-      .map((m) => winner(m)!)
-      .sort((a, b) => get(a).rank - get(b).rank),
+    ic = careerPlayinWinners(f).sort((a, b) => get(a).rank - get(b).rank),
     extra = p.challenger.filter((id) => !p.league16.includes(id));
   return [
     l.bracket.r16.map((m) => winner(m)!),

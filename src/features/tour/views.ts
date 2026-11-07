@@ -1,3 +1,4 @@
+import { worldPlayinHtml } from "./world-playin-view";
 import { regionalTourHtml } from "./regional-view";
 import * as T from "../../domain/tour/index";
 import * as V from "../../domain/index";
@@ -622,6 +623,7 @@ function careerPlayinHtml(s: T.TourSeason, v: TourViewState, locked: boolean) {
   const p = s.worldcup.career?.playin;
   if (!p)
     return '<section class="panel tour-empty"><h3>Chờ chốt đại diện League và khu vực</h3><p>Hoàn tất League Phase 3 cùng League Play-in trước khi bốc thăm World Cup Play-in.</p></section>';
+  if (p.double) return worldPlayinHtml(p.double);
   return `<section class="panel tour-career-playin"><div class="section-head"><div><span class="eyebrow">WORLD CUP PLAY-IN</span><h3>League gặp những kẻ thách thức</h3><p class="sub">Đội thắng giành vé World Cup và góp mặt ở League, Challenger mùa sau.</p></div><span class="badge">32 ĐỘI DỰ WORLD CUP</span></div>${p.preliminary.length ? `<h4>Sơ loại khu vực</h4>${cards(s, p.preliminary, locked, "World Cup Play-in · Sơ loại", F.fullMatches(s.worldcup))}` : ""}<h4>Trận quyết định vé World Cup</h4>${p.final.length ? cards(s, p.final, locked, "World Cup Play-in · Tranh vé", F.fullMatches(s.worldcup)) : '<p class="tour-history-note">Các cặp đấu xuất hiện sau khi sơ loại hoàn tất.</p>'}</section>`;
 }
 export function seasonHtml(s: T.TourSeason, v: TourViewState, locked: boolean) {

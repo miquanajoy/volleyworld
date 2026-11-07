@@ -5,6 +5,7 @@ export interface CareerPlayin {
   draw: number[];
   preliminary: Match[];
   final: Match[];
+  double?: import("./world-playin-double").WorldPlayinDouble;
 }
 export interface CareerQualification {
   leagueRoster: string[];

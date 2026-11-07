@@ -66,7 +66,7 @@ export function regionalTourHtml(s: T.TourSeason, v: TourViewState) {
         )
         .join(
           "",
-        )}</nav>${table}${v.section === "table" ? "" : `<div class="full-fixtures regional-tour-fixtures">${fixtures.map((m) => fixture(m, "Lượt " + (round + 1), false)).join("")}</div>`}`
+        )}</nav>${table}${v.section === "table" ? "" : `<div class="full-fixtures regional-tour-fixtures">${fixtures.map((m) => doubleBracketFixture(m, "Lượt " + (round + 1), false)).join("")}</div>`}`
     );
   }
   if (v.section === "table") return nav + capacityNote + table;
@@ -108,7 +108,7 @@ export function regionalTourHtml(s: T.TourSeason, v: TourViewState) {
                   : "Miễn đấu",
             );
             const route = routes.join(" × ");
-            const tile = fixture(
+            const tile = doubleBracketFixture(
               m,
               `${code(id)} · BO5`,
               decided,
@@ -136,7 +136,7 @@ export function regionalTourHtml(s: T.TourSeason, v: TourViewState) {
     `<div class="double-overview" data-regional-double>${panel("upper", "Nhánh thắng", "Thua lần đầu chuyển xuống nhánh thua.")}${panel("lower", "Nhánh thua", decided ? "Đã chốt đủ đại diện. Các trận không cần thiết không được mở." : "Thua lần hai bị loại. Cùng vòng bị loại thì xét BXH Phase 1.")}${panel("grand", "Cặp đấu cuối", "Chỉ diễn ra nếu vẫn cần phân định vé.")}</div>`
   );
 }
-function fixture(
+export function doubleBracketFixture(
   m: import("../../domain/types").Match | null,
   label: string,
   closed: boolean,

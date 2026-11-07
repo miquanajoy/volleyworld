@@ -1,3 +1,4 @@
+import { careerPlayinTotal } from "../career/playin";
 import { advanceCareerRegions, careerRegionalTotal } from "../career/regionals";
 import { meritQualification, qualifierAdvancers } from "./merit";
 import {
@@ -121,7 +122,7 @@ export function advanceRegions(s: FullSeason) {
 }
 export const fullTotalMatches = (s: FullSeason) =>
   s.regionalFormat === "career-v1"
-    ? careerRegionalTotal(s) + 16 + 64
+    ? careerRegionalTotal(s) + careerPlayinTotal(s) + 64
     : meritQualification(s)
       ? 350
       : s.regionalFormat === "qualification-v2"

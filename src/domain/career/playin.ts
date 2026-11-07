@@ -1,6 +1,7 @@
+import { regionalTourStatus } from "./regional-tour";
+import { advanceWorldPlayin, worldPlayinStatus } from "./world-playin-double";
 import { get } from "../../data/teams";
-import { shuffle } from "../shared/random";
-import { winner } from "../match/scoring";
+import { winner, loser } from "../match/scoring";
 import type { FullSeason } from "../full-season/types";
 import { regionOrder } from "../full-season/types";
 import { careerRegionEntrants, careerRegionalDone } from "./regionals";
@@ -25,33 +26,45 @@ export function createCareerPlayin(
 ) {
   if (
     f.career!.playin ||
-    (!f.career!.regionalTour &&
-      !regionOrder.every((r) => careerRegionalDone(f.regions[r])))
+    !regionOrder.every((r) =>
+      f.career!.regionalTour
+        ? regionalTourStatus(f, r).done
+        : careerRegionalDone(f.regions[r]),
+    )
   )
     throw Error("Chưa thể bốc thăm World Cup Play-in.");
   const extra = challenger.filter((id) => !league16.includes(id)),
-    d = extra.length,
     regional = regionOrder
       .flatMap((r) => careerRegionEntrants(f, r))
       .sort(byRank);
   if (
     league16.length !== 16 ||
+    new Set(league16).size !== 16 ||
+    league16.some((id) => !f.career!.leagueRoster.includes(id)) ||
     challenger.length !== 2 ||
-    regional.length !== 16
+    new Set(challenger).size !== 2 ||
+    challenger.some((id) => !f.career!.leagueRoster.includes(id)) ||
+    regional.length !== 16 ||
+    new Set(regional).size !== 16 ||
+    regional.some((id) => f.career!.leagueRoster.includes(id))
   )
     throw Error("Thiếu đại diện cho World Cup Play-in.");
-  const low = regional.slice(16 - 2 * d);
+
   f.career!.playin = {
     league16: [...league16],
     challenger: [...challenger],
-    draw: shuffle(Array.from({ length: 16 - d }, (_, i) => i)),
-    preliminary: Array.from({ length: d }, (_, i) => ({
-      id: `WP${i}`,
-      a: low[i],
-      b: low[2 * d - 1 - i],
-      sets: null,
-    })),
+    draw: [],
+    preliminary: [],
     final: [],
+    double: {
+      seeds: [
+        ...f.career!.leagueRoster.filter(
+          (id) => !league16.includes(id) && !extra.includes(id),
+        ),
+        ...regional,
+      ].sort(byRank),
+      rounds: [],
+    },
   };
   advanceCareerPlayin(f);
 }
@@ -72,7 +85,12 @@ export function careerFinalPlayers(f: FullSeason) {
 }
 export function advanceCareerPlayin(f: FullSeason) {
   const p = f.career?.playin;
-  if (!p || p.final.length) return;
+  if (!p) return;
+  if (p.double) {
+    advanceWorldPlayin(p.double);
+    return;
+  }
+  if (p.final.length) return;
   const players = careerFinalPlayers(f);
   if (players) p.final = players;
 }
@@ -80,14 +98,56 @@ export function careerConfirmed(f: FullSeason) {
   const p = f.career?.playin;
   if (!p) return [];
   return [
-    ...new Set([
-      ...p.league16,
-      ...p.challenger,
-      ...p.final.filter((m) => m.sets).map((m) => winner(m)!),
-    ]),
+    ...new Set([...p.league16, ...p.challenger, ...careerPlayinWinners(f)]),
   ];
 }
-export const careerPlayinDone = (f: FullSeason) =>
-  !!f.career?.playin &&
-  f.career.playin.final.length === 16 - careerPlayinFields(f).extra.length &&
-  f.career.playin.final.every((m) => !!m.sets);
+export const careerPlayinDone = (f: FullSeason) => {
+  const p = f.career?.playin;
+  return (
+    !!p &&
+    (p.double
+      ? worldPlayinStatus(p.double).done
+      : p.final.length === 16 - careerPlayinFields(f).extra.length &&
+        p.final.every((m) => !!m.sets))
+  );
+};
+export const careerPlayinMatches = (f: FullSeason) => {
+  const p = f.career?.playin;
+  return p
+    ? p.double
+      ? p.double.rounds.flat()
+      : [...p.preliminary, ...p.final]
+    : [];
+};
+export const careerPlayinWinners = (f: FullSeason) => {
+  const p = f.career?.playin;
+  return p
+    ? p.double
+      ? worldPlayinStatus(p.double).qualified
+      : p.final.filter((m) => m.sets).map((m) => winner(m)!)
+    : [];
+};
+export const careerPlayinEliminated = (f: FullSeason) => {
+  const p = f.career?.playin;
+  return p
+    ? p.double
+      ? worldPlayinStatus(p.double).eliminated
+      : careerPlayinMatches(f)
+          .filter((m) => m.sets)
+          .map((m) => loser(m)!)
+    : [];
+};
+export const careerPlayinTotal = (f: FullSeason) => {
+  const p = f.career?.playin;
+  return p ? (p.double ? p.double.seeds.length + 8 : 16) : 40;
+};
+/** Upgrade an unplayed old draw; scored legacy Play-ins keep all their results. */
+export function useDoublePlayin(f: FullSeason) {
+  const p = f.career?.playin;
+  if (!p || p.double || f.world || careerPlayinMatches(f).some((m) => m.sets))
+    return false;
+  const { league16, challenger } = p;
+  f.career!.playin = null;
+  createCareerPlayin(f, league16, challenger);
+  return true;
+}

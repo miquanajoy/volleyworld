@@ -4,6 +4,7 @@ const assert = require("node:assert/strict"),
   K = require("../../.test-build/career-engine.js"),
   V = require("../../.test-build/engine.js"),
   C = require("../../.test-build/challenger-engine.js");
+const { ui } = require("../support/tour-harness.cjs");
 const clone = (s) => JSON.parse(JSON.stringify(s));
 let random = 892103;
 Math.random = () =>
@@ -88,7 +89,10 @@ for (let chain = 0; chain < 10; chain++) {
         assert.equal(status.qualified.length, 32);
         assert.equal(new Set(status.qualified).size, 32);
         assert.equal(status.promoted.length, status.relegated.length);
-        assert.equal(p.preliminary.length + p.final.length, 16);
+        assert.equal(
+          p.double.rounds.flat().length,
+          40 - (32 - p.double.seeds.length),
+        );
         assert(status.challenger.every((id) => status.retained.includes(id)));
         assert(
           F.regionOrder.every(
@@ -213,11 +217,51 @@ for (let d = 0; d <= 2; d++) {
   T.nextStage(s);
   assert(T.validTour(s));
   const p = s.worldcup.career.playin;
-  assert.equal(p.preliminary.length, d);
+  assert.equal(p.double.seeds.length, 32 - d);
+  assert.equal(p.preliminary.length, 0);
   assert.equal(T.careerStatus(s).playinTickets, 16 - d);
+  const screen = ui("career", 3200 + d),
+    api = screen.w.__tour;
+  api.enter();
+  api.model.records.push(api.recordOf(s));
+  api.persist();
+  api.open(s.seasonId);
+  api.resume();
+  const dom = screen.w.document;
+  assert(
+    dom
+      .querySelector("[data-world-playin-double]")
+      .textContent.includes(`${32 - d} đội tranh ${16 - d} vé World Cup`),
+  );
+  assert.equal(
+    [
+      ...dom.querySelectorAll(
+        '[data-world-playin-slot^="WCU1"] .bracket-state',
+      ),
+    ].filter((el) => el.textContent === "Miễn đấu").length,
+    d,
+  );
+  assert.equal(
+    dom.querySelectorAll('[data-world-playin-slot^="WCL3"]').length,
+    d,
+  );
+  api.finishStage();
+  assert(T.validTour(api.selected().snapshot));
+  assert.equal(
+    dom.querySelectorAll("[data-world-playin-qualified]").length,
+    16 - d,
+  );
+  assert.equal(
+    dom.querySelectorAll("[data-world-playin-eliminated]").length,
+    16,
+  );
+  screen.close();
   T.finishStage(s);
   assert(T.validTour(s));
-  assert.equal(p.preliminary.length + p.final.length, 16);
+  assert.equal(
+    p.double.rounds.flat().length,
+    40 - (32 - p.double.seeds.length),
+  );
   assert.equal(T.careerStatus(s).qualified.length, 32);
   const corrupt = clone(s);
   corrupt.worldcup.career.playin.challenger.reverse();
@@ -253,5 +297,5 @@ for (const mutate of [
 assert.throws(() => T.nextCareerSeason(T.freshCareerTour()));
 assert.throws(() => T.freshCareerTour(2));
 console.log(
-  `PASS career32: ${allocations} exhaustive regional allocations; ${seasons} chained seasons; all3 valid Challenger overlap cases;8stage gates;16 outsider qualifiers;16 WCPlayin fixtures;64 WCfixtures;8groups/no third berths;4pots;cap16;promotion/relegation;inherited rosters;forged saves rejected`,
+  `PASS career32: ${allocations} exhaustive regional allocations; ${seasons} chained seasons; all3 valid Challenger overlap cases;8stage gates;16 outsider qualifiers;38–40 double-elimination WCPlayin fixtures;64 WCfixtures;8groups/no third berths;4pots;cap16;promotion/relegation;inherited rosters;forged saves rejected`,
 );

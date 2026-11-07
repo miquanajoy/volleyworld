@@ -1,3 +1,4 @@
+export { careerPlayinMatches, useDoublePlayin } from "../career/playin";
 export {
   regionalTourChoices,
   defaultRegionalSelection,

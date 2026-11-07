@@ -2,6 +2,7 @@ const { spawnSync } = require("node:child_process");
 for (const file of [
   "tour",
   "tour-career",
+  "world-cup-double-playin",
   "tour-career-ui",
   "tour-regional",
   "tour-merit",

@@ -2921,6 +2921,41 @@
 .tour-career-playin h4 {
   margin: 24px 0 12px;
 }
+.tour-career-playin[data-world-playin-double] {
+  display: grid;
+  gap: 24px;
+  padding: 0;
+}
+.world-playin-summary {
+  padding: 24px;
+}
+.world-playin-summary .section-head h3 {
+  margin: 6px 0 8px;
+  font-size: 21px;
+}
+.world-playin-summary .qualification-names > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.world-playin-summary .qualification-names small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.world-playin-summary details {
+  margin-top: 14px;
+}
+@media (max-width: 640px) {
+  .world-playin-summary {
+    padding: 18px;
+  }
+  .world-playin-summary .section-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
 .tour-reset-confirm {
   position: fixed;
   z-index: 1200;
