@@ -3712,3 +3712,20 @@
     padding: 20px;
   }
 }
+
+.qualification-tree.has-bronze {
+  padding-bottom: 110px;
+}
+.qualification-medals {
+  position: relative;
+  width: 100%;
+}
+.qualification-bronze {
+  position: absolute;
+  top: calc(100% + 20px);
+  left: 0;
+  width: 100%;
+}
+.qualification-bronze h4 {
+  margin: 0 0 8px;
+}

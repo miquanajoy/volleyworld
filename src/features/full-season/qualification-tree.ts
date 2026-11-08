@@ -1,6 +1,7 @@
 import * as F from "../../domain/full-season/index";
-import type { TeamId } from "../../domain/types";
-import { score, winner } from "../../domain/match/scoring";
+import { playoffSlot } from "./playoff-tree";
+import type { Match, TeamId } from "../../domain/types";
+import { score, winner, loser } from "../../domain/match/scoring";
 import { esc } from "../../shared/dom";
 import { team } from "../../components/team";
 import { fullTeam } from "./views";
@@ -13,8 +14,17 @@ export function qualifierTreeHtml(
   s: F.FullSeason,
   b: F.QualifierBracket,
   prefix: string,
-  options: { readonly?: boolean; actionPrefix?: string } = {},
+  options: {
+    readonly?: boolean;
+    actionPrefix?: string;
+    title?: string;
+    winnerLabel?: string;
+    seedNote?: string;
+    bronze?: Match | null;
+    renderTeam?: (id: TeamId) => string;
+  } = {},
 ) {
+  const renderTeam = options.renderTeam || ((id: TeamId) => fullTeam(id, s));
   const locked =
       options.readonly ??
       (selectedFull()?.status === "completed" ||
@@ -42,7 +52,9 @@ export function qualifierTreeHtml(
               ? "Tứ kết"
               : nominal === 4
                 ? "Bán kết"
-                : `Tranh vé ${ticketLabel}`,
+                : options.title
+                  ? "Chung kết"
+                  : `Tranh vé ${ticketLabel}`,
       letter =
         r === 0 && preliminary
           ? "P"
@@ -53,6 +65,14 @@ export function qualifierTreeHtml(
               : "F",
       advancing: Entrant[] = [],
       nodes: string[] = [];
+    let bronze = "";
+    if (r === b.rounds.length - 1 && options.bronze !== undefined) {
+      const semi = b.rounds.at(-2) || [];
+      const waiting = [0, 1].map((i) =>
+        semi[i]?.sets ? loser(semi[i])! : `Thua S${i + 1}`,
+      );
+      bronze = `<section class="qualification-bronze"><h4>🥉 Tranh hạng ba</h4>${playoffSlot(options.bronze || undefined, "B · Tranh hạng ba", renderTeam, actionPrefix, waiting)}</section>`;
+    }
     for (let i = 0; i < players.length; i += 2) {
       const a = players[i],
         c = players[i + 1],
@@ -71,11 +91,11 @@ export function qualifierTreeHtml(
         tag = m ? "button" : "div";
       advancing.push(winning ? { id: winning } : { waiting: `Thắng ${code}` });
       nodes.push(
-        `<div class="qualification-node ${r > 0 && !(r === 1 && preliminary && !b.rounds[0].some((m) => Math.floor(Number(m.id.split("-").at(-1)) / 2) === index)) ? "has-incoming" : ""} ${r < b.rounds.length - 1 ? "has-outgoing" : ""} ${r < b.rounds.length - 1 && index % 2 === 0 && !(r === 0 && preliminary) ? "joins-next" : ""}" style="grid-row:${position * span + 1} / span ${span};--qualification-join:${span * 64}px"><${tag} class="bracket-match full-tree-match ${m?.sets ? "is-finished" : ""}" ${m ? `type="button" data-action="${actionPrefix}.match" data-arg="${m.id}"` : 'aria-disabled="true"'} data-qualification-match="${prefix}K${r}-${index}" aria-label="${esc(`${code} · ${label}`)}"><span class="bracket-match-head"><span>${code} · ${label}</span><span class="bracket-state">${m?.sets ? "✓ Đã đấu" : m ? "Chi tiết ↗" : "Chờ vòng trước"}</span></span>${[a, c].map((entrant, side) => `<span class="full-tree-side ${winning === entrant.id ? "is-winner" : winning ? "is-loser" : ""}">${entrant.id ? `<span class="qualification-team" data-team="${entrant.id}" ${entrant.bye ? 'data-bye="true"' : ""}><span class="qualification-seed" title="${entrant.bye ? "Được miễn sơ loại" : "Hạt giống"}">S${b.seeds.indexOf(entrant.id) + 1}${entrant.bye ? " ↪" : ""}</span>${fullTeam(entrant.id, s)}</span>` : `<span class="full-tree-waiting"><span class="waiting-team-icon">?</span><span>${esc(entrant.waiting || "Chờ đội tuyển")}</span></span>`}<b class="bracket-set-score">${m?.sets ? result![side] : "–"}</b></span>`).join("")}</${tag}></div>`,
+        `<div class="qualification-node ${r > 0 && !(r === 1 && preliminary && !b.rounds[0].some((m) => Math.floor(Number(m.id.split("-").at(-1)) / 2) === index)) ? "has-incoming" : ""} ${r < b.rounds.length - 1 ? "has-outgoing" : ""} ${r < b.rounds.length - 1 && index % 2 === 0 && !(r === 0 && preliminary) ? "joins-next" : ""}" style="grid-row:${position * span + 1} / span ${span};--qualification-join:${span * 64}px">${bronze ? '<div class="qualification-medals">' : ""}<${tag} class="bracket-match full-tree-match ${m?.sets ? "is-finished" : ""}" ${m ? `type="button" data-action="${actionPrefix}.match" data-arg="${m.id}"` : 'aria-disabled="true"'} data-qualification-match="${prefix}K${r}-${index}" aria-label="${esc(`${code} · ${label}`)}"><span class="bracket-match-head"><span>${code} · ${label}</span><span class="bracket-state">${m?.sets ? "✓ Đã đấu" : m ? "Chi tiết ↗" : "Chờ vòng trước"}</span></span>${[a, c].map((entrant, side) => `<span class="full-tree-side ${winning === entrant.id ? "is-winner" : winning ? "is-loser" : ""}">${entrant.id ? `<span class="qualification-team" data-team="${entrant.id}" ${entrant.bye ? 'data-bye="true"' : ""}><span class="qualification-seed" title="${entrant.bye ? "Được miễn sơ loại" : "Hạt giống"}">S${b.seeds.indexOf(entrant.id) + 1}${entrant.bye ? " ↪" : ""}</span>${renderTeam(entrant.id)}</span>` : `<span class="full-tree-waiting"><span class="waiting-team-icon">?</span><span>${esc(entrant.waiting || "Chờ đội tuyển")}</span></span>`}<b class="bracket-set-score">${m?.sets ? result![side] : "–"}</b></span>`).join("")}</${tag}>${bronze ? bronze + "</div>" : ""}</div>`,
       );
     }
     players = advancing;
     return `<section class="qualification-round" aria-label="${label}"><div class="section-head"><div><span class="eyebrow">VÒNG ${r + 1}</span><h4>${label}</h4></div>${!locked && r === next ? `<button data-action="${actionPrefix}.qualifierStage" data-arg="${prefix}">Chạy vòng</button>` : ""}</div><div class="qualification-nodes" style="grid-template-rows:repeat(${rows},64px)">${nodes.join("")}</div></section>`;
   });
-  return `${advancingTeams.length ? `<section class="panel qualification-winner"><span>✓ ĐẠI DIỆN PLAY-IN LIÊN KHU VỰC</span>${advancingTeams.map((id) => team(id)).join("")}</section>` : ""}${win ? `<section class="panel qualification-winner"><span>✓ GIÀNH VÉ ${ticketLabel.toLocaleUpperCase("vi-VN")}</span>${team(win)}</section>` : ""}<p class="sub qualification-seed-note">${b.seeds.length} đội · BO5 · Nhánh cố định${preliminary ? ` · ${size - b.seeds.length} hạt giống được miễn sơ loại (↪), đã có sẵn ở vòng tiếp theo` : ""}. Seed: hạng bảng → tỷ lệ thắng → HS set/trận → HS điểm/trận → BXH thế giới.</p><p class="tree-scroll-hint">Đọc từ trái sang phải · Bấm vào trận để xem chi tiết · Cuộn ngang để xem toàn bộ nhánh.</p><div class="full-bracket qualification-tree" role="region" tabindex="0" aria-label="Nhánh tranh vé ${ticketLabel} có thể cuộn ngang">${columns.join("")}</div>`;
+  return `${advancingTeams.length ? `<section class="panel qualification-winner"><span>✓ ĐẠI DIỆN PLAY-IN LIÊN KHU VỰC</span>${advancingTeams.map((id) => team(id)).join("")}</section>` : ""}${win ? `<section class="panel qualification-winner"><span>${esc(options.winnerLabel || `✓ GIÀNH VÉ ${ticketLabel.toLocaleUpperCase("vi-VN")}`)}</span>${team(win)}</section>` : ""}<p class="sub qualification-seed-note">${b.seeds.length} đội · BO5 · Nhánh cố định${preliminary ? ` · ${size - b.seeds.length} hạt giống được miễn sơ loại (↪), đã có sẵn ở vòng tiếp theo` : ""}. ${esc(options.seedNote || "Seed: hạng bảng → tỷ lệ thắng → HS set/trận → HS điểm/trận → BXH thế giới.")}</p><p class="tree-scroll-hint">Đọc từ trái sang phải · Bấm vào trận để xem chi tiết · Cuộn ngang để xem toàn bộ nhánh.</p><div class="full-bracket qualification-tree ${options.bronze !== undefined ? "has-bronze" : ""}" role="region" tabindex="0" aria-label="${esc(options.title || `Nhánh tranh vé ${ticketLabel}`)} có thể cuộn ngang">${columns.join("")}</div>`;
 }

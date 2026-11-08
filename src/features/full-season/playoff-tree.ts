@@ -99,3 +99,5 @@ export function connectedPlayoffTree(
     )
     .join("")}</div></div>`;
 }
+
+export { slot as playoffSlot };
