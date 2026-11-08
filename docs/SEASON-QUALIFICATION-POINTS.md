@@ -1,10 +1,10 @@
 # Season qualification points (versions 1–2)
 
-New Tour seasons use qualification points with fixed regional participant counts (version 2). Existing saved seasons retain their original qualification rules; continuing an old chain creates the next season using the new rules. Qualification points are separate from historical honours and reset each season. They are derived from match results, never saved as editable totals.
+New Tour seasons use qualification points with fixed regional participant counts (version 2). Existing saves retain their regional format and already drawn World Cup qualifiers. Points seasons still awaiting a World Cup Play-in draw use the corrected playoff-semifinalist rule; continuing an old chain creates the next season using the latest rules. Qualification points are separate from historical honours and reset each season. They are derived from match results, never saved as editable totals.
 
 ## Main competition
 
-32 World Cup places: top four **regular League standings** receive automatic places; the highest 12 remaining teams by combined League and Challenger points qualify directly; 16 places are awarded by the existing double-elimination World Cup Play-in. Challenger no longer has separate finalist tickets.
+32 World Cup places: the four **League playoff semifinalists** receive automatic places as soon as they win their quarterfinals; the highest 12 remaining teams by combined League and Challenger points qualify directly; 16 places are awarded by the existing double-elimination World Cup Play-in. Challenger no longer has separate finalist tickets.
 
 | Source                            | Points per win |
 | --------------------------------- | -------------: |
@@ -48,7 +48,7 @@ Regional places are allocated by total points, then Phase 3 points, Phase 2 poin
 
 ## Closing phases and early tickets
 
-Live tables show earned win points, but a final-placement bonus is banked only when that phase/competition is complete. Certification uses banked points and conservative ceilings for every opponent's possible remaining results. A tie at the ceiling counts as a threat, so the UI cannot certify a ticket on an unresolved tiebreak. Main competition certification excludes already automatic top-four teams. Regional certification also checks same-confederation threats and remaining capacity.
+Live tables show earned win points, but a final-placement bonus is banked only when that phase/competition is complete. Certification uses banked points and conservative ceilings for every opponent's possible remaining results. A tie at the ceiling counts as a threat, so the UI cannot certify a ticket on an unresolved tiebreak. Main competition certification excludes already qualified playoff semifinalists. Regular League standings do not grant automatic World Cup tickets. Regional certification also checks same-confederation threats and remaining capacity.
 
 “Đã giành vé” means mathematically safe or finally allocated. “Tạm trong nhóm có suất” means only the current ranking falls inside the quota. There is no fixed universal safe-points threshold. The separate World Cup ticket view shows confirmed World Cup teams and confirmed regional World Cup Play-in representatives.
 
@@ -61,3 +61,7 @@ Version 1 retains the former `max(8, quota + 3)` participant rule for compatibil
 `season-qualification-points.cjs` exercises 40 chained complete seasons plus five extreme inherited rosters, exact awards, over 27,000 opponent point ceilings, early-ticket stability, top4+12+16 distinct allocation, group/top-two routes, reset/no-reset Phase 3, confederation limits, season reset, JSON persistence and chain import, manual-score/future-phase locks, corrupt phase/route rejection and agreement between points tables and the World Cup ticket view. Existing legacy suites remain on their saved formats.
 
 `fixed-regional-pools.cjs` exhaustively checks all 19,076 inherited regional roster allocations, reproduces the six-ticket/nine-team Asia case, verifies fixed 2×4 grouping, total ticket conservation, confederation limits, setup UI and scored legacy-save compatibility.
+
+The `leagueBerths: "playoff"` marker records the corrected direct-qualification rule independently of regional format version. Existing points seasons without a World Cup Play-in draw use this corrected rule immediately and record the marker when drawing the Play-in. Older seasons that already have a Play-in/World Cup draw keep their recorded direct qualifiers and remain readable.
+
+`league-playoff-berths.cjs` forces all regular-season top four to exit in the round of 16, verifies each quarterfinal winner receives a direct ticket, checks twelve additional distinct point tickets, and exercises current undecided-save correction plus preservation of already scored legacy Play-in/World Cup draws.

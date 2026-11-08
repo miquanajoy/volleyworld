@@ -68,6 +68,7 @@ export function setupPointsRegions(
   setupRegionalTour(f, selected, version === 2);
   f.career!.points = {
     version,
+    leagueBerths: "playoff",
     phase2: {} as Record<Region, RegionalLeague>,
   };
   for (const r of regionOrder) {

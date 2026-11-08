@@ -26,7 +26,11 @@ export function validPointsRegions(
   if (
     !p ||
     (p.version !== 1 && p.version !== 2) ||
-    Object.keys(p).sort().join() !== "phase2,version" ||
+    Object.keys(p)
+      .filter((k) => k !== "leagueBerths")
+      .sort()
+      .join() !== "phase2,version" ||
+    (p.leagueBerths !== undefined && p.leagueBerths !== "playoff") ||
     !p.phase2 ||
     Object.keys(p.phase2).length !== 5 ||
     !c.regionalTour ||
