@@ -13,7 +13,7 @@ export interface CareerQualification {
   playin: CareerPlayin | null;
   regionalTour?: CareerRegionalTour;
   points?: {
-    version: 1;
+    version: 1 | 2;
     phase2: Record<Region, import("../full-season/types").RegionalLeague>;
   };
 }

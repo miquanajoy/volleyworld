@@ -27,8 +27,12 @@ const zoneOf = (id: string) =>
   regionOf(id) === "CSV" ? "NORCECA" : regionOf(id);
 const capacity = (roster: string[], r: Region) =>
   16 - roster.filter((id) => regionOf(id) === r).length;
-export function regionalTourChoices(roster: string[], number: number) {
-  const slots = allocateCareerSlots(roster, number);
+export function regionalTourChoices(
+  roster: string[],
+  number: number,
+  fixedGroups = false,
+) {
+  const slots = allocateCareerSlots(roster, number, fixedGroups);
   return regionalTourKeys.map((region) => {
     const q = slots[region] + (region === "NORCECA" ? slots.CSV : 0);
     const pool = catalog
@@ -39,7 +43,10 @@ export function regionalTourChoices(roster: string[], number: number) {
       q,
       pool,
       count: q
-        ? Math.min(pool.length, region === "CEV" ? 16 : Math.max(8, q + 3))
+        ? Math.min(
+            pool.length,
+            region === "CEV" ? 16 : fixedGroups ? 8 : Math.max(8, q + 3),
+          )
         : 0,
     };
   });
@@ -65,8 +72,9 @@ export function validRegionalSelection(
   roster: string[],
   number: number,
   selected: string[],
+  fixedGroups = false,
 ) {
-  const choices = regionalTourChoices(roster, number);
+  const choices = regionalTourChoices(roster, number, fixedGroups);
   return (
     new Set(selected).size === selected.length &&
     selected.length === choices.reduce((n, x) => n + x.count, 0) &&
@@ -76,9 +84,13 @@ export function validRegionalSelection(
     })
   );
 }
-export function defaultRegionalSelection(roster: string[], number: number) {
-  const slots = allocateCareerSlots(roster, number);
-  return regionalTourChoices(roster, number).flatMap((x) => {
+export function defaultRegionalSelection(
+  roster: string[],
+  number: number,
+  fixedGroups = false,
+) {
+  const slots = allocateCareerSlots(roster, number, fixedGroups);
+  return regionalTourChoices(roster, number, fixedGroups).flatMap((x) => {
     const required =
       x.region === "NORCECA"
         ? [
@@ -96,9 +108,20 @@ export function defaultRegionalSelection(roster: string[], number: number) {
     ].slice(0, x.count);
   });
 }
-export function setupRegionalTour(f: FullSeason, selected: string[]) {
+export function setupRegionalTour(
+  f: FullSeason,
+  selected: string[],
+  fixedGroups = false,
+) {
   const c = f.career!;
-  if (!validRegionalSelection(c.leagueRoster, f.seasonNumber, selected))
+  if (
+    !validRegionalSelection(
+      c.leagueRoster,
+      f.seasonNumber,
+      selected,
+      fixedGroups,
+    )
+  )
     throw Error(
       "Chọn đủ đội ngoài League cho từng khu vực và đủ đội hợp lệ để phân vé.",
     );
@@ -107,6 +130,7 @@ export function setupRegionalTour(f: FullSeason, selected: string[]) {
   for (const { region, q, pool } of regionalTourChoices(
     c.leagueRoster,
     f.seasonNumber,
+    fixedGroups,
   )) {
     const ids = pool.filter((id) => selected.includes(id));
     const groups: string[][] =

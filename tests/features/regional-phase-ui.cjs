@@ -9,7 +9,7 @@ for (const phase of [0, 1]) {
   const s = T.freshPointsTour(
     1,
     T.defaultRoster(),
-    T.defaultRegionalSelection(T.defaultRoster(), 1),
+    T.defaultRegionalSelection(T.defaultRoster(), 1, true),
   );
   const target = phase ? 3 : 1;
   while (s.stage < target) {

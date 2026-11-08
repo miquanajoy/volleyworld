@@ -556,13 +556,13 @@ export function freshPointsTour(
   roster?: string[],
   selected?: string[],
 ) {
-  const s = freshCareerTour(number, roster, selected);
+  const s = freshCareerTour(number, roster);
   if (!selected) throw Error("Cần chọn đội vòng loại khu vực.");
   setupPointsRegions(s.worldcup, selected);
   return s;
 }
 export function nextPointsSeason(s: TourSeason, selected: string[]) {
-  const next = nextCareerSeason(s, selected);
+  const next = nextCareerSeason(s);
   setupPointsRegions(next.worldcup, selected);
   return next;
 }

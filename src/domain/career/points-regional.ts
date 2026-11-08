@@ -1,3 +1,4 @@
+import { allocateCareerSlots } from "./allocation";
 import { get } from "../../data/teams";
 import type { Match, Region } from "../types";
 import type { FullSeason, RegionalLeague } from "../full-season/types";
@@ -54,10 +55,19 @@ function makePhase(ids: string[], prefix: string): RegionalLeague {
     ),
   };
 }
-export function setupPointsRegions(f: FullSeason, selected: string[]) {
-  setupRegionalTour(f, selected);
+export function setupPointsRegions(
+  f: FullSeason,
+  selected: string[],
+  version: 1 | 2 = 2,
+) {
+  f.career!.slots = allocateCareerSlots(
+    f.career!.leagueRoster,
+    f.seasonNumber,
+    version === 2,
+  );
+  setupRegionalTour(f, selected, version === 2);
   f.career!.points = {
-    version: 1,
+    version,
     phase2: {} as Record<Region, RegionalLeague>,
   };
   for (const r of regionOrder) {
