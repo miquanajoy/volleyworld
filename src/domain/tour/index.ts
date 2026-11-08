@@ -1,3 +1,6 @@
+export { freshPointsTour, nextPointsSeason } from "../career/tour";
+export * from "../career/season-points";
+export * from "../career/points-regional";
 export { careerPlayinMatches, useDoublePlayin } from "../career/playin";
 export {
   regionalTourChoices,
@@ -14,6 +17,7 @@ export { regionalFormat, regionalStage } from "../career/tour";
 import {
   career,
   careerCalendar,
+  pointsCalendar,
   regionalCalendar,
   regionalFormat,
   regionalStage,
@@ -131,9 +135,11 @@ export const qualificationStage = (s: TourSeason) =>
   career(s) ? careerIndex(s, 5) : merit(s) ? 6 : 5;
 export const calendar = (s: TourSeason) =>
   career(s)
-    ? regionalFormat(s)
-      ? regionalCalendar
-      : careerCalendar
+    ? s.worldcup.career?.points
+      ? pointsCalendar
+      : regionalFormat(s)
+        ? regionalCalendar
+        : careerCalendar
     : merit(s)
       ? [
           stages[0],

@@ -139,6 +139,11 @@ api.toggleTeam(id);
 assert(d.querySelector('[data-action="Tour.start"]').disabled);
 api.toggleTeam(id);
 click('[data-action="Tour.start"]');
+// Keep this suite on the saved split-phase format; new points format has its own suite.
+const legacyUI = T.freshCareerTour(1, first, defaults);
+api.model.records[0] = api.recordOf(legacyUI);
+api.model.selected = legacyUI.seasonId;
+api.section("journey");
 assert.equal(d.querySelectorAll(".tour-journey-card").length, 10);
 for (let stage = 0; stage < 10; stage++) {
   api.resume();

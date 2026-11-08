@@ -1,3 +1,4 @@
+import { validPointsRegions } from "./points-validation";
 import { validWorldPlayinDouble } from "./world-playin-double";
 import {
   regionalTourChoices,
@@ -157,7 +158,9 @@ export function validCareerFull(input: unknown): input is FullSeason {
       }
       return true;
     }
-    if (c.regionalTour) {
+    if (c.points) {
+      if (!validPointsRegions(s, match)) return false;
+    } else if (c.regionalTour) {
       const chosen = regionOrder.flatMap((r) => s.regions[r].teamIds);
       if (
         !validRegionalSelection(c.leagueRoster, s.seasonNumber, chosen) ||
@@ -366,7 +369,7 @@ export function validCareerFull(input: unknown): input is FullSeason {
         p.league16.length !== 16 ||
         p.league16.some((id) => !c.leagueRoster.includes(id)) ||
         !sameCareerSet(p.challenger, [...p.challenger]) ||
-        p.challenger.length !== 2 ||
+        p.challenger.length !== (c.points ? 0 : 2) ||
         p.challenger.some((id) => !c.leagueRoster.includes(id))
       )
         return false;
@@ -444,6 +447,9 @@ export function validCareerFull(input: unknown): input is FullSeason {
         confirmed,
       ) ||
       !sameCareerSet([...w.pots[0], ...w.pots[1]], p.league16) ||
+      (c.points &&
+        (!sameCareerSet(w.pots[0], p.league16.slice(0, 8)) ||
+          !sameCareerSet(w.pots[1], p.league16.slice(8)))) ||
       !sameCareerSet(w.pots[2], [...extra, ...ic.slice(0, 8 - extra.length)]) ||
       !sameCareerSet(w.pots[3], ic.slice(8 - extra.length))
     )

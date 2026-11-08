@@ -12,7 +12,12 @@ export interface WorldCupBerth {
   readonly id: string;
   readonly region: Region;
   readonly route:
-    "group" | "regional-playoff" | "playin" | "league" | "challenger";
+    | "group"
+    | "regional-playoff"
+    | "playin"
+    | "league"
+    | "challenger"
+    | "points";
   readonly label: string;
 }
 export interface WorldCupBerths {

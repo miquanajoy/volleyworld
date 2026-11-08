@@ -3029,3 +3029,69 @@
   color: #91988c;
   font-size: 13px;
 }
+
+/* Qualification points remain distinct from historical honours. */
+.points-rankings,
+.points-regional-tickets {
+  display: grid;
+  gap: 20px;
+}
+.points-panel {
+  padding: 20px;
+  min-width: 0;
+  margin-bottom: 20px;
+}
+.points-panel .section-head {
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.points-panel table {
+  width: 100%;
+  min-width: 760px;
+}
+.points-panel td:last-child {
+  min-width: 185px;
+}
+.points-panel .team {
+  white-space: nowrap;
+}
+.points-provisional {
+  color: #8e6712;
+  font-size: 12px;
+}
+.points-pending {
+  color: var(--muted);
+  font-size: 12px;
+}
+.points-policy {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.points-policy summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 600;
+}
+.points-panel .qualification-names {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+.points-panel .qualification-names > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.points-panel .qualification-names small {
+  width: 100%;
+  color: var(--muted);
+}
