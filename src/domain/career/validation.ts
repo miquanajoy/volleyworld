@@ -1,3 +1,4 @@
+import { validWorldPlayinDouble } from "./world-playin-double";
 import {
   regionalTourChoices,
   regionalTourQuota,
@@ -33,6 +34,7 @@ import {
   careerFinalPlayers,
   careerPlayinDone,
   careerConfirmed,
+  careerPlayinWinners,
 } from "./playin";
 import { careerWorldPairs } from "./world";
 export const sameCareerSet = (a: string[], b: string[]) =>
@@ -371,40 +373,56 @@ export function validCareerFull(input: unknown): input is FullSeason {
       const f = careerPlayinFields(s),
         d = f.extra.length,
         k = 16 - d;
-      if (
-        !Array.isArray(p.draw) ||
-        p.draw.length !== k ||
-        new Set(p.draw).size !== k ||
-        p.draw.some((n) => !Number.isInteger(n) || n < 0 || n >= k) ||
-        !Array.isArray(p.preliminary) ||
-        p.preliminary.length !== d
-      )
-        return false;
-      const low = f.regional.slice(16 - 2 * d);
-      for (let i = 0; i < d; i++) {
-        const m = p.preliminary[i];
+      if (p.double !== undefined) {
+        const seeds = [...f.league, ...f.regional].sort(
+          (a, b) => get(a).rank - get(b).rank,
+        );
         if (
-          !match(m, f.regional, `WP${i}`) ||
-          m.a !== low[i] ||
-          m.b !== low[2 * d - 1 - i]
+          !Array.isArray(p.draw) ||
+          p.draw.length ||
+          !Array.isArray(p.preliminary) ||
+          p.preliminary.length ||
+          !Array.isArray(p.final) ||
+          p.final.length ||
+          !validWorldPlayinDouble(p.double, seeds, match)
         )
           return false;
-      }
-      const final = careerFinalPlayers(s);
-      if (
-        !Array.isArray(p.final) ||
-        p.final.length !== (final ? final.length : 0)
-      )
-        return false;
-      for (let i = 0; i < p.final.length; i++) {
-        const m = p.final[i],
-          p0 = final![i];
+      } else {
         if (
-          !match(m, [...f.league, ...f.regional], p0.id) ||
-          m.a !== p0.a ||
-          m.b !== p0.b
+          !Array.isArray(p.draw) ||
+          p.draw.length !== k ||
+          new Set(p.draw).size !== k ||
+          p.draw.some((n) => !Number.isInteger(n) || n < 0 || n >= k) ||
+          !Array.isArray(p.preliminary) ||
+          p.preliminary.length !== d
         )
           return false;
+        const low = f.regional.slice(16 - 2 * d);
+        for (let i = 0; i < d; i++) {
+          const m = p.preliminary[i];
+          if (
+            !match(m, f.regional, `WP${i}`) ||
+            m.a !== low[i] ||
+            m.b !== low[2 * d - 1 - i]
+          )
+            return false;
+        }
+        const final = careerFinalPlayers(s);
+        if (
+          !Array.isArray(p.final) ||
+          p.final.length !== (final ? final.length : 0)
+        )
+          return false;
+        for (let i = 0; i < p.final.length; i++) {
+          const m = p.final[i],
+            p0 = final![i];
+          if (
+            !match(m, [...f.league, ...f.regional], p0.id) ||
+            m.a !== p0.a ||
+            m.b !== p0.b
+          )
+            return false;
+        }
       }
     }
     if (s.world === null) return true;
@@ -412,9 +430,7 @@ export function validCareerFull(input: unknown): input is FullSeason {
     const w = s.world,
       confirmed = careerConfirmed(s),
       p = c.playin!,
-      ic = p.final
-        .map((m) => winner(m)!)
-        .sort((a, b) => get(a).rank - get(b).rank),
+      ic = careerPlayinWinners(s).sort((a, b) => get(a).rank - get(b).rank),
       extra = p.challenger.filter((id) => !p.league16.includes(id));
     if (
       !w ||

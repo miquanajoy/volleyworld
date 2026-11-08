@@ -13,7 +13,7 @@ Mùa đầu chọn 32 đội cho cả League và Challenger: CEV 7, AVC 7, NORCE
 | 3     | League Phase 2     | Vòng 11–20                                                        |
 | 4     | Challenger         | Swiss, playoff, huy chương; hai đội vào chung kết có vé World Cup |
 | 5     | League Phase 3     | Vòng 21–31 và bốn trận League Play-in; xác định đủ 16 đội playoff |
-| 6     | World Cup Play-in  | Hoàn tất vòng sơ bộ nếu có, rồi các trận quyết định vé            |
+| 6     | World Cup Play-in  | Nhánh thắng–thua, mỗi đội 2 mạng · 38–40 trận BO5                 |
 | 7     | League Playoff     | Nhánh 16 đội loại trực tiếp, tranh ba trước chung kết             |
 | 8     | World Cup          | Tám bảng bốn đội, chỉ nhất/nhì vào playoff 16 đội                 |
 
@@ -35,13 +35,13 @@ So sánh ứng viên giữa bảng theo thứ hạng bảng, tỷ lệ thắng, 
 
 Gọi `d` là số đội top 2 Challenger nằm ngoài League playoff 16 (`0`, `1` hoặc `2`). Không chuyển vé Challenger cho đội hạng ba.
 
-| d   | Đội League phải dự World Cup Play-in | Sơ bộ ngoài League | Trận cuối | Vé từ Play-in | Tổng World Cup   |
-| --- | ------------------------------------ | ------------------ | --------- | ------------- | ---------------- |
-| 0   | 16                                   | 0                  | 16        | 16            | 16 + 16 = 32     |
-| 1   | 15                                   | 1                  | 15        | 15            | 16 + 1 + 15 = 32 |
-| 2   | 14                                   | 2                  | 14        | 14            | 16 + 2 + 14 = 32 |
+| d   | Đội League dự Play-in | Đội khu vực | Tổng đội | Vé Play-in | Số trận BO5 |
+| --- | --------------------- | ----------- | -------- | ---------- | ----------- |
+| 0   | 16                    | 16          | 32       | 16         | 40          |
+| 1   | 15                    | 16          | 31       | 15         | 39          |
+| 2   | 14                    | 16          | 30       | 14         | 38          |
 
-Luôn có 16 đại diện tuyển chọn khu vực. Trong số này, `2d` đội có thứ hạng thế giới thấp nhất đầu mùa đấu `d` trận sơ bộ (cao gặp thấp); còn lại được chờ sẵn. Sau đó bốc thăm các đại diện ngoài League gặp các đội League chưa có vé. Tổng Play-in luôn 16 trận BO5, không có vé miễn phí cho đội League. Hai đội Challenger đã có vé không phải dự Play-in, nên không tồn tại tình huống mất vé do thua Play-in.
+Top 2 Challenger đã có vé nên không dự Play-in. World Cup Play-in dùng nhánh thắng–thua, mỗi đội có hai mạng. Khung 32 vị trí có 0/1/2 suất miễn vòng đầu theo hạt giống thế giới. Tám đội thắng vòng 2 nhánh thắng giành vé. Nhánh thua chốt 8/7/6 vé còn lại; không trao vé cho đội đã thua hai trận. Chi tiết lịch đấu và xử lý bản lưu: [WORLD-CUP-DOUBLE-PLAYIN.md](WORLD-CUP-DOUBLE-PLAYIN.md).
 
 ## Hạt giống và vòng bảng World Cup
 
@@ -66,7 +66,7 @@ Mỗi bảng một đội mỗi pot, tối đa hai đội một khu vực. Thu�
 
 Preview này lưu trong trình duyệt, không khởi tạo kết nối Supabase và không ghi DB. Dùng xuất/nhập để chuyển thiết bị. Dữ liệu mới có `rules: career-v1`; lịch sử legacy và merit-v1 vẫn đọc/chơi bằng luật cũ. Các mùa career không vào hàng đợi cloud. Bản chính hỗ trợ tạo, tiếp tục và nhập mùa career trên trình duyệt; đăng nhập và đồng bộ cho mùa cũ vẫn hoạt động riêng.
 
-Số trận thay đổi theo đội hình và các bảng tuyển chọn. Mùa đầu là 833 trận: League 516 + Challenger 82 + tuyển chọn 155 + World Cup Play-in 16 + World Cup 64.
+Số trận thay đổi theo đội hình và thể thức tuyển chọn. World Cup Play-in mới có 38–40 trận; số trận thực tế được cập nhật sau khi chốt suất Challenger và League. Bản lưu Play-in cũ đã có kết quả giữ nguyên thể thức và số trận cũ.
 
 ## Kiểm chứng
 

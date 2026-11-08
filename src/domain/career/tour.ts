@@ -22,6 +22,7 @@ import {
   advanceCareerPlayin,
   careerPlayinDone,
   careerConfirmed,
+  careerPlayinEliminated,
 } from "./playin";
 import { drawCareerWorld, careerWorldPots } from "./world";
 import { sameCareerSet, validCareerFull } from "./validation";
@@ -138,7 +139,7 @@ export function careerStatus(s: TourSeason) {
     promoted = qualified.filter((id) => !s.roster.includes(id)),
     p = s.worldcup.career!.playin;
   const relegated = p
-    ? p.final.filter((m) => m.sets && V.winner(m) !== m.a).map((m) => m.a)
+    ? careerPlayinEliminated(s.worldcup).filter((id) => s.roster.includes(id))
     : [];
   return {
     automatic,
@@ -176,7 +177,10 @@ export const careerCalendar = [
   ["League · Phase 2", "Vòng 11–20"],
   ["Challenger", "Swiss & playoff · Top 2 chắc vé World Cup"],
   ["League · Phase 3", "Vòng 21–31 & Play-in League · Chốt 16 đội playoff"],
-  ["World Cup Play-in", "16 trận · Tranh vé World Cup và thăng/trụ hạng"],
+  [
+    "World Cup Play-in",
+    "Nhánh thắng–thua · Tranh vé World Cup và thăng/trụ hạng",
+  ],
   ["League · Phase 4", "Playoff 16 đội · Xếp pot World Cup"],
   ["World Cup", "32 đội · 8 bảng · Chỉ top 2 đi tiếp"],
 ];
@@ -262,7 +266,11 @@ export function careerBatch(s: TourSeason): Match[] {
   }
   if (stage === 5) {
     const p = s.worldcup.career!.playin!;
-    return p.preliminary.some((m) => !m.sets) ? p.preliminary : p.final;
+    return p.double
+      ? p.double.rounds.at(-1) || []
+      : p.preliminary.some((m) => !m.sets)
+        ? p.preliminary
+        : p.final;
   }
   if (stage === 6)
     return (

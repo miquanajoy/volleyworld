@@ -1,3 +1,4 @@
+import { careerPlayinMatches } from "../career/playin";
 import { regionalTourMatches } from "../career/regional-tour";
 import { regionTeams } from "../../data/teams";
 import { simulate } from "../match/simulation";
@@ -78,9 +79,7 @@ export function fullMatches(s: FullSeason): Match[] {
     ]),
     ...regionalTourMatches(s),
     ...(s.intercontinental?.branches.flatMap(qualifierMatches) || []),
-    ...(s.career?.playin
-      ? [...s.career.playin.preliminary, ...s.career.playin.final]
-      : []),
+    ...careerPlayinMatches(s),
     ...(s.world?.groups.flatMap(leagueMatches) || []),
     ...worldStages.flatMap((k) => s.world?.bracket?.[k] || []),
   ];

@@ -6,3 +6,4 @@ export * from "./world";
 export * from "./tour";
 export * from "./validation";
 export * from "./regional-double";
+export * from "./world-playin-double";

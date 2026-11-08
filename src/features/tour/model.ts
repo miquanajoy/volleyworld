@@ -49,8 +49,9 @@ export const model = {
 export const selected = () =>
   model.records.find((r) => r.season_id === model.selected);
 export function recordOf(source: T.TourSeason, revision = 0): TourRecord {
-  const s = clone(source),
-    upgraded = T.useOriginalPlayoff(s);
+  const s = clone(source);
+  T.useDoublePlayin(s.worldcup);
+  const upgraded = T.useOriginalPlayoff(s);
   return {
     ...(upgraded ? { dirty: true } : {}),
     ...(T.career(s)
@@ -117,7 +118,10 @@ export function validRecord(input: unknown): input is TourRecord {
           T.played(r.snapshot) === r.played &&
           (!r.chain_id || r.snapshot.career?.chainId === r.chain_id) &&
           (r.total_matches === undefined ||
-            T.seasonTotal(r.snapshot) === r.total_matches) &&
+            T.seasonTotal(r.snapshot) === r.total_matches ||
+            (T.career(r.snapshot) &&
+              !r.snapshot.worldcup.career?.playin &&
+              T.seasonTotal(r.snapshot) - 24 === r.total_matches)) &&
           T.complete(r.snapshot) === (r.status === "completed")))
     );
   } catch {
@@ -148,14 +152,16 @@ export function readScope(key: string): TourRecord[] {
             );
           })
           .map((r) =>
-            r.snapshot &&
-            V.expandedSingle(r.snapshot.league) &&
-            (r.snapshot.stage < 6 ||
-              (r.snapshot.stage === 6 &&
-                !r.snapshot.league.bracket &&
-                !r.snapshot.league.playin?.some((m) => m.sets)))
-              ? { ...r, ...recordOf(r.snapshot, r.revision), dirty: true }
-              : r,
+            r.snapshot && T.career(r.snapshot)
+              ? { ...r, ...recordOf(r.snapshot, r.revision), dirty: false }
+              : r.snapshot &&
+                  V.expandedSingle(r.snapshot.league) &&
+                  (r.snapshot.stage < 6 ||
+                    (r.snapshot.stage === 6 &&
+                      !r.snapshot.league.bracket &&
+                      !r.snapshot.league.playin?.some((m) => m.sets)))
+                ? { ...r, ...recordOf(r.snapshot, r.revision), dirty: true }
+                : r,
           )
       : [];
   } catch {

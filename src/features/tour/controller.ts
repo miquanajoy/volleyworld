@@ -586,10 +586,7 @@ function competitionMatches(s: T.TourSeason, id: string) {
     ];
   }
   if (T.career(s) && model.stage === T.qualificationStage(s))
-    return [
-      ...(s.worldcup.career?.playin?.preliminary || []),
-      ...(s.worldcup.career?.playin?.final || []),
-    ];
+    return T.careerPlayinMatches(s.worldcup);
   if (model.stage === T.qualificationStage(s))
     return [
       ...F.regionOrder.flatMap((r) => [
@@ -697,10 +694,7 @@ export function showTeam(id: string) {
             ),
           );
   } else if (T.career(s) && model.stage === T.qualificationStage(s))
-    source = [
-      ...(s.worldcup.career?.playin?.preliminary || []),
-      ...(s.worldcup.career?.playin?.final || []),
-    ];
+    source = T.careerPlayinMatches(s.worldcup);
   else if (model.stage === T.qualificationStage(s))
     source = [
       ...F.regionOrder.flatMap((r) =>
