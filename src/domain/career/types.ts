@@ -12,6 +12,10 @@ export interface CareerQualification {
   slots: Record<Region, number>;
   playin: CareerPlayin | null;
   regionalTour?: CareerRegionalTour;
+  points?: {
+    version: 1;
+    phase2: Record<Region, import("../full-season/types").RegionalLeague>;
+  };
 }
 export interface CareerChain {
   chainId: string;

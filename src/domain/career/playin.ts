@@ -41,8 +41,8 @@ export function createCareerPlayin(
     league16.length !== 16 ||
     new Set(league16).size !== 16 ||
     league16.some((id) => !f.career!.leagueRoster.includes(id)) ||
-    challenger.length !== 2 ||
-    new Set(challenger).size !== 2 ||
+    challenger.length !== (f.career!.points ? 0 : 2) ||
+    new Set(challenger).size !== challenger.length ||
     challenger.some((id) => !f.career!.leagueRoster.includes(id)) ||
     regional.length !== 16 ||
     new Set(regional).size !== 16 ||

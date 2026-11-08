@@ -21,6 +21,13 @@ export function careerWorldPots(f: FullSeason, l: SeasonTournament) {
   const p = f.career!.playin!,
     ic = careerPlayinWinners(f).sort((a, b) => get(a).rank - get(b).rank),
     extra = p.challenger.filter((id) => !p.league16.includes(id));
+  if (f.career!.points)
+    return [
+      p.league16.slice(0, 8),
+      p.league16.slice(8),
+      ic.slice(0, 8),
+      ic.slice(8),
+    ];
   return [
     l.bracket.r16.map((m) => winner(m)!),
     l.bracket.r16.map((m) => loser(m)!),

@@ -1,3 +1,10 @@
+import {
+  pointsFormat,
+  pointsRegionalRows,
+  pointsRegionalPhaseDone,
+  pointsRegionalTotal,
+  advancePointsRegions,
+} from "./points-regional";
 import { catalog, get } from "../../data/teams";
 import { fullLeague, fullStandings } from "../full-season/league";
 import { regionalGroup } from "../full-season/regional";
@@ -167,6 +174,16 @@ export function regionalTourEarly(f: FullSeason, r: Region) {
   return allocate(f, regionalTourSeeds(g), n);
 }
 export function regionalTourStatus(f: FullSeason, r: Region) {
+  if (pointsFormat(f)) {
+    const rows = pointsRegionalRows(f, r),
+      done = pointsRegionalPhaseDone(f, r, 2),
+      early = rows.filter((x) => x.confirmed).map((x) => x.id);
+    return {
+      done,
+      early,
+      entrants: done ? rows.filter((x) => x.inQuota).map((x) => x.id) : early,
+    };
+  }
   const g = f.regions[r],
     q = regionalTourQuota(f, r),
     early = regionalTourEarly(f, r);
@@ -205,6 +222,10 @@ export function regionalTourStatus(f: FullSeason, r: Region) {
   return { done: true, early, entrants: allocate(f, order, q, early) };
 }
 export function advanceRegionalTour(f: FullSeason) {
+  if (pointsFormat(f)) {
+    advancePointsRegions(f, 2);
+    return;
+  }
   const rt = f.career!.regionalTour!;
   for (const r of regionalTourKeys) {
     const g = f.regions[r],
@@ -232,6 +253,7 @@ export function regionalTourMatches(f: FullSeason): Match[] {
   );
 }
 export function regionalTourTotal(f: FullSeason) {
+  if (pointsFormat(f)) return pointsRegionalTotal(f);
   return regionalTourKeys.reduce((n, r) => {
     const g = f.regions[r],
       q = regionalTourQuota(f, r);

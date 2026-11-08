@@ -143,8 +143,8 @@ export function start() {
     )?.snapshot;
     if (d.parent && !previous) throw Error("Không tìm thấy mùa trước.");
     const s = previous
-        ? T.nextCareerSeason(previous, d.regionalIds)
-        : T.freshCareerTour(1, d.ids, d.regionalIds),
+        ? T.nextPointsSeason(previous, d.regionalIds)
+        : T.freshPointsTour(1, d.ids, d.regionalIds),
       r = recordOf(s);
     r.dirty = !T.career(s);
     model.records.push(r);
@@ -254,6 +254,15 @@ function currentRound(s: T.TourSeason, stage: number): number {
   if (stage === T.lastStage(s) && s.worldcup.world)
     return F.worldCurrentRound(s.worldcup.world);
   const g = s.worldcup.regions[model.region];
+  if (s.worldcup.career?.points && [1, 3].includes(stage)) {
+    const phase = T.pointsRegionPhase(
+      s.worldcup,
+      model.region,
+      T.regionalPhaseIndex(stage),
+    );
+    const row = phase.rounds.findIndex((row) => row.some((m) => !m.sets));
+    return Math.max(0, row < 0 ? phase.rounds.length - 1 : row);
+  }
   if (T.regionalFormat(s) && (stage === 1 || stage === 3)) {
     const split = T.regionalTourSplit(g),
       start = stage === 1 ? 0 : split,
@@ -288,6 +297,7 @@ export function section(key: string) {
       "teams",
       "rules",
       "qualifiers",
+      "points",
     ].includes(key)
   )
     return;
@@ -539,6 +549,25 @@ export function edit(id: string) {
   });
 }
 function regionalHistory(s: T.TourSeason, region: Region) {
+  if (s.worldcup.career?.points) {
+    const phase = T.regionalPhaseIndex(model.stage);
+    if (phase === 2 || model.section === "playoff")
+      return T.pointsRegionalPhaseMatches(s.worldcup, region, phase);
+    const g = T.pointsRegionPhase(s.worldcup, region, phase);
+    return [
+      ...g.rounds.flatMap((row, i) =>
+        row.map((m) =>
+          i > model.round ? { ...m, sets: null, resultOrder: undefined } : m,
+        ),
+      ),
+      ...(model.round >= g.rounds.length - 1
+        ? [
+            ...(g.playoff?.rounds.flat() || []),
+            ...(g.decider ? [g.decider] : []),
+          ]
+        : []),
+    ];
+  }
   const g = s.worldcup.regions[region];
   return model.stage === 6
     ? [
@@ -743,6 +772,16 @@ export function showTeam(id: string) {
       s.challenger?.rounds.findIndex((row) => row.some((x) => x.id === m.id)) ??
       -1;
     if (round >= 0) return `Swiss · Vòng ${round + 1}`;
+    if (
+      s.worldcup.career?.points &&
+      T.regionalStage(s, model.stage) &&
+      model.stage !== 6
+    ) {
+      const phase = T.regionalPhaseIndex(model.stage);
+      const g = T.pointsRegionPhase(s.worldcup, model.region, phase);
+      round = g.rounds.findIndex((row) => row.some((x) => x.id === m.id));
+      if (round >= 0) return `Phase ${phase + 1} · Vòng bảng ${round + 1}`;
+    }
     for (const r of F.regionOrder) {
       round = s.worldcup.regions[r].rounds.findIndex((row) =>
         row.some((x) => x.id === m.id),

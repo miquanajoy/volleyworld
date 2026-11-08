@@ -1,3 +1,4 @@
+import { pointsRegionalHtml } from "./points-view";
 import * as T from "../../domain/tour/index";
 import * as F from "../../domain/full-season/index";
 import * as V from "../../domain/index";
@@ -13,6 +14,7 @@ import type { TourViewState } from "./views";
 const regionName = (r: Region) => T.regionalTourName(r) || names[r];
 
 export function regionalTourHtml(s: T.TourSeason, v: TourViewState) {
+  if (s.worldcup.career?.points) return pointsRegionalHtml(s, v);
   const f = s.worldcup,
     r = v.region === "CSV" ? "NORCECA" : v.region,
     g = f.regions[r],

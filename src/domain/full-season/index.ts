@@ -1,3 +1,4 @@
+import { pointsFormat, pointsRegionalMatches } from "../career/points-regional";
 import { careerPlayinMatches } from "../career/playin";
 import { regionalTourMatches } from "../career/regional-tour";
 import { regionTeams } from "../../data/teams";
@@ -70,6 +71,13 @@ export function freshFullSeason(
   };
 }
 export function fullMatches(s: FullSeason): Match[] {
+  if (pointsFormat(s))
+    return [
+      ...pointsRegionalMatches(s),
+      ...careerPlayinMatches(s),
+      ...(s.world?.groups.flatMap(leagueMatches) || []),
+      ...worldStages.flatMap((k) => s.world?.bracket?.[k] || []),
+    ];
   return [
     ...regionOrder.flatMap((r) => [
       ...leagueMatches(s.regions[r]),
