@@ -1,3 +1,4 @@
+import { seasonTeam } from "../../components/season-match";
 import { get } from "../../data/teams";
 import type { TourSeason } from "../../domain/tour/index";
 import type { Region, Match } from "../../domain/types";
@@ -10,6 +11,7 @@ import {
   pointsRegionalRows,
   pointsRegionPhase,
   regionalPhaseIndex,
+  pointsPhaseMatches,
   pointsPhaseDone,
   pointsPhasePlaces,
   pointsRegionalSeeds,
@@ -25,7 +27,7 @@ import {
 } from "../../domain/career/regional-double";
 import { regionalGroup } from "../../domain/full-season/regional";
 import { fullStandings, fullLeagueDone } from "../../domain/full-season/league";
-import { qualifierPlayers } from "../../domain/full-season/qualification";
+import { qualifierTreeHtml } from "../full-season/qualification-tree";
 import { leagueRoundSnapshot } from "../../domain/league/round-standings";
 import { careerStatus } from "../../domain/career/tour";
 import { team } from "../../components/team";
@@ -79,7 +81,7 @@ export function pointsRegionalHtml(s: TourSeason, v: TourViewState) {
     if (p === 2) return "";
     const g = pointsRegionPhase(f, r, p),
       round = Math.max(0, Math.min(v.round, g.rounds.length - 1));
-    return `<div class="full-groups">${g
+    return `<div class="full-groups tour-phase-groups">${g
       .groups!.map((_, i) => {
         const group = regionalGroup(g, i),
           snap = leagueRoundSnapshot(group, round);
@@ -100,7 +102,21 @@ export function pointsRegionalHtml(s: TourSeason, v: TourViewState) {
     const roundNav = `<nav class="tour-round-nav">${g.rounds.map((_, i) => `<button data-action="Tour.round" data-arg="${i}" aria-pressed="${round === i}">Lượt ${i + 1}</button>`).join("")}</nav>`;
     const b = g.playoff;
     const tree = b
-      ? `<section class="double-overview-panel"><h3>Playoff Phase ${p + 1} · Top 2 mỗi bảng</h3><div class="playoff-tree-scroll"><div class="regional-double-columns">${b.rounds.map((row, i) => `<section class="lower-tree-stage"><h4>${i === b.rounds.length - 1 ? "Chung kết" : "Vòng " + (i + 1)}</h4>${row.map(fixture).join("")}${!row.length ? `<p class="sub">${qualifierPlayers(b, i) ? "Được miễn đấu" : "Chờ vòng trước"}</p>` : ""}</section>`).join("")}${g.decider ? `<section class="lower-tree-stage"><h4>Tranh hạng ba</h4>${fixture(g.decider)}</section>` : ""}</div></div>${pointsPhaseDone(g) ? `<p class="sub">Vô địch: ${team(Object.keys(pointsPhasePlaces(g)).find((id) => pointsPhasePlaces(g)[id] === 1)!)} · Điểm thưởng phase đã chốt.</p>` : ""}</section>`
+      ? `<section class="double-overview-panel" data-phase-playoff><h3>Playoff Phase ${p + 1} · Top 2 mỗi bảng</h3>${qualifierTreeHtml(
+          f,
+          b,
+          r + "P" + (p + 1),
+          {
+            readonly: v.stage !== s.stage,
+            actionPrefix: "Tour",
+            title: `Playoff Phase ${p + 1}`,
+            renderTeam: (id) => seasonTeam(id, pointsPhaseMatches(g)),
+            winnerLabel: `VÔ ĐỊCH PHASE ${p + 1} · ĐIỂM THƯỞNG ĐÃ CHỐT`,
+            seedNote:
+              "Top 1 mỗi bảng xếp trên top 2 · Tránh gặp lại đội cùng bảng ở trận đầu · Vô địch nhận điểm thưởng, không tự động nhận vé.",
+            bronze: b.seeds.length >= 4 ? g.decider || null : undefined,
+          },
+        )}${pointsPhaseDone(g) ? `<p class="sub">Vô địch: ${team(Object.keys(pointsPhasePlaces(g)).find((id) => pointsPhasePlaces(g)[id] === 1)!)} · Điểm thưởng phase đã chốt.</p>` : ""}</section>`
       : '<p class="sub">Playoff mở sau khi hoàn tất tất cả bảng trong khu vực.</p>';
     return (
       nav +

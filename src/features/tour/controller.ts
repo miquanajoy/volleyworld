@@ -429,11 +429,13 @@ export function qualifierStage(prefix: string) {
   if (
     !active() ||
     !(
-      T.career(selected()!.snapshot!)
-        ? [1, 5]
-        : T.merit(selected()!.snapshot!)
-          ? [6]
-          : [1, 5]
+      T.seasonPointsFormat(selected()!.snapshot!)
+        ? [1, 3]
+        : T.career(selected()!.snapshot!)
+          ? [1, 5]
+          : T.merit(selected()!.snapshot!)
+            ? [6]
+            : [1, 5]
     ).includes(selected()!.snapshot!.stage)
   )
     return;
@@ -442,7 +444,11 @@ export function qualifierStage(prefix: string) {
       T.simulateMatches(
         s,
         T.batch(s)
-          .filter((m) => m.id.startsWith(prefix + "K"))
+          .filter(
+            (m) =>
+              m.id.startsWith(prefix + "K") ||
+              (T.seasonPointsFormat(s) && m.id === prefix + "B"),
+          )
           .map((m) => m.id),
       ),
     ),

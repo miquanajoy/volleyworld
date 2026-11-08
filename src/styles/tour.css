@@ -3095,3 +3095,31 @@
   width: 100%;
   color: var(--muted);
 }
+
+/* Regional phase tables share the available width in two columns. */
+.tour-phase-groups {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+.tour-phase-groups .points-panel {
+  margin-bottom: 0;
+}
+.tour-phase-groups table {
+  min-width: 0;
+}
+.tour-phase-groups th,
+.tour-phase-groups td {
+  padding: 12px 8px;
+  white-space: nowrap;
+}
+.tour-phase-groups td:last-child {
+  min-width: 100px;
+}
+.tour-phase-groups td:nth-child(2) {
+  text-align: left;
+}
+@media (max-width: 1000px) {
+  .tour-phase-groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
