@@ -3123,3 +3123,29 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Phase 3 inherits the connected tree and keeps every card the same width. */
+.points-regional-double .regional-double-columns {
+  grid-auto-columns: 244px;
+  width: max-content;
+  min-width: max-content;
+}
+.points-regional-double .regional-double-nodes {
+  min-width: 0;
+}
+.points-regional-double .tree-scroll-hint {
+  margin: 0 0 10px;
+}
+.points-regional-double .playoff-tree-scroll,
+.points-regional-double .double-lower-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: auto;
+  scrollbar-color: #9eaf94 #edf1e8;
+}
+@media (max-width: 650px) {
+  .points-regional-double .regional-double-columns {
+    grid-auto-columns: 220px;
+  }
+}

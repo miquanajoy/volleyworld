@@ -2,6 +2,10 @@ const assert = require("node:assert/strict");
 const T = require("../../.test-build/tour-engine.js");
 const V = require("../../.test-build/engine.js");
 const F = require("../../.test-build/full-engine.js");
+const K = require("../../.test-build/career-engine.js");
+let random = 871233;
+Math.random = () =>
+  (random = (Math.imul(random, 1664525) + 1013904223) >>> 0) / 4294967296;
 const { ui } = require("../support/tour-harness.cjs");
 const clone = (x) => JSON.parse(JSON.stringify(x));
 const first = T.defaultRoster();
@@ -202,7 +206,25 @@ for (let stage = 0; stage < 10; stage++) {
         const cancelled = [
           ...d.querySelectorAll(".bracket-match.is-cancelled"),
         ];
-        assert(cancelled.length > 0);
+        const snapshot = api.selected().snapshot;
+        const plan = K.regionalDoublePlan(
+          T.regionalTourSeeds(snapshot.worldcup.regions[r]),
+          r + "D",
+        );
+        const planned = plan.reduce((n, stage) => n + stage.pairs.length, 0);
+        const played =
+          snapshot.worldcup.career.regionalTour.brackets[r]?.rounds.flat()
+            .length || 0;
+        assert.equal(
+          d.querySelectorAll("[data-regional-slot]").length,
+          planned,
+          "all planned slots remain visible",
+        );
+        assert.equal(
+          cancelled.length,
+          planned - played,
+          "only genuinely unplayed slots are cancelled; a full reset path can play every match",
+        );
         for (const slot of cancelled) {
           assert(slot.textContent.includes("Cặp đấu không diễn ra"));
           assert.deepEqual(
@@ -217,7 +239,7 @@ for (let stage = 0; stage < 10; stage++) {
           (slot) => slot.querySelectorAll(".team").length === 2,
         );
         assert(
-          knownClosed,
+          !cancelled.length || knownClosed,
           "Known participants remain visible in an unused pair",
         );
         assert.equal(JSON.stringify(api.selected().snapshot), frozen);
