@@ -78,12 +78,24 @@ function knockoutUpper(
     return { wins: actualWins, bonus: 0 };
   return { wins: league ? 5 : 4, bonus: bonus(1) };
 }
+/** Preserve already drawn legacy World Cups; undecided seasons use playoff berths. */
+export const leaguePlayoffBerths = (s: TourSeason) =>
+  s.worldcup.career?.points?.leagueBerths === "playoff" ||
+  !s.worldcup.career?.playin;
+export const leagueBerthName = (s: TourSeason) =>
+  leaguePlayoffBerths(s)
+    ? "Top 4 playoff League"
+    : "Top 4 vòng bảng League · Luật cũ";
 export function leagueTopFour(s: TourSeason) {
-  return leagueDone(s.league)
-    ? standings(s.league)
-        .slice(0, 4)
-        .map((t) => t.id)
-    : [];
+  if (!leaguePlayoffBerths(s))
+    return leagueDone(s.league)
+      ? standings(s.league)
+          .slice(0, 4)
+          .map((t) => t.id)
+      : [];
+  return (s.league.bracket?.qf || [])
+    .filter((m) => m.sets)
+    .map((m) => winner(m)!);
 }
 export function seasonPointsRows(s: TourSeason) {
   const table = standings(s.league),
@@ -200,6 +212,6 @@ export const seasonPointsLabels = (s: TourSeason) =>
       id: r.id,
       route: r.automatic ? "league" : "points",
       label: r.automatic
-        ? "Top 4 BXH League · Vé World Cup"
+        ? `${leagueBerthName(s)} · Vé World Cup`
         : "Đủ điểm tích lũy · Vé World Cup",
     }));

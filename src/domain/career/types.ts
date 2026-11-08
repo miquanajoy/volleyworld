@@ -14,6 +14,7 @@ export interface CareerQualification {
   regionalTour?: CareerRegionalTour;
   points?: {
     version: 1 | 2;
+    leagueBerths?: "playoff";
     phase2: Record<Region, import("../full-season/types").RegionalLeague>;
   };
 }

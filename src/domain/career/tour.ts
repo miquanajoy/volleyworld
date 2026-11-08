@@ -383,6 +383,8 @@ export function nextCareerStage(s: TourSeason) {
   if (careerBaseStage(s, s.stage) === 3)
     s.challenger = C.freshChallenger(s.seasonNumber, s.roster, true);
   if (careerBaseStage(s, s.stage) === 5) {
+    if (s.worldcup.career?.points)
+      s.worldcup.career.points.leagueBerths = "playoff";
     const status = careerStatus(s);
     createCareerPlayin(s.worldcup, status.league16, status.challenger);
   }

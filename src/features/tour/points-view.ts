@@ -6,6 +6,7 @@ import type { TourViewState } from "./views";
 import {
   seasonPointsRows,
   leagueTopFour,
+  leagueBerthName,
 } from "../../domain/career/season-points";
 import {
   pointsRegionalRows,
@@ -34,16 +35,20 @@ import { team } from "../../components/team";
 import { names } from "../../shared/dom";
 import { doubleBracketFixture } from "./regional-view";
 const regionName = (r: Region) => regionalTourName(r) || names[r];
-const badge = (confirmed: boolean, provisional: boolean, automatic = false) =>
+const badge = (
+  confirmed: boolean,
+  provisional: boolean,
+  automatic: string | false = false,
+) =>
   confirmed
-    ? `<span class="full-qualification" data-point-status="qualified">✓ ${automatic ? "Top 4 League · Vé World Cup" : "Đã giành vé"}</span>`
+    ? `<span class="full-qualification" data-point-status="qualified">✓ ${automatic ? `${automatic} · Vé World Cup` : "Đã giành vé"}</span>`
     : provisional
       ? '<span class="points-provisional" data-point-status="provisional">Tạm trong nhóm có suất</span>'
       : '<span class="points-pending">Chưa chốt vé</span>';
 export function mainPointsHtml(s: TourSeason) {
   const rows = seasonPointsRows(s),
     auto = leagueTopFour(s);
-  return `<section class="panel points-panel" data-main-points><div class="section-head"><div><span class="eyebrow">ĐIỂM MÙA · CẬP NHẬT MỚI NHẤT</span><h3>League + Challenger</h3><p class="sub">4 vé top 4 BXH League + 12 vé theo điểm · Điểm không mang sang mùa sau.</p></div><span class="badge">${rows.filter((r) => r.confirmed).length}/16 VÉ ĐÃ CHỐT</span></div><div class="table-wrap"><table class="full-standings"><thead><tr><th>#</th><th>Đội</th><th>League</th><th>Challenger</th><th>Tổng</th><th>Tối đa còn có thể đạt</th><th>Trạng thái World Cup</th></tr></thead><tbody>${rows.map((r, i) => `<tr data-point-team="${r.id}" class="${r.confirmed ? "direct" : r.inQuota ? "in" : ""}"><td>${i + 1}</td><td><button class="tour-table-team" data-action="Tour.team" data-arg="${r.id}">${team(r.id)}</button></td><td>${r.league}</td><td>${r.challenger}</td><td><b>${r.points}</b></td><td>${r.max}</td><td>${badge(r.confirmed, r.inQuota, auto.includes(r.id))}</td></tr>`).join("")}</tbody></table></div><details class="points-policy"><summary>Phổ điểm & cách chốt vé</summary><p>Thắng vòng tròn League / Swiss: 5 điểm. Thắng Play-in hoặc playoff League: 20; playoff Challenger: 10.</p><p>Thưởng League: vô địch 400 · á quân 300 · hạng ba 240 · hạng tư 200 · tứ kết 150 · vòng 16 đội 80. Challenger: 300 / 180 / 120 / 100 / 60 / 25.</p><p>Mỗi giải chỉ nhận một thưởng thành tích cuối. 12 vé điểm bỏ qua bốn đội top 4 League. Bằng điểm: thành tích playoff League → Challenger → số trận thắng League → kết quả bốc thăm đã lưu của mùa.</p><p>Điểm thắng cập nhật trực tiếp; thưởng và điểm bảo đảm được chốt khi hết phase. “Đã giành vé” chỉ hiện khi mọi kịch bản còn lại đều không thể đẩy đội ra ngoài suất.</p></details></section>`;
+  return `<section class="panel points-panel" data-main-points><div class="section-head"><div><span class="eyebrow">ĐIỂM MÙA · CẬP NHẬT MỚI NHẤT</span><h3>League + Challenger</h3><p class="sub">4 vé ${leagueBerthName(s)} + 12 vé theo điểm · Điểm không mang sang mùa sau.</p></div><span class="badge">${rows.filter((r) => r.confirmed).length}/16 VÉ ĐÃ CHỐT</span></div><div class="table-wrap"><table class="full-standings"><thead><tr><th>#</th><th>Đội</th><th>League</th><th>Challenger</th><th>Tổng</th><th>Tối đa còn có thể đạt</th><th>Trạng thái World Cup</th></tr></thead><tbody>${rows.map((r, i) => `<tr data-point-team="${r.id}" class="${r.confirmed ? "direct" : r.inQuota ? "in" : ""}"><td>${i + 1}</td><td><button class="tour-table-team" data-action="Tour.team" data-arg="${r.id}">${team(r.id)}</button></td><td>${r.league}</td><td>${r.challenger}</td><td><b>${r.points}</b></td><td>${r.max}</td><td>${badge(r.confirmed, r.inQuota, auto.includes(r.id) ? leagueBerthName(s) : false)}</td></tr>`).join("")}</tbody></table></div><details class="points-policy"><summary>Phổ điểm & cách chốt vé</summary><p>Thắng vòng tròn League / Swiss: 5 điểm. Thắng Play-in hoặc playoff League: 20; playoff Challenger: 10.</p><p>Thưởng League: vô địch 400 · á quân 300 · hạng ba 240 · hạng tư 200 · tứ kết 150 · vòng 16 đội 80. Challenger: 300 / 180 / 120 / 100 / 60 / 25.</p><p>Mỗi giải chỉ nhận một thưởng thành tích cuối. 12 vé điểm bỏ qua nhóm bốn vé trực tiếp nêu trên. Bằng điểm: thành tích playoff League → Challenger → số trận thắng League → kết quả bốc thăm đã lưu của mùa.</p><p>Điểm thắng cập nhật trực tiếp; thưởng và điểm bảo đảm được chốt khi hết phase. “Đã giành vé” chỉ hiện khi mọi kịch bản còn lại đều không thể đẩy đội ra ngoài suất.</p></details></section>`;
 }
 export function regionPointsHtml(s: TourSeason, r: Region) {
   const rows = pointsRegionalRows(s.worldcup, r),
@@ -55,7 +60,7 @@ export const allPointsHtml = (s: TourSeason) =>
 export function pointsWorldTicketsHtml(s: TourSeason) {
   const state = careerStatus(s),
     rows = seasonPointsRows(s);
-  return `<section class="panel points-panel" data-points-wc-tickets><div class="section-head"><div><span class="eyebrow">VÉ WORLD CUP · CẬP NHẬT MỚI NHẤT</span><h3>${state.qualified.length}/32 đội đã giành vé World Cup</h3><p class="sub">4 vé top 4 League · 12 vé điểm · 16 vé qua Play-in.</p></div></div><div class="qualification-names">${state.qualified.map((id) => `<span data-qualified-team="${id}">${team(id)}<small>${rows.find((r) => r.id === id)?.automatic ? "Top 4 BXH League" : rows.find((r) => r.id === id)?.confirmed ? "Đủ điểm tích lũy" : "Thắng World Cup Play-in"}</small><b>✓</b></span>`).join("") || '<p class="sub">Chưa có đội chắc chắn giành vé.</p>'}</div></section><div class="points-regional-tickets">${regionalTourKeys
+  return `<section class="panel points-panel" data-points-wc-tickets><div class="section-head"><div><span class="eyebrow">VÉ WORLD CUP · CẬP NHẬT MỚI NHẤT</span><h3>${state.qualified.length}/32 đội đã giành vé World Cup</h3><p class="sub">4 vé ${leagueBerthName(s)} · 12 vé điểm · 16 vé qua Play-in.</p></div></div><div class="qualification-names">${state.qualified.map((id) => `<span data-qualified-team="${id}">${team(id)}<small>${rows.find((r) => r.id === id)?.automatic ? leagueBerthName(s) : rows.find((r) => r.id === id)?.confirmed ? "Đủ điểm tích lũy" : "Thắng World Cup Play-in"}</small><b>✓</b></span>`).join("") || '<p class="sub">Chưa có đội chắc chắn giành vé.</p>'}</div></section><div class="points-regional-tickets">${regionalTourKeys
     .map((r) => {
       const confirmed = pointsRegionalRows(s.worldcup, r).filter(
         (x) => x.confirmed,
