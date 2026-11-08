@@ -1,5 +1,4 @@
 import { seasonTeam } from "../../components/season-match";
-import { get } from "../../data/teams";
 import type { TourSeason } from "../../domain/tour/index";
 import type { Region, Match } from "../../domain/types";
 import type { TourViewState } from "./views";
@@ -16,16 +15,13 @@ import {
   pointsPhaseDone,
   pointsPhasePlaces,
   pointsRegionalSeeds,
+  completeRegionalDouble,
 } from "../../domain/career/points-regional";
 import {
   regionalTourKeys,
   regionalTourQuota,
   regionalTourName,
 } from "../../domain/career/regional-tour";
-import {
-  regionalDoublePlan,
-  regionalDoublePreview,
-} from "../../domain/career/regional-double";
 import { regionalGroup } from "../../domain/full-season/regional";
 import { fullStandings, fullLeagueDone } from "../../domain/full-season/league";
 import { qualifierTreeHtml } from "../full-season/qualification-tree";
@@ -33,7 +29,7 @@ import { leagueRoundSnapshot } from "../../domain/league/round-standings";
 import { careerStatus } from "../../domain/career/tour";
 import { team } from "../../components/team";
 import { names } from "../../shared/dom";
-import { doubleBracketFixture } from "./regional-view";
+import { doubleBracketFixture, regionalDoublePanelHtml } from "./regional-view";
 const regionName = (r: Region) => regionalTourName(r) || names[r];
 const badge = (
   confirmed: boolean,
@@ -138,45 +134,25 @@ export function pointsRegionalHtml(s: TourSeason, v: TourViewState) {
   const seeds = pointsRegionalSeeds(f, r),
     b = f.career!.regionalTour!.brackets[r] || { rounds: [] };
   if (seeds.length < 2) return nav + regionPointsHtml(s, r);
-  const plan = regionalDoublePlan(seeds, r + "D"),
-    preview = regionalDoublePreview(seeds, r + "D", b);
-  const panel = (kind: string, label: string) => {
-    const columns = plan
-        .map((stage, i) => ({ stage, i }))
-        .filter((x) => x.stage.kind === kind),
-      rows = Math.max(1, ...columns.map((x) => x.stage.pairs.length));
-    return `<section class="double-overview-panel" aria-label="${label}"><h3>${label}</h3><div class="double-lower-scroll"><div class="regional-double-columns">${columns
-      .map(
-        ({ stage, i }) =>
-          `<section class="lower-tree-stage"><h4>${kind === "grand" ? (stage.id.endsWith("R") ? "Reset nếu cần" : "Chung kết") : "Vòng " + stage.id.match(/\d+$/)?.[0]}</h4><div class="regional-double-nodes" style="grid-template-rows:repeat(${rows},132px)">${stage.pairs
-            .map((_, j) => {
-              const id = stage.id + "-" + j,
-                m = b.rounds[i]?.find((m) => m.id === id) || null;
-              return `<div data-regional-slot="${id}" class="lower-tree-node" style="grid-row:${j * (rows / stage.pairs.length) + 1}/span ${rows / stage.pairs.length}">${doubleBracketFixture(
-                m,
-                id + " · BO5",
-                b.rounds.length === plan.length && !m,
-                preview.get(id),
-                stage.pairs[j].map((source) =>
-                  typeof source === "object" && source
-                    ? (source.loss ? "Thua " : "Thắng ") +
-                      source.id
-                        .slice(r.length + 1)
-                        .replace(/-(\d+)$/, (_, n) => "-" + (Number(n) + 1))
-                    : source
-                      ? get(source).name
-                      : "Miễn đấu",
-                ),
-              )}</div>`;
-            })
-            .join("")}</div></section>`,
-      )
-      .join("")}</div></div></section>`;
-  };
+  const panel = (
+    kind: "upper" | "lower" | "grand",
+    label: string,
+    sub: string,
+  ) =>
+    regionalDoublePanelHtml({
+      region: r,
+      seeds,
+      bracket: b,
+      kind,
+      label,
+      sub,
+      closed: completeRegionalDouble(b, seeds.length),
+      caption: `VÒNG LOẠI KHU VỰC · PHASE 3 · ${regionName(r)}`,
+    });
   // Only actual current fixtures are editable; all historical cards open read-only details.
   return (
     nav +
     regionPointsHtml(s, r) +
-    `<p class="sub">Phase 3 · Hạt giống theo điểm Phase 1 + 2 · Đấu hết nhánh đến nhà vô địch, sau đó chốt vé bằng tổng điểm.</p><div class="double-overview" data-regional-double>${panel("upper", "Nhánh thắng")}${panel("lower", "Nhánh thua")}${panel("grand", "Chung kết")}</div>`
+    `<p class="sub">Phase 3 · Hạt giống theo điểm Phase 1 + 2 · Đấu hết nhánh đến nhà vô địch, sau đó chốt vé bằng tổng điểm.</p><div class="double-overview points-regional-double" data-regional-double>${panel("upper", "Nhánh thắng", "Thua lần đầu chuyển xuống nhánh thua.")}${panel("lower", "Nhánh thua", "Thua lần hai bị loại · Nguồn đối thủ được ghi dưới mỗi trận.")}${panel("grand", "Chung kết", "Đấu đến nhà vô địch · Reset nếu đội nhánh thua thắng trận đầu.")}</div>`
   );
 }

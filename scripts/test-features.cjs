@@ -4,6 +4,7 @@ for (const file of [
   "tour-career",
   "season-qualification-points",
   "regional-phase-ui",
+  "regional-phase-three-ui",
   "fixed-regional-pools",
   "league-playoff-berths",
   "world-cup-double-playin",
