@@ -9,7 +9,11 @@ let rng = 726349;
 Math.random = () =>
   (rng = (Math.imul(rng, 1664525) + 1013904223) >>> 0) / 4294967296;
 const newSeason = (number = 1, roster = T.defaultRoster()) =>
-  T.freshPointsTour(number, roster, T.defaultRegionalSelection(roster, number));
+  T.freshPointsTour(
+    number,
+    roster,
+    T.defaultRegionalSelection(roster, number, true),
+  );
 const won = (ms, id) => ms.filter((m) => m.sets && V.winner(m) === id).length;
 assert.deepEqual(
   [1, 2, 3, 4, 5, 8, 9, 16, 17].map(T.leaguePointBonus),
@@ -210,7 +214,7 @@ for (let season = 0; season < 40; season++) {
   finals.push(clone(s));
   s = T.nextPointsSeason(
     s,
-    T.defaultRegionalSelection(status.qualified, s.seasonNumber + 1),
+    T.defaultRegionalSelection(status.qualified, s.seasonNumber + 1, true),
   );
   assert(
     T.seasonPointsRows(s).every((x) => x.points === 0 && !x.confirmed),
@@ -239,7 +243,10 @@ for (const counts of [
   extreme.league.setupConfirmed = true;
   extreme.league.seasonNumber = 2;
   extreme.worldcup = K.freshCareerQualification(rs, 2);
-  K.setupPointsRegions(extreme.worldcup, T.defaultRegionalSelection(rs, 2));
+  K.setupPointsRegions(
+    extreme.worldcup,
+    T.defaultRegionalSelection(rs, 2, true),
+  );
   assert(T.validTour(extreme));
   for (let stage = 0; stage < 10; stage++) {
     T.finishStage(extreme);

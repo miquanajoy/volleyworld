@@ -25,7 +25,7 @@ export function validPointsRegions(
     a.every((id) => b.includes(id));
   if (
     !p ||
-    p.version !== 1 ||
+    (p.version !== 1 && p.version !== 2) ||
     Object.keys(p).sort().join() !== "phase2,version" ||
     !p.phase2 ||
     Object.keys(p.phase2).length !== 5 ||
@@ -40,6 +40,7 @@ export function validPointsRegions(
       c.leagueRoster,
       f.seasonNumber,
       regionOrder.flatMap((r) => f.regions[r].teamIds),
+      p.version === 2,
     ) ||
     f.regions.CSV.teamIds.length
   )

@@ -63,7 +63,11 @@ export function validCareerFull(input: unknown): input is FullSeason {
       Object.keys(s.regions).length !== 5
     )
       return false;
-    const slots = allocateCareerSlots(c.leagueRoster, s.seasonNumber);
+    const slots = allocateCareerSlots(
+      c.leagueRoster,
+      s.seasonNumber,
+      c.points?.version === 2,
+    );
     if (
       !c.slots ||
       Object.keys(c.slots).length !== 5 ||

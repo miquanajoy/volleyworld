@@ -96,9 +96,11 @@ export function toggleTeam(id: string) {
   const d = draft();
   if (!d || !V.get(id)) return;
   if (d.regionalIds) {
-    const choice = T.regionalTourChoices(d.ids, draftNumber(d.parent)).find(
-      (x) => x.pool.includes(id),
-    );
+    const choice = T.regionalTourChoices(
+      d.ids,
+      draftNumber(d.parent),
+      true,
+    ).find((x) => x.pool.includes(id));
     if (!choice) return;
     if (d.regionalIds.includes(id))
       d.regionalIds = d.regionalIds.filter((x) => x !== id);
@@ -116,7 +118,11 @@ export function resetRoster() {
   const d = draft();
   if (d) {
     if (d.regionalIds)
-      d.regionalIds = T.defaultRegionalSelection(d.ids, draftNumber(d.parent));
+      d.regionalIds = T.defaultRegionalSelection(
+        d.ids,
+        draftNumber(d.parent),
+        true,
+      );
     else d.ids = T.defaultRoster();
     render();
   }
@@ -133,7 +139,7 @@ export function start() {
     if (!d.parent && !T.validRoster(d.ids))
       throw Error("Cần đúng 7 Âu, 7 Á, 6 Nam Mỹ, 7 Bắc/Trung Mỹ và 5 Phi.");
     if (!d.regionalIds) {
-      d.regionalIds = T.defaultRegionalSelection(d.ids, 1);
+      d.regionalIds = T.defaultRegionalSelection(d.ids, 1, true);
       d.region = "CEV";
       render();
       return;
@@ -178,7 +184,11 @@ export function nextSeason(id = model.selected || "") {
     const ids = previous.worldcup.world!.groups.flatMap((g) => g.teamIds);
     model.setup = {
       ids,
-      regionalIds: T.defaultRegionalSelection(ids, previous.seasonNumber + 1),
+      regionalIds: T.defaultRegionalSelection(
+        ids,
+        previous.seasonNumber + 1,
+        true,
+      ),
       parent: id,
       region: "CEV",
       scope: model.scope,
