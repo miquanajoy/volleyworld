@@ -197,7 +197,15 @@ const fs = require("node:fs"),
   );
   assert.equal(w.document.querySelector(".tour-selection-intro"), null);
   click('[data-action="Tour.achievements"]');
-  assert.equal(w.document.querySelectorAll(".tour-country-card").length, 39);
+  const medalistIds = new Set(
+    records.flatMap((r) => Object.values(r.honours || {}).flat()),
+  );
+  const medalCards = [...w.document.querySelectorAll(".tour-country-card")];
+  assert(medalCards.length > 0);
+  assert(
+    medalCards.every((el) => medalistIds.has(el.dataset.arg)),
+    "production profiles only list medalists",
+  );
   click('[data-action="Tour.achievementTeam"]');
   assert.equal(
     w.document.querySelectorAll("[data-achievement-season]").length,

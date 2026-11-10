@@ -136,8 +136,8 @@ for (const key of A.competitionKeys) {
     recordList.filter((r) => A.honoursOf(r)[key].includes(defaultId)).length,
   );
 }
-const region = V.get(defaultId).region;
-let profile = doc(A.achievementsHtml(recordList, region, defaultId, "all"));
+const region = V.get(winner).region;
+let profile = doc(A.achievementsHtml(recordList, region, winner, "all"));
 assert.equal(
   profile.querySelectorAll("[data-achievement-season]").length,
   4,
@@ -160,16 +160,23 @@ assert.equal(row3.querySelectorAll('[data-result="pending"]').length, 3);
 profile = doc(
   A.achievementsHtml([r1], V.get(unselected).region, unselected, "all"),
 );
-assert.equal(
-  profile.querySelectorAll('[data-result="absent"]').length >= 2,
-  true,
+assert(
+  !profile.querySelector(".tour-country-profile"),
+  "a non-medalist is not exposed as a selected profile",
 );
 profile = doc(A.achievementsHtml([withoutDetails], region, defaultId, "all"));
-assert.equal(profile.querySelectorAll('[data-result="unavailable"]').length, 3);
+assert(
+  profile.querySelector("[data-achievement-empty]"),
+  "unknown history never fabricates medalists",
+);
 const countries = doc(A.achievementsHtml(recordList, "CEV", null, "league"));
 assert.equal(
   countries.querySelectorAll(".tour-country-card").length,
-  V.catalog.filter((t) => t.region === "CEV").length,
+  V.catalog.filter(
+    (t) =>
+      t.region === "CEV" &&
+      A.medalTotals(recordList, t.id, "league").some((n) => n > 0),
+  ).length,
 );
 assert.equal(
   countries.querySelector(
@@ -182,6 +189,102 @@ assert.equal(
   snapshot,
   "Achievement rendering cannot mutate history",
 );
+// Medal eligibility follows the selected competition, across gold, silver and bronze.
+const medalRecord = {
+  ...onlyMetadata,
+  honours: {
+    league: ["POL", "ITA", "JPN"],
+    challenger: ["BRA", "POL", "CAN"],
+    worldcup: ["FRA", "USA", "ARG"],
+  },
+};
+const fixtureBefore = JSON.stringify(medalRecord);
+for (const competition of ["all", ...A.competitionKeys])
+  for (const region of ["CEV", "AVC", "NORCECA", "CAVB", "CSV"]) {
+    const html = doc(
+      A.achievementsHtml([medalRecord], region, null, competition),
+    );
+    const keys = competition === "all" ? A.competitionKeys : [competition];
+    const expected = [...new Set(keys.flatMap((k) => medalRecord.honours[k]))]
+      .filter((id) => V.get(id).region === region)
+      .sort();
+    const actual = [...html.querySelectorAll(".tour-country-card")]
+      .map((el) => el.dataset.arg)
+      .sort();
+    assert.deepEqual(
+      actual,
+      expected,
+      `${region}/${competition} only includes relevant medalists`,
+    );
+    assert(
+      html
+        .querySelector(".section-head .badge")
+        .textContent.includes(String(expected.length)),
+    );
+    assert.equal(
+      !!html.querySelector("[data-achievement-empty]"),
+      expected.length === 0,
+    );
+  }
+assert.equal(JSON.stringify(medalRecord), fixtureBefore);
+assert(
+  doc(A.achievementsHtml([], "CEV", null, "all")).querySelector(
+    "[data-achievement-empty]",
+  ),
+);
+assert(
+  !doc(
+    A.achievementsHtml([medalRecord], "CEV", "ITA", "worldcup"),
+  ).querySelector(".tour-country-profile"),
+);
+const { ui } = require("../support/tour-harness.cjs");
+const screen = ui("career", 17645),
+  api = screen.w.__tour,
+  d = screen.w.document;
+api.enter();
+api.model.records = [r1, r2];
+api.achievements();
+for (const competition of ["all", ...A.competitionKeys])
+  for (const region of ["CEV", "AVC", "NORCECA", "CAVB", "CSV"]) {
+    api.achievementRegion(region);
+    api.achievementCompetition(competition);
+    const expected = V.catalog
+      .filter(
+        (t) =>
+          t.region === region &&
+          A.medalTotals([r1, r2], t.id, competition).some((n) => n > 0),
+      )
+      .map((t) => t.id)
+      .sort();
+    assert.deepEqual(
+      [...d.querySelectorAll(".tour-country-card")]
+        .map((el) => el.dataset.arg)
+        .sort(),
+      expected,
+    );
+  }
+const switchCase = V.catalog.flatMap((t) =>
+  A.competitionKeys
+    .filter(
+      (k) =>
+        A.medalTotals([r1, r2], t.id).some((n) => n > 0) &&
+        !A.medalTotals([r1, r2], t.id, k).some((n) => n > 0),
+    )
+    .map((k) => ({ id: t.id, region: t.region, key: k })),
+)[0];
+assert(switchCase);
+api.achievementRegion(switchCase.region);
+api.achievementCompetition("all");
+api.achievementTeam(switchCase.id);
+assert(d.querySelector(".tour-country-profile"));
+api.achievementCompetition(switchCase.key);
+assert.equal(
+  api.model.achievementTeam,
+  null,
+  "changing competition clears a profile with no matching medal",
+);
+assert(!d.querySelector(".tour-country-profile"));
+screen.close();
 const summary = doc(
   A.seasonHtml(
     s1,
