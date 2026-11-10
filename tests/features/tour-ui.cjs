@@ -498,10 +498,17 @@ assert.equal(
 );
 
 click('[data-action="Tour.achievements"]');
-assert.equal(d.querySelectorAll(".tour-country-card").length, 39);
-const profileId = api.model.records[0].snapshot.roster.find(
+const honours = api.model.records[0].honours;
+const europeanMedalists = [...new Set(Object.values(honours).flat())].filter(
   (id) => V.get(id).region === "CEV",
 );
+assert.deepEqual(
+  [...d.querySelectorAll(".tour-country-card")]
+    .map((el) => el.dataset.arg)
+    .sort(),
+  europeanMedalists.sort(),
+);
+const profileId = europeanMedalists[0];
 click(`[data-action="Tour.achievementTeam"][data-arg="${profileId}"]`);
 assert.equal(d.querySelectorAll("[data-achievement-season]").length, 1);
 assert.equal(
@@ -510,8 +517,14 @@ assert.equal(
 );
 click('[data-action="Tour.achievementCompetition"][data-arg="league"]');
 assert.equal(api.model.achievementCompetition, "league");
-click('[data-action="Tour.achievementTeam"][data-arg=""]');
-assert.equal(d.querySelectorAll(".tour-country-card").length, 39);
+if (d.querySelector('[data-action="Tour.achievementTeam"][data-arg=""]'))
+  click('[data-action="Tour.achievementTeam"][data-arg=""]');
+assert.deepEqual(
+  [...d.querySelectorAll(".tour-country-card")]
+    .map((el) => el.dataset.arg)
+    .sort(),
+  [...honours.league].filter((id) => V.get(id).region === "CEV").sort(),
+);
 const data = t.data();
 t.close();
 const reload = ui("local", 81732, data),

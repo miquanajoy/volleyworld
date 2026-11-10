@@ -1,4 +1,4 @@
-import { achievementsHtml } from "./achievements";
+import { achievementsHtml, medalTotals } from "./achievements";
 import * as T from "../../domain/tour/index";
 import * as F from "../../domain/full-season/index";
 import * as C from "../../domain/challenger/index";
@@ -995,6 +995,15 @@ export function achievementTeam(id: string) {
 export function achievementCompetition(value: string) {
   if (!["all", "league", "challenger", "worldcup"].includes(value)) return;
   model.achievementCompetition = value as typeof model.achievementCompetition;
+  if (
+    model.achievementTeam &&
+    !medalTotals(
+      model.records,
+      model.achievementTeam,
+      model.achievementCompetition,
+    ).some((n) => n > 0)
+  )
+    model.achievementTeam = null;
   render();
 }
 function ensureAchievementHistory() {

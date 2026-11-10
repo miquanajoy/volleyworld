@@ -4,7 +4,7 @@ import type { TourSeason } from "../../domain/tour/index";
 import * as V from "../../domain/index";
 import * as C from "../../domain/challenger/index";
 import * as F from "../../domain/full-season/index";
-import { catalog, get } from "../../data/teams";
+import { catalog } from "../../data/teams";
 import type { Region } from "../../domain/types";
 import { team } from "../../components/team";
 import { esc, names } from "../../shared/dom";
@@ -163,21 +163,28 @@ export function achievementsHtml(
   competition: Competition,
 ) {
   const sorted = [...records].sort((a, b) => b.season_number - a.season_number),
-    selected = teamId && get(teamId)?.region === region ? get(teamId) : null,
+    countries = catalog
+      .filter((t) => t.region === region)
+      .map((t) => ({ ...t, medals: medalTotals(sorted, t.id, competition) }))
+      .filter((t) => t.medals.some((n) => n > 0)),
+    selected = countries.find((t) => t.id === teamId) || null,
     label =
       competition === "all"
         ? "CẢ BA ĐẤU TRƯỜNG"
         : competitionNames[competition].toUpperCase();
-  return `<div class="tour-page tour-achievements"><div class="section-head"><div><span class="eyebrow">VOLLEYWORLD TOUR · HỒ SƠ QUỐC GIA</span><h2>Thành tích qua các mùa</h2><p class="sub">Mỗi mùa một dấu ấn. Xem huy chương và hành trình của từng đội tại cả ba giải.</p></div><button data-action="Tour.enter">← Các mùa Tour</button></div><nav class="tour-region-nav" aria-label="Khu vực thành tích">${F.regionOrder.map((r) => `<button data-action="Tour.achievementRegion" data-arg="${r}" aria-pressed="${r === region}">${names[r]}</button>`).join("")}</nav><nav class="tour-achievement-filters" aria-label="Thống kê theo giải"><span>THỐNG KÊ HUY CHƯƠNG</span>${(["all", ...competitionKeys] as Competition[]).map((key) => `<button data-action="Tour.achievementCompetition" data-arg="${key}" aria-pressed="${competition === key}">${key === "all" ? "Tất cả giải" : competitionNames[key]}</button>`).join("")}</nav>${
+  return `<div class="tour-page tour-achievements"><div class="section-head"><div><span class="eyebrow">VOLLEYWORLD TOUR · HỒ SƠ QUỐC GIA</span><h2>Thành tích qua các mùa</h2><p class="sub">Chỉ hiển thị quốc gia có huy chương theo khu vực và giải đang chọn.</p></div><button data-action="Tour.enter">← Các mùa Tour</button></div><nav class="tour-region-nav" aria-label="Khu vực thành tích">${F.regionOrder.map((r) => `<button data-action="Tour.achievementRegion" data-arg="${r}" aria-pressed="${r === region}">${names[r]}</button>`).join("")}</nav><nav class="tour-achievement-filters" aria-label="Thống kê theo giải"><span>THỐNG KÊ HUY CHƯƠNG</span>${(["all", ...competitionKeys] as Competition[]).map((key) => `<button data-action="Tour.achievementCompetition" data-arg="${key}" aria-pressed="${competition === key}">${key === "all" ? "Tất cả giải" : competitionNames[key]}</button>`).join("")}</nav>${
     selected
-      ? `<section class="tour-country-profile"><div><button class="tour-profile-back" data-action="Tour.achievementTeam" data-arg="">← ${names[region]}</button><span class="eyebrow">${label}</span><h3>${team(selected.id)}</h3><p>${sorted.length} mùa trong lịch sử · BXH thế giới #${selected.rank}</p></div>${counters(medalTotals(sorted, selected.id, competition))}</section><section class="panel tour-country-history"><div class="section-head"><div><span class="eyebrow">LỊCH SỬ TỪNG MÙA</span><h3>Ba giải đấu. Đầy đủ thành tích.</h3></div><span class="badge">${sorted.length} MÙA</span></div>${sorted.length ? `<div class="table-wrap"><table class="tour-achievement-table"><thead><tr><th>MÙA GIẢI</th>${competitionKeys.map((key) => `<th class="${competition === key ? "is-selected" : ""}">${competitionNames[key]}</th>`).join("")}</tr></thead><tbody>${sorted.map((r) => `<tr data-achievement-season="${r.season_number}"><th scope="row"><button data-action="Tour.open" data-arg="${esc(r.season_id)}">Mùa ${r.season_number} <span aria-hidden="true">↗</span></button><small>${r.status === "completed" ? "Đã hoàn tất" : "Đang diễn ra"}</small></th>${competitionKeys.map((key) => `<td class="${competition === key ? "is-selected" : ""}" data-competition="${key}">${resultHtml(resultFor(r, selected.id, key), r.season_number)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : '<div class="tour-empty"><h3>Chưa có mùa Tour nào</h3><p>Thành tích của đội sẽ được ghi lại khi bạn bắt đầu một mùa.</p></div>'}<p class="tour-achievement-note">🥇 Vô địch · 🥈 Á quân · 🥉 Hạng ba · Các đội bị loại cùng vòng được ghi theo nhóm hạng. Dấu “–” là không tham dự hoặc không giành vé.</p></section>`
-      : `<div class="section-head"><div><h3>${names[region]}</h3><p class="sub">Chọn một quốc gia để xem chi tiết từng mùa.</p></div><span class="badge">${catalog.filter((t) => t.region === region).length} QUỐC GIA</span></div><div class="tour-country-grid">${catalog
-          .filter((t) => t.region === region)
-          .map((t) => {
-            const medals = medalTotals(sorted, t.id, competition),
-              sum = medals.reduce((a, b) => a + b, 0);
-            return `<button class="tour-country-card ${sum ? "has-medals" : ""}" data-action="Tour.achievementTeam" data-arg="${t.id}"><span class="tour-country-card-top"><span class="team-rank">#${t.rank}</span><span aria-hidden="true">↗</span></span><span class="tour-country-name">${team(t.id)}</span>${counters(medals, true)}<span class="tour-country-caption">${sum ? `${sum} lần lên bục huy chương` : sorted.some((r) => r.snapshot?.roster.includes(t.id)) ? "Xem hành trình qua các mùa" : "Xem lịch sử tham dự"}</span></button>`;
-          })
-          .join("")}</div>`
+      ? `<section class="tour-country-profile"><div><button class="tour-profile-back" data-action="Tour.achievementTeam" data-arg="">← ${names[region]}</button><span class="eyebrow">${label}</span><h3>${team(selected.id)}</h3><p>${sorted.length} mùa trong lịch sử · BXH thế giới #${selected.rank}</p></div>${counters(selected.medals)}</section><section class="panel tour-country-history"><div class="section-head"><div><span class="eyebrow">LỊCH SỬ TỪNG MÙA</span><h3>Ba giải đấu. Đầy đủ thành tích.</h3></div><span class="badge">${sorted.length} MÙA</span></div>${sorted.length ? `<div class="table-wrap"><table class="tour-achievement-table"><thead><tr><th>MÙA GIẢI</th>${competitionKeys.map((key) => `<th class="${competition === key ? "is-selected" : ""}">${competitionNames[key]}</th>`).join("")}</tr></thead><tbody>${sorted.map((r) => `<tr data-achievement-season="${r.season_number}"><th scope="row"><button data-action="Tour.open" data-arg="${esc(r.season_id)}">Mùa ${r.season_number} <span aria-hidden="true">↗</span></button><small>${r.status === "completed" ? "Đã hoàn tất" : "Đang diễn ra"}</small></th>${competitionKeys.map((key) => `<td class="${competition === key ? "is-selected" : ""}" data-competition="${key}">${resultHtml(resultFor(r, selected.id, key), r.season_number)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : '<div class="tour-empty"><h3>Chưa có mùa Tour nào</h3><p>Thành tích của đội sẽ được ghi lại khi bạn bắt đầu một mùa.</p></div>'}<p class="tour-achievement-note">🥇 Vô địch · 🥈 Á quân · 🥉 Hạng ba · Các đội bị loại cùng vòng được ghi theo nhóm hạng. Dấu “–” là không tham dự hoặc không giành vé.</p></section>`
+      : `<div class="section-head"><div><h3>${names[region]}</h3><p class="sub">Chọn một quốc gia để xem chi tiết từng mùa.</p></div><span class="badge">${countries.length} QUỐC GIA CÓ HUY CHƯƠNG</span></div>${
+          countries.length
+            ? `<div class="tour-country-grid">${countries
+                .map((t) => {
+                  const medals = t.medals,
+                    sum = medals.reduce((a, b) => a + b, 0);
+                  return `<button class="tour-country-card has-medals" data-action="Tour.achievementTeam" data-arg="${t.id}"><span class="tour-country-card-top"><span class="team-rank">#${t.rank}</span><span aria-hidden="true">↗</span></span><span class="tour-country-name">${team(t.id)}</span>${counters(medals, true)}<span class="tour-country-caption">${sum} lần lên bục huy chương</span></button>`;
+                })
+                .join("")}</div>`
+            : `<section class="panel tour-empty" data-achievement-empty><h3>Chưa có quốc gia giành huy chương</h3><p>${names[region]} chưa có huy chương trong ${competition === "all" ? "cả ba giải" : competitionNames[competition]} ở lịch sử hiện có.</p></section>`
+        }`
   }</div>`;
 }
