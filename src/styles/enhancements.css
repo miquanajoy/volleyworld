@@ -3729,3 +3729,21 @@
 .qualification-bronze h4 {
   margin: 0 0 8px;
 }
+
+.world-playoff-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 1.25em;
+  margin-left: 0.4em;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #187348;
+}
+.world-playoff-status[data-playoff-status="eliminated"] {
+  color: #c8333e;
+}
+.full-group-team:has(> .world-playoff-status) {
+  grid-template-columns: 22px minmax(0, 1fr) auto auto auto;
+}

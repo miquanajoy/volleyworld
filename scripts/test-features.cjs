@@ -32,6 +32,7 @@ for (const file of [
   "full-season-groups",
   "world-qualification",
   "world-cup-berths",
+  "world-playoff-status",
   "full-playoff-tree",
   "full-world-matchdays",
   "full-season-cloud",
