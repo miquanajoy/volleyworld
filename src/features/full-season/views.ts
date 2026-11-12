@@ -1,3 +1,4 @@
+import { worldPlayoffStatusHtml } from "../../components/world-playoff-status";
 import { seasonTeam, seasonMatchCard } from "../../components/season-match";
 import { worldPlayoffTree } from "./playoff-tree";
 import {
@@ -44,6 +45,7 @@ export function fullStandingsTable(
   round = latestLeagueRound(g),
   contender = false,
   qualification = false,
+  playoffBerths?: ReturnType<typeof F.worldPlayoffBerths>,
 ) {
   const snapshot = leagueRoundSnapshot(g, round),
     rows = F.fullStandings(snapshot),
@@ -59,7 +61,7 @@ export function fullStandingsTable(
   return `<p class="sub standings-round-note">BXH tới vòng ${round + 1} · ${leagueRoundStatus(g, round)} · chỉ tính kết quả tới vòng đang xem.</p>${rankMovementLegend}<div class="table-wrap"><table class="full-standings"><thead><tr><th>#</th><th>ĐỘI TUYỂN</th><th>TRẬN</th><th>W</th><th>L</th><th>SET</th><th>HS SET</th><th>ĐIỂM</th><th>HS ĐIỂM</th></tr></thead><tbody>${rows
     .map(
       (t, i) =>
-        `<tr class="${i < slots ? "direct" : ""}"><td>${i + 1}${rankMovementHtml(changes[t.id], round)}</td><td><button class="full-team-button" data-action="Full.team" data-arg="${t.id}" data-arg1="${round}">${team(t.id)}</button>${berths[t.id]?.qualified ? `<span class="full-qualification" data-berth="qualified">✓ Giành vé</span>` : berths[t.id]?.contender ? `<span class="full-qualification" data-berth="contender">${qualification ? (slots === 2 ? (F.fullLeagueDone(snapshot) ? "→ Play-in liên khu vực" : "Bảo đảm ít nhất Play-in") : "Bảo đảm ít nhất playoff khu vực") : "Bảo đảm ít nhất trận tranh suất"}</span>` : i < slots ? `<span class="full-qualification">Top dự kiến</span>` : ""}</td><td>${t.w + t.l}</td><td><b>${t.w}</b></td><td>${t.l}</td><td>${t.sf}:${t.sa}</td><td>${t.sf - t.sa}</td><td>${t.pf}:${t.pa}</td><td>${t.pf - t.pa}</td></tr>`,
+        `<tr class="${i < slots ? "direct" : ""}"><td>${i + 1}${rankMovementHtml(changes[t.id], round)}</td><td><button class="full-team-button" data-action="Full.team" data-arg="${t.id}" data-arg1="${round}">${team(t.id)}</button>${playoffBerths ? worldPlayoffStatusHtml(playoffBerths[t.id]) : berths[t.id]?.qualified ? `<span class="full-qualification" data-berth="qualified">✓ Giành vé</span>` : berths[t.id]?.contender ? `<span class="full-qualification" data-berth="contender">${qualification ? (slots === 2 ? (F.fullLeagueDone(snapshot) ? "→ Play-in liên khu vực" : "Bảo đảm ít nhất Play-in") : "Bảo đảm ít nhất playoff khu vực") : "Bảo đảm ít nhất trận tranh suất"}</span>` : i < slots ? `<span class="full-qualification">Top dự kiến</span>` : ""}</td><td>${t.w + t.l}</td><td><b>${t.w}</b></td><td>${t.l}</td><td>${t.sf}:${t.sa}</td><td>${t.sf - t.sa}</td><td>${t.pf}:${t.pa}</td><td>${t.pf - t.pa}</td></tr>`,
     )
     .join("")}</tbody></table></div>`;
 }

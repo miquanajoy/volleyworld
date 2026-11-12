@@ -1,3 +1,4 @@
+import { groupBerths } from "./regional";
 import { careerWorldPairs } from "../career/world";
 import { newQualification, qualificationEntrants } from "./qualification";
 import { get } from "../../data/teams";
@@ -29,6 +30,28 @@ export function worldCurrentRound(w: WorldCup) {
 }
 export function worldAtRound(w: WorldCup, round: number): WorldCup {
   return { ...w, groups: w.groups.map((g) => leagueRoundSnapshot(g, round)) };
+}
+/** Derive from the supplied snapshot, never persisted or inferred from current rank.
+ * Legacy 24-team cups retain third-place routes until all groups finish. */
+export function worldPlayoffBerths(w: WorldCup) {
+  const complete = w.groups.every(fullLeagueDone),
+    entrants = complete ? new Set(worldEntrants(w)) : null;
+  return Object.assign(
+    {},
+    ...w.groups.map((g) => {
+      const topTwo = groupBerths(g, 2),
+        survival = w.groups.length === 8 ? topTwo : groupBerths(g, 3);
+      return Object.fromEntries(
+        g.teamIds.map((id) => [
+          id,
+          {
+            qualified: entrants ? entrants.has(id) : topTwo[id].qualified,
+            eliminated: entrants ? !entrants.has(id) : survival[id].eliminated,
+          },
+        ]),
+      );
+    }),
+  ) as Record<TeamId, { qualified: boolean; eliminated: boolean }>;
 }
 export function regionalQualifiers(s: FullSeason): TeamId[] {
   if (newQualification(s)) return qualificationEntrants(s);
