@@ -412,9 +412,34 @@ export function restore() {
     mutate((current) => Object.assign(current, clone(s)));
   });
 }
+const historyLoads = new Set<string>();
+let historyLoading = 0;
+function hydrateHistory() {
+  if (model.selected || model.setup || historyLoading >= 4) return;
+  for (const row of model.records) {
+    const key = `${model.scope}:${model.token}:${row.season_id}`;
+    if (row.status !== "completed" || row.snapshot || historyLoads.has(key))
+      continue;
+    if (historyLoading >= 4) break;
+    historyLoads.add(key);
+    historyLoading++;
+    void cloud
+      .load(row.season_id)
+      .catch((error) =>
+        toast(
+          error instanceof Error ? error.message : "Chưa tải được huy chương.",
+        ),
+      )
+      .finally(() => {
+        historyLoading--;
+        render();
+      });
+  }
+}
 export function renderCircuit() {
   store.tab = "circuit";
   cloud.initialize();
+  hydrateHistory();
   if (model.setup && !draft()) model.setup = null;
   for (const id of ["homeHero", "stats", "nav", "seasonBar"]) {
     const el = document.getElementById(id);

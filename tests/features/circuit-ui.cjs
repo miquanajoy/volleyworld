@@ -202,7 +202,11 @@ const assert = require("node:assert/strict"),
     el.click();
     assert(d.querySelector(".full-standings"));
   }
-  const first = c.selected().snapshot;
+  c.enter();
+  assert.equal(d.querySelectorAll(".tour-history-awards > section").length, 3);
+  assert.equal(d.querySelectorAll(".tour-history-award").length, 9);
+  assert(d.querySelector(".tour-season-card .badge.gold"));
+  const first = c.model.records[0].snapshot;
   await c.nextSeason(first.seasonId);
   assert(c.model.setup.parent === first.seasonId);
   for (const r of D.regions)
