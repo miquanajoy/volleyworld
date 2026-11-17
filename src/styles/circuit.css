@@ -244,3 +244,108 @@ main:has(.circuit-page) {
     grid-template-columns: 1fr;
   }
 }
+
+/* Setup is itself the page panel, rather than a panel nested in a page. */
+.circuit-page.panel.tour-setup {
+  padding: 32px;
+}
+.circuit-page .controls {
+  display: flex;
+  align-items: center;
+}
+.circuit-page .tour-region-nav {
+  margin: 24px 0;
+}
+.circuit-page .notice {
+  padding: 16px 20px;
+  margin: 18px 0;
+}
+.circuit-page .challenger-team-choice {
+  min-height: 64px;
+}
+.circuit-page .challenger-team-choice:disabled:not(.is-selected) {
+  opacity: 0.55;
+  background: #f5f6f2;
+}
+@media (max-width: 700px) {
+  .circuit-page.panel.tour-setup {
+    padding: 20px;
+  }
+}
+
+.circuit-page .full-format-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.circuit-page .tour-journey-card {
+  padding: 24px;
+  gap: 12px;
+  min-height: 205px;
+  align-items: flex-start;
+}
+.circuit-page .tour-journey-card h3 {
+  font-size: 20px;
+  margin: 0;
+}
+.circuit-page .tour-journey-card p {
+  font-size: 14px;
+  margin: 0;
+  color: var(--muted);
+}
+.circuit-page .tour-journey-card > .badge {
+  align-self: flex-start;
+  width: auto;
+  margin-top: auto;
+}
+.circuit-page .tour-journey-card > button {
+  align-self: flex-start;
+  width: auto;
+  min-width: 110px;
+}
+.circuit-page .tour-section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0 16px;
+}
+.circuit-page .tour-section-nav button {
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+.circuit-page .tour-section-nav [aria-current="page"] {
+  background: #eaf2e5;
+  color: var(--green);
+}
+@media (max-width: 1000px) {
+  .circuit-page .full-format-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 460px) {
+  .circuit-page .full-format-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.circuit-page .circuit-points {
+  margin: 24px 0;
+  padding: 24px;
+}
+.circuit-page .circuit-points h3 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+.circuit-page .circuit-points > .sub {
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0 0 20px;
+  max-width: 85ch;
+}
+.circuit-page .circuit-points .table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+@media (max-width: 700px) {
+  .circuit-page .circuit-points {
+    padding: 18px;
+  }
+}

@@ -24,8 +24,10 @@ export function setupHtml() {
   const draft = model.setup!,
     r = draft.region,
     ids = draft.selection[r][draft.tier],
+    capacity = draft.tier === "upper" ? 16 : 8,
+    full = ids.length >= capacity,
     locked = draft.tier === "upper" && !!draft.parent;
-  return `<section class="panel tour-setup circuit-page"><span class="eyebrow">CHỌN ĐỘI ĐẦU MÙA</span><h2>${draft.parent ? "Mùa tiếp theo" : "Mùa đầu tiên"}</h2><p>16 đội mâm 1 và 8 đội mâm 2 mỗi khu vực. Danh sách giữ xuyên suốt cả mùa.</p>${regionNav("setupRegion", r)}<div class="controls">${(["upper", "lower"] as const).map((t) => `<button data-action="Circuit.setupTier" data-arg="${t}" aria-pressed="${draft.tier === t}">${t === "upper" ? "Mâm 1 · 16 đội" : "Mâm 2 · 8 đội"}</button>`).join("")}</div><p class="notice">${locked ? "Mâm 1 kế thừa: 8 đội World Cup và 8 đội có điểm cao nhất còn lại. Bạn tiếp tục chọn đội mâm 2." : `Đã chọn ${ids.length}/${draft.tier === "upper" ? 16 : 8} đội · Không trùng hai mâm.`}</p><div class="challenger-team-grid">${D.pool(
+  return `<section class="panel tour-setup circuit-page"><span class="eyebrow">CHỌN ĐỘI ĐẦU MÙA</span><h2>${draft.parent ? "Mùa tiếp theo" : "Mùa đầu tiên"}</h2><p>16 đội mâm 1 và 8 đội mâm 2 mỗi khu vực. Danh sách giữ xuyên suốt cả mùa.</p>${regionNav("setupRegion", r)}<div class="controls">${(["upper", "lower"] as const).map((t) => `<button data-action="Circuit.setupTier" data-arg="${t}" aria-pressed="${draft.tier === t}">${t === "upper" ? "Mâm 1 · 16 đội" : "Mâm 2 · 8 đội"}</button>`).join("")}</div><p class="notice">${locked ? "Mâm 1 kế thừa: 8 đội World Cup và 8 đội có điểm cao nhất còn lại. Bạn tiếp tục chọn đội mâm 2." : `Đã chọn ${ids.length}/${draft.tier === "upper" ? 16 : 8} đội · ${full ? "Đã đủ suất. Bỏ chọn một đội để thay thế." : "Chọn thêm đội để đủ suất."} Không trùng hai mâm.`}</p><div class="challenger-team-grid">${D.pool(
     r,
   )
     .map((id) => {
@@ -33,7 +35,7 @@ export function setupHtml() {
         draft.selection[r][draft.tier === "upper" ? "lower" : "upper"].includes(
           id,
         );
-      return `<button class="challenger-team-choice ${ids.includes(id) ? "is-selected" : ""}" data-action="Circuit.toggle" data-arg="${id}" aria-pressed="${ids.includes(id)}" ${locked || other ? "disabled" : ""}>${team(id)}<span>${other ? "Đã chọn ở mâm kia" : ids.includes(id) ? "✓" : "+"}</span></button>`;
+      return `<button class="challenger-team-choice ${ids.includes(id) ? "is-selected" : ""}" data-action="Circuit.toggle" data-arg="${id}" aria-pressed="${ids.includes(id)}" ${locked || other || (full && !ids.includes(id)) ? "disabled" : ""}>${team(id)}<span>${other ? "Đã chọn ở mâm kia" : ids.includes(id) ? "✓" : "+"}</span></button>`;
     })
     .join(
       "",
