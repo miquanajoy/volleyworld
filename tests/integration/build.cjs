@@ -112,7 +112,7 @@ const fs = require("node:fs"),
   click('[data-action="Circuit.create"]');
   assert(w.document.querySelector(".tour-setup"));
   click('[data-action="Circuit.start"]');
-  assert.equal(w.document.querySelectorAll(".tour-journey-card").length, 7);
+  assert.equal(w.document.querySelectorAll(".tour-journey-card").length, 8);
   click('[data-action="Circuit.viewStage"][data-arg="0"]');
   click('[data-action="Circuit.match"]');
   click('[data-action="Circuit.dialogEdit"]');
@@ -131,7 +131,7 @@ const fs = require("node:fs"),
   click('[data-action="Circuit.finish"]');
   record = JSON.parse(w.localStorage.getItem(key))[0];
   assert.equal(record.status, "completed");
-  assert.equal(record.played, 1071);
+  assert.equal(record.played, 1151);
   assert.equal(record.snapshot.world.groups.length, 8);
   assert.equal(record.podium.length, 3);
   click('[data-action="Circuit.achievements"]');
@@ -164,7 +164,7 @@ const fs = require("node:fs"),
   assert.equal(errors.length, 0, errors.map((e) => e.message).join("\n"));
   w.close();
   console.log(
-    "PASS regional circuit production bundle: real Vite ESM/SDK; inherited score editor;1071 matches;World Cup32;medalist filters;WC qualifiers inherit next season;guest isolated",
+    "PASS regional circuit production bundle: real Vite ESM/SDK; inherited score editor;1151 matches;World Cup32;medalist filters;WC qualifiers inherit next season;guest isolated",
   );
 })().catch((e) => {
   console.error(e);

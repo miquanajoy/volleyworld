@@ -7,7 +7,7 @@ const copy = (x) => JSON.parse(JSON.stringify(x));
 const win = (m, id) => {
   m.sets = Array.from({ length: 3 }, () => (m.a === id ? [25, 20] : [20, 25]));
 };
-const counts = [176, 190, 506, 547, 887, 1007, 1071];
+const counts = [176, 190, 506, 547, 887, 1007, 1071, 1151];
 let promoted = 0;
 for (let season = 0; season < 16; season++) {
   const s = D.freshCircuit();
@@ -16,7 +16,7 @@ for (let season = 0; season < 16; season++) {
   assert.equal(D.validSelection(s.regions), true);
   const nextAttempt = copy(s);
   assert.throws(() => D.nextStage(nextAttempt));
-  for (let stage = 0; stage < 7; stage++) {
+  for (let stage = 0; stage < 8; stage++) {
     assert.equal(s.stage, stage);
     while (!D.stageDone(s)) {
       const pending = D.batch(s).filter((m) => !m.sets);
@@ -77,7 +77,7 @@ for (let season = 0; season < 16; season++) {
     assert(D.validCircuit(copy(s)));
   }
   assert(D.complete(s));
-  assert.equal(D.matches(s).length, 1071);
+  assert.equal(D.matches(s).length, 1151);
   assert.equal(D.podium(s).length, 3);
   const sel = D.inheritedSelection(s),
     future = D.freshCircuit(2, sel, s);
@@ -90,7 +90,8 @@ for (let season = 0; season < 16; season++) {
     assert.equal(
       s.regions[r].upper.filter((id) => !future.regions[r].upper.includes(id))
         .length,
-      fromLower.length,
+      future.regions[r].upper.filter((id) => s.regions[r].lower.includes(id))
+        .length,
     );
     assert.equal(future.regions[r].upper.length, 16);
     assert.equal(future.regions[r].lower.length, 8);
@@ -134,9 +135,11 @@ for (const r of D.regions) {
 D.nextStage(s);
 D.finishStage(s);
 D.nextStage(s);
+D.finishStage(s);
+D.nextStage(s);
 for (const r of D.regions) {
   assert(D.qualifiers(s, r).every((id) => D.nextUpper(s, r).includes(id)));
 }
 console.log(
-  `PASS regional circuit:16 full seasons;1071 matches each;partial/reload validation;fixed seeds;no reset;16-team Swiss;4+4 distinct WC tickets;GSL losses;promotion including forced16 lower-tier qualifiers (${promoted} observed naturally)`,
+  `PASS regional circuit:16 full seasons;1151 matches each;partial/reload validation;fixed seeds;no reset;16-team Swiss;4+4 distinct WC tickets;GSL losses;promotion including forced16 lower-tier qualifiers (${promoted} observed naturally)`,
 );

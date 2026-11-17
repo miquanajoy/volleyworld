@@ -5,6 +5,7 @@ for (const file of [
   "circuit-ticket-preview",
   "circuit-integer-points",
   "circuit-shared-matchday",
+  "circuit-promotion",
   "circuit-cloud",
   "tour",
   "tour-career",

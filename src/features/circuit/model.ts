@@ -35,6 +35,7 @@ export const selected = () =>
   model.records.find((r) => r.season_id === model.selected);
 export function recordOf(s: D.CircuitSeason, revision = 0): CircuitRecord {
   s = clone(s);
+  D.enablePromotion(s);
   if (s.stage < 5) s.integerPoints = true;
   return {
     season_id: s.seasonId,
@@ -64,7 +65,9 @@ export function validRecord(input: unknown): input is CircuitRecord {
     Array.isArray(r.podium) &&
     r.podium.every((id) => !!get(id)) &&
     new Set(r.podium).size === r.podium.length &&
-    r.podium.length === (r.status === "completed" ? 3 : 0) &&
+    (r.status === "completed"
+      ? r.podium.length === 3
+      : [0, 3].includes(r.podium.length)) &&
     (!r.snapshot ||
       (D.validCircuit(r.snapshot) &&
         r.snapshot.seasonId === r.season_id &&
@@ -86,6 +89,14 @@ export function readScope(key: string): CircuitRecord[] {
         !row.snapshot.integerPoints
       ) {
         row.snapshot.integerPoints = true;
+        row.dirty = true;
+      }
+      if (
+        row.snapshot &&
+        row.snapshot.stage < 7 &&
+        !row.snapshot.promotionEnabled
+      ) {
+        D.enablePromotion(row.snapshot);
         row.dirty = true;
       }
       return row;

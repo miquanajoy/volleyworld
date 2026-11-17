@@ -12,6 +12,9 @@ import {
   leagueRanks,
   regionOf,
   nextSeeds,
+  seasonMatchCount,
+  promotionEntrants,
+  promotionSeeds,
 } from "./index";
 import { get } from "../../data/teams";
 import * as C from "../challenger/index";
@@ -117,7 +120,8 @@ export function validCircuit(input: unknown): input is CircuitSeason {
       !Number.isFinite(Date.parse(s.createdAt)) ||
       !Number.isInteger(s.stage) ||
       s.stage < 0 ||
-      s.stage > 7 ||
+      (s.promotionEnabled !== undefined && s.promotionEnabled !== true) ||
+      s.stage > (s.promotionEnabled ? 8 : 7) ||
       !validSelection(s.regions)
     )
       return false;
@@ -135,6 +139,38 @@ export function validCircuit(input: unknown): input is CircuitSeason {
         s.stage >= 5 !== !!z.playin
       )
         return false;
+      if (!!z.promotion !== !!(s.promotionEnabled && s.stage >= 7))
+        return false;
+      if (z.promotion) {
+        const p = z.promotion,
+          entrants = promotionEntrants(s, r);
+        if (
+          !same(p.tie, entrants) ||
+          !equal(p.seeds, promotionSeeds(s, r, p.tie)) ||
+          p.pots.length !== 4 ||
+          p.groups.length !== 4
+        )
+          return false;
+        if (
+          p.pots.some((pot, i) => !same(pot, p.seeds.slice(i * 4, i * 4 + 4)))
+        )
+          return false;
+        if (
+          p.groups.some(
+            (g, i) =>
+              g.kind !== "gsl" ||
+              g.prefix !== r + "PRG" + i ||
+              g.bronzeRequired ||
+              g.opening ||
+              !equal(
+                g.seeds,
+                p.pots.map((p) => p[i]),
+              ) ||
+              !validBracket(g),
+          )
+        )
+          return false;
+      }
       for (let p = 0; p < z.phases.length; p++)
         for (const tier of ["upper", "lower"] as const) {
           const g = z.phases[p][tier];
@@ -405,7 +441,10 @@ export function validCircuit(input: unknown): input is CircuitSeason {
         return false;
     }
     const ms = matches(s);
-    if (new Set(ms.map((m) => m.id)).size !== ms.length || ms.length > 1071)
+    if (
+      new Set(ms.map((m) => m.id)).size !== ms.length ||
+      ms.length > seasonMatchCount(s)
+    )
       return false;
     return ms.every(
       (m: Match) =>

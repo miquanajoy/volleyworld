@@ -36,6 +36,8 @@ import {
   regionOf,
 } from "./league";
 import { directTickets, points, qualifiers } from "./points";
+import { drawPromotion, promotionWinners } from "./promotion";
+export * from "./promotion";
 export * from "./types";
 export * from "./bracket";
 export * from "./league";
@@ -66,7 +68,7 @@ export function freshCircuit(
 ): CircuitSeason {
   if (!validSelection(selection))
     throw Error(
-      "Mỗi khu vực cần 16 đội mâm 1 và 8 đội mâm 2, không trùng nhau.",
+      "Mỗi khu vực cần 16 đội hạng 1 và 8 đội hạng 2, không trùng nhau.",
     );
   if (
     previous &&
@@ -77,11 +79,12 @@ export function freshCircuit(
           JSON.stringify(nextUpper(previous, r)),
       ))
   )
-    throw Error("Danh sách mâm 1 phải kế thừa suất mùa trước.");
+    throw Error("Danh sách hạng 1 phải kế thừa suất mùa trước.");
   const seasonId = crypto.randomUUID();
   return {
     version: 2,
     integerPoints: true,
+    promotionEnabled: true,
     mode: "circuit",
     seasonId,
     seasonNumber: number,
@@ -100,7 +103,14 @@ export function freshCircuit(
     world: null,
   };
 }
-export const complete = (s: CircuitSeason) => s.stage === 7;
+export const complete = (s: CircuitSeason) =>
+  s.stage === (s.promotionEnabled ? 8 : 7);
+export const seasonMatchCount = (s: CircuitSeason) =>
+  s.promotionEnabled ? 1151 : 1071;
+export const lastStage = (s: CircuitSeason) => (s.promotionEnabled ? 7 : 6);
+export function enablePromotion(s: CircuitSeason) {
+  if (s.stage < 7) s.promotionEnabled = true;
+}
 export function matches(s: CircuitSeason): Match[] {
   return [
     ...regions.flatMap((r) => {
@@ -110,6 +120,7 @@ export function matches(s: CircuitSeason): Match[] {
           ...phaseMatches(p.upper),
           ...phaseMatches(p.lower),
         ]),
+        ...(z.promotion?.groups.flatMap(bracketMatches) || []),
         ...(z.playin?.groups.flatMap(bracketMatches) || []),
         ...bracketMatches(z.playin?.bracket || null),
       ];
@@ -125,7 +136,16 @@ export function matches(s: CircuitSeason): Match[] {
 export const played = (s: CircuitSeason) =>
   matches(s).filter((m) => m.sets).length;
 export function stageDone(s: CircuitSeason, stage = s.stage): boolean {
-  if (stage === 7) return true;
+  if (stage === 8) return !!s.promotionEnabled;
+  if (stage === 7)
+    return (
+      !s.promotionEnabled ||
+      regions.every(
+        (r) =>
+          !!s.regions[r].promotion &&
+          s.regions[r].promotion!.groups.every(bracketDone),
+      )
+    );
   if ([0, 2, 4].includes(stage)) {
     const p = phaseIndex(stage);
     return regions.every((r) => {
@@ -164,6 +184,8 @@ export function regionalBatch(
       ...(upper !== true ? pendingGroups(p.lower) : []),
     ];
   }
+  if (s.stage === 7 && s.promotionEnabled)
+    return s.regions[r].promotion!.groups.flatMap(bracketBatch);
   if (s.stage === 5) {
     const p = s.regions[r].playin!;
     return p.bracket ? bracketBatch(p.bracket) : p.groups.flatMap(bracketBatch);
@@ -172,7 +194,7 @@ export function regionalBatch(
 }
 export function batch(s: CircuitSeason): Match[] {
   if (complete(s) || stageDone(s)) return [];
-  if ([0, 2, 4, 5].includes(s.stage))
+  if ([0, 2, 4, 5, 7].includes(s.stage))
     return regions.flatMap((r) => regionalBatch(s, r));
   if (s.stage === 1) return bracketBatch(s.firstStand);
   if (s.stage === 3) {
@@ -189,6 +211,9 @@ export function batch(s: CircuitSeason): Match[] {
   return key ? w.bracket![key] : [];
 }
 export function advance(s: CircuitSeason) {
+  if (s.stage === 7 && s.promotionEnabled)
+    for (const r of regions)
+      s.regions[r].promotion!.groups.forEach(advanceBracket);
   if ([0, 2, 4].includes(s.stage)) {
     const p = phaseIndex(s.stage);
     for (const r of regions)
@@ -258,6 +283,8 @@ export function nextStage(s: CircuitSeason) {
     throw Error("Hoàn tất chặng hiện tại trước khi tiếp tục.");
   if (s.stage < 5) s.integerPoints = true;
   s.stage++;
+  if (s.stage === 7 && s.promotionEnabled)
+    for (const r of regions) s.regions[r].promotion = drawPromotion(s, r);
   if (s.stage === 1) {
     const seeds = [0, 1].flatMap((rank) =>
       regions.map((r) => leagueRanks(s.regions[r].phases[0].upper)[rank].id),
@@ -409,8 +436,10 @@ export function worldFacade(s: CircuitSeason): F.FullSeason {
   };
 }
 export function nextUpper(s: CircuitSeason, r: CircuitRegion) {
-  if (!complete(s)) throw Error("Hoàn tất World Cup trước khi mở mùa tiếp.");
+  if (!complete(s))
+    throw Error("Hoàn tất mùa giải và vòng tranh suất trước khi mở mùa tiếp.");
   const wc = qualifiers(s, r);
+  if (s.promotionEnabled) return [...wc, ...promotionWinners(s, r)];
   return [
     ...wc,
     ...points(s, r, true)
@@ -429,7 +458,7 @@ export function inheritedSelection(s: CircuitSeason) {
 }
 export const podium = (s: CircuitSeason) =>
   s.world ? F.worldPodium(worldFacade(s)) : [];
-export const totalMatches = 1071;
+export const totalMatches = 1151;
 export { validCircuit } from "./validation";
 
 export * from "./international-tickets";
