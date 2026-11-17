@@ -146,10 +146,11 @@ export function stageDone(s: CircuitSeason, stage = s.stage): boolean {
 }
 function pendingGroups(p: Parameters<typeof phaseMatches>[0]) {
   if (p.bracket) return bracketBatch(p.bracket);
-  const n = p.groups.find((g) => !F.fullLeagueDone(g));
-  if (!n) return [];
-  const round = n.rounds.findIndex((row) => row.some((m) => !m.sets));
-  return p.groups.flatMap((g) => g.rounds[round] || []);
+  const round =
+    p.groups[0]?.rounds.findIndex((_, i) =>
+      p.groups.some((g) => g.rounds[i]?.some((m) => !m.sets)),
+    ) ?? -1;
+  return round < 0 ? [] : p.groups.flatMap((g) => g.rounds[round] || []);
 }
 export function regionalBatch(
   s: CircuitSeason,
