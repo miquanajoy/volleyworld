@@ -435,6 +435,22 @@ export function renderCircuit() {
   );
 }
 export function initializeCircuit() {
+  document
+    .querySelectorAll<HTMLElement>("footer [data-action]")
+    .forEach((el) => {
+      const action = el.dataset.action;
+      el.dataset.action =
+        action === "exportSave"
+          ? "Circuit.export"
+          : action === "Tour.import"
+            ? "Circuit.import"
+            : action === "Tour.create"
+              ? "Circuit.create"
+              : action;
+    });
+  const edition = document.querySelector("header .edition");
+  if (edition) edition.textContent = "BỐN KHU VỰC · MỘT HÀNH TRÌNH";
+
   const brand = document.querySelector<HTMLElement>(".brand");
   if (brand) brand.dataset.action = "Circuit.enter";
   purgeLegacyData();

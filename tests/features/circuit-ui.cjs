@@ -17,6 +17,35 @@ const assert = require("node:assert/strict"),
     e.click();
   };
   assert(d.querySelector(".tour-hero"));
+  assert.equal(
+    d.querySelector(".tour-hero").children.length,
+    2,
+    "Inherited hero has copy and route columns",
+  );
+  assert.equal(
+    d.querySelectorAll(".circuit-region-grid > .full-region-summary").length,
+    4,
+  );
+  assert.equal(
+    d.querySelectorAll("footer [data-action^='Tour.']").length,
+    0,
+    "Footer uses the current circuit actions",
+  );
+  const fs = require("node:fs"),
+    style = d.createElement("style");
+  style.textContent = fs.readFileSync("src/styles/circuit.css", "utf8");
+  d.head.append(style);
+  assert.equal(
+    w.getComputedStyle(d.querySelector(".full-region-summary")).padding,
+    "24px",
+    "Region cards inherit panel spacing",
+  );
+  assert.equal(
+    w.getComputedStyle(d.querySelector(".circuit-region-grid"))
+      .gridTemplateColumns,
+    "repeat(4, minmax(0, 1fr))",
+  );
+
   assert.equal(w.localStorage.getItem("volleyworld-tour-guest"), null);
   assert.equal(w.localStorage.getItem("sb-keep-auth"), "token");
   assert.equal(w.localStorage.getItem("volleyworld-reset-test"), "cutoff");
