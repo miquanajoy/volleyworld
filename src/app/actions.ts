@@ -1,3 +1,4 @@
+import { actions as circuitActions } from "../features/circuit/controller";
 import { accountState } from "../features/account/model";
 import * as Tour from "../features/tour/controller";
 import { tourCloud } from "../features/tour/cloud";
@@ -14,6 +15,7 @@ import type { AppTab } from "./store";
 type Action = (element: HTMLElement) => unknown;
 const arg = (e: HTMLElement) => e.dataset.arg || "";
 const actions: Record<string, Action> = {
+  ...circuitActions,
   "Tour.nextSeason": (e) => Tour.nextSeason(arg(e)),
   "Tour.requestReset": (e) => Tour.requestReset(arg(e)),
   "Tour.confirmReset": (e) => Tour.confirmReset(arg(e)),

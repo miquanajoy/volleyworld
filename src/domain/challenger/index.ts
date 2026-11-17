@@ -195,15 +195,24 @@ export function drawChallengerPlayoff(s: ChallengerSeason) {
     seeds = [0, 1, 2].flatMap((l) =>
       shuffle(rows.filter((r) => r.l === l).map((r) => r.id)),
     ),
-    slots = seedSlots(16).map((n) => seeds[n - 1]);
+    slots = seedSlots(s.circuit ? 8 : 16).map((n) => seeds[n - 1]);
   s.bracket = {
-    r16: Array.from({ length: 8 }, (_, i) => ({
-      id: `CR${i}`,
-      a: slots[2 * i],
-      b: slots[2 * i + 1],
-      sets: null,
-    })),
-    qf: [],
+    r16: s.circuit
+      ? []
+      : Array.from({ length: 8 }, (_, i) => ({
+          id: `CR${i}`,
+          a: slots[2 * i],
+          b: slots[2 * i + 1],
+          sets: null,
+        })),
+    qf: s.circuit
+      ? Array.from({ length: 4 }, (_, i) => ({
+          id: `CQ${i}`,
+          a: slots[2 * i],
+          b: slots[2 * i + 1],
+          sets: null,
+        }))
+      : [],
     sf: [],
     bronze: [],
     final: [],
@@ -308,7 +317,9 @@ export function challengerPlacements(s: ChallengerSeason) {
             ? 5
             : b.r16.some((m) => loser(m) === r.id)
               ? 9
-              : 17,
+              : s.circuit
+                ? 9
+                : 17,
       to: podium.includes(r.id)
         ? podium.indexOf(r.id) + 1
         : loser(b.bronze[0]) === r.id
@@ -317,7 +328,9 @@ export function challengerPlacements(s: ChallengerSeason) {
             ? 8
             : b.r16.some((m) => loser(m) === r.id)
               ? 16
-              : 32,
+              : s.circuit
+                ? 16
+                : 32,
       stage: podium.includes(r.id)
         ? "Huy chương"
         : loser(b.bronze[0]) === r.id

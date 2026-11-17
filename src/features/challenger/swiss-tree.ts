@@ -22,6 +22,7 @@ function layout(
   through: number,
   rows: ReturnType<typeof C.challengerStandings>,
 ) {
+  const factor = s.circuit ? 0.5 : 1;
   const specs = [
     [[0, 0, 16, 0]],
     [
@@ -48,7 +49,14 @@ function layout(
       [3, 2, 0, 6],
       [2, 3, 0, 6],
     ],
-  ];
+  ].map((column) =>
+    column.map(([w, l, games, slots]) => [
+      w,
+      l,
+      games * factor,
+      slots * factor,
+    ]),
+  );
   const columns: Node[][] = specs.map((col, c) =>
     col.map(([w, l, games, slots]) => ({
       key: `${w}-${l}`,
@@ -130,7 +138,7 @@ export function swissTreeHtml(s: C.ChallengerSeason, through: number) {
       });
     }),
   );
-  return `<div class="swiss-map-legend"><span><i class="swiss-legend-win"></i>Thắng → nhóm trên</span><span><i class="swiss-legend-loss"></i>Thua → nhóm dưới</span><span>Đối thủ bốc thăm lại mỗi vòng · Cuộn ngang xem toàn bộ · Bấm vào trận để xem hoặc nhập điểm</span></div><div class="swiss-tree-scroll" tabindex="0" role="region" aria-label="Sơ đồ nhánh Swiss, có thể cuộn ngang"><div class="swiss-map" style="width:${total}px"><div class="swiss-map-head">${columns.map((_, i) => `<div style="width:${width}px"><span class="eyebrow">${i < 5 ? `VÒNG ${i + 1}` : "KẾT QUẢ SWISS"}</span><b>${i < 5 ? (i <= through ? "Đã bốc thăm" : "Chờ bốc thăm") : "16 vé playoff"}</b></div>`).join("")}</div><div class="swiss-map-body" style="height:${height}px"><svg class="swiss-map-lines" width="${total}" height="${height}" viewBox="0 0 ${total} ${height}" aria-hidden="true">${paths.join("")}</svg>${columns
+  return `<div class="swiss-map-legend"><span><i class="swiss-legend-win"></i>Thắng → nhóm trên</span><span><i class="swiss-legend-loss"></i>Thua → nhóm dưới</span><span>Đối thủ bốc thăm lại mỗi vòng · Cuộn ngang xem toàn bộ · Bấm vào trận để xem hoặc nhập điểm</span></div><div class="swiss-tree-scroll" tabindex="0" role="region" aria-label="Sơ đồ nhánh Swiss, có thể cuộn ngang"><div class="swiss-map" style="width:${total}px"><div class="swiss-map-head">${columns.map((_, i) => `<div style="width:${width}px"><span class="eyebrow">${i < 5 ? `VÒNG ${i + 1}` : "KẾT QUẢ SWISS"}</span><b>${i < 5 ? (i <= through ? "Đã bốc thăm" : "Chờ bốc thăm") : `${s.circuit ? 8 : 16} vé playoff`}</b></div>`).join("")}</div><div class="swiss-map-body" style="height:${height}px"><svg class="swiss-map-lines" width="${total}" height="${height}" viewBox="0 0 ${total} ${height}" aria-hidden="true">${paths.join("")}</svg>${columns
     .map((col, c) =>
       col
         .map((node) => {

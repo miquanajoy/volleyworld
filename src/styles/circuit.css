@@ -1,0 +1,158 @@
+/* The circuit inherits the existing Tour, tables, cards, trees and editor styles. */
+.circuit-page {
+  min-width: 0;
+}
+.circuit-page h1 {
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
+  line-height: 1.2;
+}
+.circuit-group-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+.circuit-group-grid > * {
+  min-width: 0;
+}
+.circuit-page .table-wrap {
+  max-width: 100%;
+  overflow: auto;
+}
+.circuit-page .full-standings {
+  min-width: 600px;
+}
+.circuit-page .tour-group-table {
+  min-width: 0;
+}
+.circuit-page .full-standings .team-name {
+  white-space: nowrap;
+}
+.circuit-stage-actions {
+  margin: 18px 0;
+}
+.circuit-page .controls,
+.circuit-page .tour-region-nav,
+.circuit-page .full-group-nav {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.circuit-page .tour-journey-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.circuit-page .challenger-team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.circuit-page .challenger-team-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.circuit-page .challenger-team-choice.is-selected {
+  border-color: var(--accent, #187348);
+  background: #eaf2e5;
+}
+.circuit-page .challenger-team-choice:disabled {
+  opacity: 0.55;
+}
+.circuit-page .season-medals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 16px 0;
+}
+.circuit-page .season-medals > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.circuit-page .qualification-names {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+.circuit-page .qualification-names > span {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.circuit-page .qualification-names small {
+  color: var(--muted);
+}
+.circuit-page .circuit-bracket {
+  margin-top: 18px;
+}
+.circuit-page .circuit-bronze .bracket-match {
+  max-width: 320px;
+}
+.circuit-page .regional-double-columns {
+  width: max-content;
+  min-width: 100%;
+}
+.circuit-page .regional-double-columns > section {
+  min-width: 244px;
+}
+.circuit-page .double-lower-scroll,
+.circuit-page .playoff-tree-scroll {
+  overflow: auto;
+}
+.circuit-page .circuit-group-grid .circuit-bracket .double-overview-panel {
+  padding: 14px;
+}
+.circuit-page .tour-country-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  text-align: left;
+}
+.circuit-page [aria-current="page"],
+.circuit-page [aria-pressed="true"] {
+  border-color: var(--accent, #187348);
+  box-shadow: inset 0 -2px 0 #187348;
+}
+@media (max-width: 1100px) {
+  .circuit-group-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .circuit-page .tour-journey-grid {
+    grid-template-columns: 1fr;
+  }
+  .circuit-page .challenger-team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .circuit-page .panel {
+    padding: 16px;
+  }
+  .circuit-page .tour-season-heading {
+    align-items: flex-start;
+  }
+  .circuit-page .controls > button {
+    min-height: 40px;
+  }
+  .circuit-page .regional-double-columns > section {
+    min-width: 220px;
+  }
+}
+@media (max-width: 420px) {
+  .circuit-page .challenger-team-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.circuit-points .full-standings {
+  min-width: 980px;
+}

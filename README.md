@@ -1,18 +1,17 @@
 # VolleyWorld Tour
 
-A Vietnamese-language men's volleyball simulator built around one full-season journey: **World League → regional qualification → Challenger → World Cup**. The eight-event calendar keeps every competition's results and gives each season three independent titles.
+A Vietnamese-language volleyball simulator built around four regions and two tiers: **regional League → First Stand → regional League → Challenger → final regional League → World Cup Play-in → World Cup**.
 
-Play at [volleyworld.vercel.app](https://volleyworld.vercel.app/). See [Tour rules and architecture](docs/TOUR.md).
+Play at [volleyworld.vercel.app](https://volleyworld.vercel.app/). See [the regional circuit specification](docs/REGIONAL-CIRCUIT.md).
 
-- Choose one fixed 32-country roster for League and Challenger: Europe 7, Asia/Oceania 7, South America 6, North/Central America/Caribbean 7, Africa 5.
-- League uses 31 rounds in three calendar windows (10 + 10 + 11), then the original single-elimination qualification: top 12 direct, ranks 13–20 in Play-in, 16 playoff teams. Bronze precedes the final.
-- Challenger uses a five-round Swiss stage, regional separation in round one and no Swiss rematches, followed by a fixed 16-team playoff.
-- Teams outside League enter regional selection for 16 World Cup Play-in places. World Cup starts only after Play-in and the League final are complete.
-- New feature-branch seasons use **World Cup 32**, Challenger top-two tickets and 16 League playoff tickets, followed by World Cup Play-in. World Cup entrants become the next League roster; only the first season selects teams. The first season has 833 matches; later totals vary. See [career32 rules](docs/TOUR-CAREER32.md). Legacy and merit24 saves retain their original rules. Manual scores, set-by-set simulation, selected scoreline generation and five-match form share the same match components.
-- Completed season pages and history cards show all three podiums. Country profiles show each season's League, Challenger and World Cup achievement, including tied knockout placements and non-participation.
-- Career32 preview is local-only with export/import and chain reset; it does not write production data. Legacy seasons retain account-isolated cloud saves and CAS conflict handling.
-
-Tour is the only public mode. The standalone experimental lobbies and writers have been removed; Nations League source and active write access have been retired. Historical SQL migrations remain for reproducible database upgrades. The domain modules behind League, Challenger and World Cup remain reusable competition engines within Tour.
+- Europe, Asia/Oceania, the Americas and Africa each have 16 Tier 1 and 8 Tier 2 teams. Tier 2 rosters are chosen at the beginning of each season.
+- Phase 1: Tier 1 double elimination stops at two regional representatives. Eight teams play First Stand; its grand final is one match with no reset.
+- Phase 2: seeded groups and regional single elimination select four representatives per region for the 16-team Swiss Challenger; eight advance to knockout, including bronze.
+- Phase 3: groups are redrawn from Phase 2 League seeds. The top eight play double elimination with one grand final. Regional finalists plus two season-points leaders qualify directly for World Cup.
+- Each regional Play-in has twelve remaining Tier 1 teams and the top four Tier 2 teams: four GSL groups, then an eight-team double bracket stopped at four tickets.
+- World Cup has 32 teams, eight groups and a sixteen-team knockout with bronze. All eight World Cup participants per region are guaranteed Tier 1 next season, joined by eight remaining Tier 1 points leaders.
+- A full season has 1,071 BO5 matches. Match cards, standings, rank movement, bracket connectors, Swiss visualization, score editor and country profiles reuse the established UI.
+- Circuit saves use their own account-scoped cloud table with revision conflicts and offline retention. Old game caches are removed on entry; browser authentication is preserved. Legacy engines remain available as regression fixtures, not as public modes.
 
 ## Development
 
@@ -29,7 +28,8 @@ Configure Supabase using `.env.example`. Vite accepts only HTTPS project URLs an
 
 - `src/app`: single-mode bootstrap, explicit delegated actions and renderer composition.
 - `src/domain`: pure match, standings, qualification, Swiss, knockout and Tour calendar rules.
-- `src/features/tour`: selection, journey, three-title summaries, country achievements, score actions and account-scoped season model.
+- `src/features/circuit`: the public circuit UI, scoped cloud saves, roster selection, medals and shared match actions.
+- `src/features/tour`: retained legacy renderer and shared components used by the circuit and regression suite.
 - `src/features/account`: authentication and Tour-only account lifecycle.
 - `src/features/shared/season-cloud.ts`: serial CAS writers, lazy history, offline retry and scope guards.
 - `src/components`: shared team/form, editor detail, podium and bracket presentation.
