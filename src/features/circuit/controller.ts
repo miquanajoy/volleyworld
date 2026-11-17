@@ -44,6 +44,7 @@ function mutate(action: (s: D.CircuitSeason) => void) {
   if (!row?.snapshot || locked())
     throw Error("Mùa chỉ xem hoặc cần giải quyết xung đột.");
   const s = clone(row.snapshot);
+  D.enablePromotion(s);
   action(s);
   if (!D.validCircuit(s))
     throw Error("Tiến trình không hợp lệ; bản lưu trước được giữ.");
@@ -70,7 +71,7 @@ export async function open(id: string) {
   if (!row?.snapshot) return;
   model.selected = id;
   model.setup = null;
-  model.stage = Math.min(row.snapshot.stage, 6);
+  model.stage = Math.min(row.snapshot.stage, D.lastStage(row.snapshot));
   model.section = row.status === "completed" ? "journey" : "matches";
   model.group = null;
   syncRound();
@@ -256,8 +257,17 @@ export function showTeam(id: string) {
   if (!s || !get(id)) return;
   const ms = D.matches(s).filter((m) => m.a === id || m.b === id);
   $("teamLeagueTitle").textContent = get(id).name;
+  const promotion = D.promotionStatus(s, D.regionOf(id), id);
+  const route =
+    promotion === "safe"
+      ? "✓ Suất Hạng 1 mùa sau · World Cup"
+      : promotion === "qualified"
+        ? "✓ Suất Hạng 1 mùa sau · Phase 6"
+        : promotion === "eliminated"
+          ? "× Không giành suất Hạng 1 mùa sau"
+          : "Chưa chốt suất Hạng 1 mùa sau";
   $("teamLeagueSummary").innerHTML =
-    `<h3>${team(id)}</h3><p>${ms.filter((m) => m.sets).length} trận đã đấu trong mùa ${s.seasonNumber}</p><div class="table-wrap"><table class="full-standings"><thead><tr><th>Trận</th><th>Đối thủ</th><th>Kết quả</th></tr></thead><tbody>${ms.map((m) => `<tr><td>${esc(m.id)}</td><td>${team(m.a === id ? m.b : m.a)}</td><td>${m.sets ? m.sets.map(([a, b]) => `${a}–${b}`).join(" · ") : "Chưa đấu"}</td></tr>`).join("")}</tbody></table></div>`;
+    `<h3>${team(id)}</h3>${s.promotionEnabled ? `<p>${route}</p>` : ""}<p>${ms.filter((m) => m.sets).length} trận đã đấu trong mùa ${s.seasonNumber}</p><div class="table-wrap"><table class="full-standings"><thead><tr><th>Trận</th><th>Đối thủ</th><th>Kết quả</th></tr></thead><tbody>${ms.map((m) => `<tr><td>${esc(m.id)}</td><td>${team(m.a === id ? m.b : m.a)}</td><td>${m.sets ? m.sets.map(([a, b]) => `${a}–${b}`).join(" · ") : "Chưa đấu"}</td></tr>`).join("")}</tbody></table></div>`;
   $("teamLeagueRows").innerHTML = "";
   $("teamLeagueDialog").showModal();
 }
@@ -268,7 +278,7 @@ export function simRound() {
     mutate((d) =>
       D.simulateBatch(
         d,
-        [0, 2, 4, 5].includes(d.stage) ? model.region : undefined,
+        [0, 2, 4, 5, 7].includes(d.stage) ? model.region : undefined,
         [0, 2, 4].includes(d.stage) ? model.tier === "upper" : undefined,
       ),
     );
@@ -281,14 +291,14 @@ export function finishStage() {
   if (
     !s ||
     model.stage !== s.stage ||
-    !confirm("Mô phỏng các trận còn lại của khu vực/mâm đang xem?")
+    !confirm("Mô phỏng các trận còn lại của khu vực/hạng đang xem?")
   )
     return;
   run(() => {
     mutate((d) =>
       D.finishStage(
         d,
-        [0, 2, 4, 5].includes(d.stage) ? model.region : undefined,
+        [0, 2, 4, 5, 7].includes(d.stage) ? model.region : undefined,
         [0, 2, 4].includes(d.stage) ? model.tier === "upper" : undefined,
       ),
     );
@@ -300,7 +310,7 @@ export function finish() {
   if (!confirm("Mô phỏng toàn bộ mùa giải?")) return;
   run(() => {
     mutate(D.finishSeason);
-    model.stage = 6;
+    model.stage = D.lastStage(selected()!.snapshot!);
     model.section = "journey";
     render();
   });
@@ -308,7 +318,10 @@ export function finish() {
 export function next() {
   run(() => {
     mutate(D.nextStage);
-    model.stage = Math.min(selected()!.snapshot!.stage, 6);
+    model.stage = Math.min(
+      selected()!.snapshot!.stage,
+      D.lastStage(selected()!.snapshot!),
+    );
     model.group = null;
     model.section = D.complete(selected()!.snapshot!) ? "journey" : "matches";
     syncRound();
@@ -322,8 +335,8 @@ export function viewStage(value: string) {
     !s ||
     !Number.isInteger(n) ||
     n < 0 ||
-    n > 6 ||
-    (n > s.stage && !D.internationalStage(n))
+    n > D.lastStage(s) ||
+    (n > s.stage && !D.internationalStage(n) && n !== 7)
   )
     return;
   model.stage = n;
@@ -402,7 +415,11 @@ function importSeasons() {
         throw Error("Trùng số mùa trong bản nhập.");
       const before = [...model.records];
       model.records.push(
-        ...additions.map((row) => ({ ...row, revision: 0, dirty: true })),
+        ...additions.map((row) => ({
+          ...row,
+          ...recordOf(row.snapshot!, 0),
+          dirty: true,
+        })),
       );
       if (!persist()) {
         model.records = before;

@@ -450,3 +450,36 @@ main:has(.circuit-page) {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.circuit-page .circuit-promotion-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 50%;
+  font-size: 19px;
+  font-weight: 800;
+}
+.circuit-page .circuit-promotion-status.is-qualified {
+  background: #e8f3e6;
+  color: #197244;
+}
+.circuit-page .circuit-promotion-status.is-eliminated {
+  background: #fae9e7;
+  color: #b83932;
+}
+.circuit-page .circuit-promotion-summary .qualification-names > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.circuit-page .circuit-promotion-table {
+  min-width: 450px;
+}
+.circuit-page .circuit-promotion-groups > section {
+  min-width: 0;
+}
+.circuit-page .circuit-promotion-groups .double-overview-panel {
+  padding: 16px;
+}

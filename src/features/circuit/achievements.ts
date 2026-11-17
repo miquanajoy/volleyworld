@@ -21,7 +21,7 @@ function awards(s: D.CircuitSeason) {
               id: x.id,
               rank: x.from,
               type: "league",
-              label: `League ${D.regionNames[r]} · Phase ${i + 1} · Mâm ${t === "upper" ? 1 : 2}`,
+              label: `League ${D.regionNames[r]} · Phase ${i + 1} · Hạng ${t === "upper" ? 1 : 2}`,
             })),
         ),
       ),

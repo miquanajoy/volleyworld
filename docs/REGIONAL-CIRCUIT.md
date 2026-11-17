@@ -14,8 +14,9 @@ Four regions: Europe, Asia/Oceania, Americas (NORCECA + CSV), Africa. Each has s
 | 3     | Challenger                  |      41 |
 | 4     | Phase 3 regional leagues    |     340 |
 | 5     | Regional World Cup Play-ins |     120 |
-| 6     | World Cup                   |      64 |
-|       | Total                       |   1,071 |
+| 6     | Phase 5 World Cup           |      64 |
+| 7     | Phase 6 promotion           |      80 |
+|       | Total                       |   1,151 |
 
 Phase 1 Tier 1 is sixteen-team double elimination stopped before the grand final: upper winner first, lower winner second. Both qualify for First Stand. First Stand has eight teams and one grand final, no reset.
 
@@ -54,7 +55,11 @@ World Cup has eight seeded groups of four, each with one team per region and one
 
 ## Following season
 
-Every World Cup participant is guaranteed Tier 1 next season. Each region fills the other eight places with the highest pre-Play-in points teams from its previous Tier 1 roster that did not qualify. Each promoted Tier 2 qualifier therefore displaces one nonqualifying Tier 1 team. The remaining national pool, including relegated teams, is eligible for the next Tier 2 selection. All inherited Tier 1 slots are locked in setup.
+Every World Cup participant is guaranteed Tier 1 next season. All other sixteen current-season teams per region must play Phase 6, regardless of original tier or points. Four GSL groups award two places each: two wins qualify, two losses eliminate. No overall final or placement points are awarded. The other eight Tier 1 places come exclusively from these winners. Tier 2 is still selected at the next season start from the national pool excluding inherited Tier 1 teams. All sixteen inherited Tier 1 slots are locked in setup.
+
+Phase 6 seeds use total season points, then League Phase 3/2/1 placement, then a stored random tie order. Four shuffled pots each provide one team to each group; pot 1 faces pot 4 and pot 2 faces pot 3. The draw is stored and never regenerated on render or reload. Green ticks and red crosses update as soon as a team reaches two wins or losses; World Cup participants have a separate safe route. Regional group panels reuse the existing bracket renderer in two columns on wide screens.
+
+New and unfinished seasons carry `promotionEnabled: true`. World Cup is stage 6, promotion is stage 7, and completion becomes stage 8. Existing completed seasons without the marker remain immutable at stage 7 with their original 1,071 matches and inheritance policy. Loading an unfinished local/cloud/imported season enables Phase 6 without replacing results. A World Cup podium can exist on an active season while promotion remains unfinished. The season ends only after all four regions complete promotion, for 1,151 matches.
 
 ## UI, persistence and verification
 

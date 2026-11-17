@@ -89,7 +89,7 @@ const assert = require("node:assert/strict"),
   click('[data-action="Circuit.setupRegion"][data-arg="CAVB"]');
   assert.equal(d.querySelectorAll('[data-action="Circuit.toggle"]').length, 24);
   click('[data-action="Circuit.start"]');
-  assert.equal(d.querySelectorAll(".tour-journey-card").length, 7);
+  assert.equal(d.querySelectorAll(".tour-journey-card").length, 8);
   click('[data-action="Circuit.viewStage"][data-arg="0"]');
   assert(d.querySelector(".regional-double-columns"));
   assert(!d.textContent?.includes("Trận reset"));
@@ -111,7 +111,7 @@ const assert = require("node:assert/strict"),
   c.showTeam(pending.a);
   assert(d.getElementById("teamLeagueDialog").open);
   d.getElementById("teamLeagueDialog").close();
-  for (let stage = 0; stage < 7; stage++) {
+  for (let stage = 0; stage < 8; stage++) {
     if (c.selected().snapshot.stage !== stage) throw Error("stage progression");
     for (const section of [
       "matches",
@@ -148,7 +148,7 @@ const assert = require("node:assert/strict"),
           c.finishStage();
         }
       }
-    } else if (stage === 5) {
+    } else if ([5, 7].includes(stage)) {
       click('[data-action="Circuit.section"][data-arg="matches"]');
       for (const r of D.regions) {
         click(`[data-action="Circuit.region"][data-arg="${r}"]`);
@@ -188,7 +188,7 @@ const assert = require("node:assert/strict"),
         "Unranked team rows keep a real name column",
       );
     }
-    if (stage === 5) {
+    if ([5, 7].includes(stage)) {
       assert.equal(
         d.querySelectorAll("[data-circuit-bracket]").length >= 1,
         true,
@@ -211,7 +211,7 @@ const assert = require("node:assert/strict"),
     c.next();
   }
   assert.equal(c.selected().status, "completed");
-  assert.equal(c.selected().played, 1071);
+  assert.equal(c.selected().played, 1151);
   assert.equal(D.podium(c.selected().snapshot).length, 3);
   await c.achievements();
   assert(d.querySelector(".tour-country-card"));
@@ -244,7 +244,7 @@ const assert = require("node:assert/strict"),
   assert.equal(reload.w.__circuit.model.records.length, 2);
   reload.close();
   console.log(
-    "PASS circuit UI: inherited cards/editor/team dialog; all7 stages and4regions/2tiers; two-table/group filters; Swiss8; no reset; WC icons/history; medals filters; next-season selection; reload and legacy purge preserve auth",
+    "PASS circuit UI: inherited cards/editor/team dialog; all8 stages and4regions/2tiers; two-table/group filters; Swiss8; no reset; WC icons/history; medals filters; next-season selection; reload and legacy purge preserve auth",
   );
 })().catch((e) => {
   console.error(e);
