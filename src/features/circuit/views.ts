@@ -92,14 +92,14 @@ function regionHtml(s: D.CircuitSeason, locked: boolean) {
   if (!p) return '<section class="panel tour-empty">Chặng chưa mở.</section>';
   return `${regionNav()}<div class="controls"><button data-action="Circuit.tier" data-arg="upper" aria-pressed="${model.tier === "upper"}">Mâm 1</button><button data-action="Circuit.tier" data-arg="lower" aria-pressed="${model.tier === "lower"}">Mâm 2</button></div>${p.groups.length && model.section !== "playoff" ? tables(s, p.groups, model.tier === "upper" ? 4 : 2, locked) : ""}${p.bracket && (model.section === "playoff" || !p.groups.length) ? bracketHtml(p.bracket, `${D.regionNames[model.region]} · Mâm ${model.tier === "upper" ? 1 : 2}`, D.bracketDone(p.bracket)) : model.section === "playoff" ? '<section class="panel tour-empty"><h3>Chờ hoàn tất vòng bảng</h3><p>Nhánh playoff tự mở sau lượt cuối.</p></section>' : ""}${
     D.leagueDone(p)
-      ? `<section class="panel"><h3>Thứ hạng chính thức</h3><div class="qualification-names">${D.leagueRanks(
+      ? `<section class="panel"><h3>Thứ hạng chính thức</h3><div class="table-wrap"><table class="full-standings circuit-final-standings"><thead><tr><th>Hạng</th><th>Đội tuyển</th><th>Thành tích</th></tr></thead><tbody>${D.leagueRanks(
           p,
         )
           .map(
             (t) =>
-              `<span><b>#${t.from}${t.from !== t.to ? "–" + t.to : ""}</b> ${team(t.id)}</span>`,
+              `<tr class="${t.from <= 3 ? "is-podium" : ""}"><td><span class="circuit-rank rank-${t.from}">${t.from === t.to ? t.from : t.from + "–" + t.to}</span></td><td>${team(t.id)}</td><td>${t.from <= 3 ? ["🥇 Vô địch", "🥈 Á quân", "🥉 Hạng ba"][t.from - 1] : "Hoàn tất"}</td></tr>`,
           )
-          .join("")}</div></section>`
+          .join("")}</tbody></table></div></section>`
       : ""
   }`;
 }

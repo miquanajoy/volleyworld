@@ -40,13 +40,24 @@ export function bracketHtml(
                   (next && next.pairs.length < stage.pairs.length && j % 2 === 0
                     ? " join-upper"
                     : "");
+              const finalStack =
+                b.kind === "single" && b.bronzeRequired && !next;
+              const tile = doubleBracketFixture(
+                m,
+                finalStack
+                  ? "Chung kết · BO5"
+                  : column + 1 + "-" + (j + 1) + " · BO5",
+                closed,
+                preview.get(id),
+                routes,
+              ).replaceAll("Tour.match", "Circuit.match");
+              if (finalStack)
+                return `<div class="${classes} circuit-medal-stack" style="grid-row:1/span ${rows}" data-circuit-slot="${id}"><section class="circuit-final-slot">${tile}</section><section class="circuit-bronze" data-circuit-bronze><h4>🥉 Tranh hạng ba</h4>${doubleBracketFixture(b.bronze, "Huy chương đồng · BO5", closed, undefined, ["Thua bán kết 1", "Thua bán kết 2"]).replaceAll("Tour.match", "Circuit.match")}</section></div>`;
               return `<div class="${classes}" style="grid-row:${j * span + 1}/span ${span}" data-circuit-slot="${id}">${doubleBracketFixture(m, column + 1 + "-" + (j + 1) + " · BO5", closed, preview.get(id), routes).replaceAll("Tour.match", "Circuit.match")}${kind === "lower" ? `<p class="double-route">${routes.map(esc).join(" × ")}</p>` : ""}</div>`;
             })
             .join("")}</div></section>`;
         })
         .join("")}</div></div></section>`;
     })
-    .join(
-      "",
-    )}${b.bronze ? `<section class="double-overview-panel circuit-bronze"><h3>Tranh hạng ba</h3>${doubleBracketFixture(b.bronze, "Huy chương đồng · BO5", closed).replaceAll("Tour.match", "Circuit.match")}</section>` : ""}</div>`;
+    .join("")}</div>`;
 }

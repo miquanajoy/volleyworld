@@ -250,6 +250,19 @@ export function validCircuit(input: unknown): input is CircuitSeason {
         ))
     )
       return false;
+    // Existing scored legacy draws without an opening override keep their recorded routes.
+    if (s.firstStand?.opening) {
+      const opening = s.firstStand.opening;
+      if (
+        !equal(
+          opening,
+          [0, 5, 2, 7, 1, 4, 3, 6].map((i) => s.firstStand!.seeds[i]),
+        ) ||
+        new Set(opening.slice(0, 4).map(regionOf)).size !== 4 ||
+        new Set(opening.slice(4).map(regionOf)).size !== 4
+      )
+        return false;
+    }
     if (s.challenger) {
       const c = s.challenger,
         entrants = Array.from({ length: 4 }, (_, i) =>
