@@ -156,6 +156,18 @@ function meta(r) {
   assert(await c.cloud.resetAll());
   assert.equal(c.model.records.length, 0);
   assert.deepEqual(copy([...remote.get("B").values()]), beforeB);
+  await c.cloud.switchAccount(service("B"), "B");
+  const remoteOnly = c.model.records[0];
+  remoteOnly.snapshot = undefined;
+  c.enter();
+  offline = true;
+  a.w.document.querySelector('[data-action="Circuit.open"]').click();
+  await new Promise((r) => setTimeout(r, 20));
+  assert(
+    a.w.document.getElementById("toast").textContent.includes("Không tải được"),
+    "Remote history read failure is reported, never an unhandled action rejection",
+  );
+  offline = false;
   await c.cloud.switchAccount(null, null);
   assert.equal(a.w.localStorage.getItem("volleyworld-circuit-v2-guest"), guest);
   a.close();

@@ -1,3 +1,4 @@
+import { toast } from "../shared/feedback";
 import { actions as circuitActions } from "../features/circuit/controller";
 import { accountState } from "../features/account/model";
 import * as Tour from "../features/tour/controller";
@@ -98,7 +99,21 @@ export function initializeActions() {
     const action = actions[e.dataset.action || ""];
     if (!action) return;
     event.preventDefault();
-    void action(e);
+    try {
+      void Promise.resolve(action(e)).catch((error) =>
+        toast(
+          error instanceof Error
+            ? error.message
+            : "Chưa thực hiện được. Vui lòng thử lại.",
+        ),
+      );
+    } catch (error) {
+      toast(
+        error instanceof Error
+          ? error.message
+          : "Chưa thực hiện được. Vui lòng thử lại.",
+      );
+    }
   };
   for (const name of ["click", "input", "change"])
     document.addEventListener(name, handle);
