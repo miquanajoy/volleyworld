@@ -311,7 +311,14 @@ export function next() {
 export function viewStage(value: string) {
   const n = Number(value),
     s = selected()?.snapshot;
-  if (!s || !Number.isInteger(n) || n < 0 || n > 6 || n > s.stage) return;
+  if (
+    !s ||
+    !Number.isInteger(n) ||
+    n < 0 ||
+    n > 6 ||
+    (n > s.stage && !D.internationalStage(n))
+  )
+    return;
   model.stage = n;
   model.group = null;
   model.section = "matches";
