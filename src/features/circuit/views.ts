@@ -191,6 +191,26 @@ function worldHtml(s: D.CircuitSeason, locked: boolean) {
 export function rulesHtml() {
   return `<section class="panel"><h2>Thể thức mùa giải</h2><p>Bốn khu vực · mỗi khu vực 16 đội mâm 1, 8 đội mâm 2.</p><p>Phase 1: mâm 1 nhánh thắng–thua, dừng ở hai đội đứng đầu; mâm 2 vòng bảng và playoff. First Stand: 8 đội, nhánh thắng–thua.</p><p>Phase 2: mâm 1 2 bảng × 8, Top 4 mỗi bảng vào playoff loại trực tiếp, có tranh hạng ba; bốn đội vào bán kết dự Challenger. Challenger 16 đội Swiss, 8 đội playoff, có tranh hạng ba.</p><p>Phase 3: chia lại bảng theo hạt giống League Phase 2, playoff mâm 1 nhánh thắng–thua. Hai đội vào chung kết giành vé World Cup. Mâm 2 các phase: 2 bảng × 4, Top 2 vào bán kết, không tranh hạng ba.</p><p>World Cup: mỗi khu vực hai vé League Phase 3, hai vé điểm cả mùa và bốn vé Play-in. Play-in: 12 đội mâm 1 + Top 4 điểm mâm 2, bốn bảng sinh tử rồi nhánh thắng–thua tranh bốn vé.</p><p>Mọi trận BO5. Chung kết tổng một trận, không reset. World Cup 8 bảng × 4, Top 2 vào playoff loại trực tiếp và có tranh hạng ba.</p><h3>Điểm thưởng phiên bản 1</h3><p>League thắng 5 điểm; quốc tế thắng 10 điểm. Hệ số thưởng League Phase 1/2/3: 1 / 1,5 / 2.</p><div class="table-wrap"><table><thead><tr><th>Hạng</th><th>Mâm 1</th><th>Mâm 2</th><th>First Stand</th></tr></thead><tbody>${[1, 2, 3, 4, 5, 7, 9, 13].map((rank) => `<tr><td>${rank}</td><td>${D.upperBonus(rank)}</td><td>${D.lowerBonus(rank)}</td><td>${D.internationalBonus(rank)}</td></tr>`).join("")}</tbody></table></div><p>Challenger thưởng bằng 1,5 lần First Stand ở cùng thứ hạng. World Cup thưởng bằng 3 lần First Stand ở cùng thứ hạng. Điểm World Cup ghi riêng sau khi chốt vé, không thay đổi các suất đã trao. Play-in quyết định vé bằng kết quả trận đấu, không cộng vào điểm xét vé đã chốt.</p><p>Mùa sau: tám đội World Cup mỗi khu vực chắc suất mâm 1, cộng tám đội mâm 1 có điểm cao nhất còn lại. Mâm 2 tiếp tục chọn đầu mùa.</p></section>`;
 }
+function internationalPreviewHtml(s: D.CircuitSeason, stage: number) {
+  const capacity = D.internationalCapacity(stage),
+    count = D.internationalTicketCount(s, stage),
+    total = capacity * 4;
+  const ready = stage <= s.stage;
+  const condition =
+    stage === 1
+      ? "Hoàn tất League Phase 1 của cả bốn khu vực để bắt đầu First Stand."
+      : stage === 3
+        ? "Hoàn tất League Phase 2 của cả bốn khu vực để bắt đầu Challenger."
+        : "Hoàn tất League Phase 3 và World Cup Play-in để bắt đầu World Cup.";
+  return `<section class="panel circuit-ticket-preview" data-international-preview="${stage}"><div class="section-head"><div><span class="eyebrow">${ready ? "DANH SÁCH THAM DỰ" : "THEO DÕI VÉ · CẬP NHẬT SAU MỖI TRẬN"}</span><h2>${D.calendar[stage][0]}</h2></div><span class="badge">${count}/${total} ĐỘI ĐÃ CÓ VÉ</span></div><p class="sub">${ready ? "Các đội đã giành quyền tham dự giải." : condition + " Có thể xem đội đã có vé ngay từ bây giờ."}</p><div class="full-format-grid">${D.regions
+    .map((r) => {
+      const tickets = D.internationalTickets(s, stage, r);
+      return `<section class="panel full-region-summary" data-ticket-region="${r}"><h3>${D.regionNames[r]}</h3><span class="badge">${tickets.length}/${capacity} VÉ</span><div class="qualification-names">${tickets.map((t) => `<span data-international-team="${t.id}">${team(t.id)}<small>✓ ${t.route}</small></span>`).join("")}${Array.from({ length: Math.max(0, capacity - tickets.length) }, () => '<span class="sub circuit-ticket-waiting">Chờ xác định đội giành vé</span>').join("")}</div></section>`;
+    })
+    .join(
+      "",
+    )}</div>${!ready ? '<p class="notice">Chưa mở bốc thăm và thi đấu. Vé chỉ được ghi nhận khi đã chắc chắn.</p>' : ""}</section>`;
+}
 export function seasonHtml(s: D.CircuitSeason, locked: boolean) {
   const stages = D.calendar,
     scopedPending = (
@@ -206,7 +226,7 @@ export function seasonHtml(s: D.CircuitSeason, locked: boolean) {
     phase = D.phaseIndex(model.stage);
   let body = "";
   if (model.section === "journey")
-    body = `<div class="tour-journey-grid">${stages.map(([title, sub], i) => `<section class="panel tour-journey-card"><span class="eyebrow">${i <= 1 ? "PHASE 1" : i <= 3 ? "PHASE 2" : i === 4 ? "PHASE 3" : "PHASE 4"}</span><h3>${title}</h3><p>${sub}</p><span class="badge">${i < s.stage ? "✓ HOÀN TẤT" : i === s.stage ? "ĐANG ĐẤU" : "CHƯA MỞ"}</span>${button("viewStage", i < s.stage ? "Xem kết quả" : "Vào giải", String(i), i > s.stage)}</section>`).join("")}</div>${qualifierHtml(s)}${
+    body = `<div class="tour-journey-grid">${stages.map(([title, sub], i) => `<section class="panel tour-journey-card"><span class="eyebrow">${i <= 1 ? "PHASE 1" : i <= 3 ? "PHASE 2" : i === 4 ? "PHASE 3" : "PHASE 4"}</span><h3>${title}</h3><p>${sub}</p><span class="badge">${i < s.stage ? "✓ HOÀN TẤT" : i === s.stage ? "ĐANG ĐẤU" : "CHƯA MỞ"}</span>${button("viewStage", i < s.stage ? "Xem kết quả" : i > s.stage && D.internationalStage(i) ? "Xem đội đã có vé" : "Vào giải", String(i), i > s.stage && !D.internationalStage(i))}</section>`).join("")}</div>${qualifierHtml(s)}${
       D.complete(s)
         ? `<section class="panel"><h2>World Cup · Top 3</h2><div class="season-medals">${D.podium(
             s,
@@ -217,9 +237,13 @@ export function seasonHtml(s: D.CircuitSeason, locked: boolean) {
             )}</div>${button("nextSeason", "Bắt đầu mùa tiếp theo", s.seasonId)}</section>`
         : ""
     }`;
+  else if (model.stage > s.stage && D.internationalStage(model.stage))
+    body = internationalPreviewHtml(s, model.stage);
   else if (model.section === "points") body = pointsHtml(s);
   else if (model.section === "qualifiers") body = qualifierHtml(s);
   else if (model.section === "rules") body = rulesHtml();
+  else if (model.section === "teams" && D.internationalStage(model.stage))
+    body = internationalPreviewHtml(s, model.stage);
   else if (model.section === "teams")
     body =
       regionNav() +
@@ -243,5 +267,5 @@ export function seasonHtml(s: D.CircuitSeason, locked: boolean) {
   else if (model.stage === 3) body = challengerHtml(s, read);
   else if (model.stage === 5) body = playinHtml(s);
   else body = worldHtml(s, read);
-  return `<div class="tour-page circuit-page"><div class="section-head tour-season-heading"><div><span class="eyebrow">VOLLEYWORLD TOUR · MÙA ${s.seasonNumber}</span><h1>${model.section === "journey" ? "Hành trình mùa giải" : stages[model.stage][0]}</h1><p class="sub">${D.played(s)}/${D.totalMatches} trận · ${D.complete(s) ? "Mùa đã hoàn tất" : stages[s.stage][0]}</p></div><div class="controls">${button("enter", "← Các mùa")}${button("achievements", "Thành tích quốc gia")}${button("exportOne", "Xuất mùa này")}${button("requestReset", "Bắt đầu lại chuỗi mùa")}</div></div><nav class="tour-section-nav controls">${tab("journey", "Hành trình")}${tab("matches", "Lịch đấu")}${tab("table", "BXH")}${tab("playoff", "Nhánh playoff")}${tab("points", "Điểm tích lũy")}${tab("qualifiers", "Vé World Cup")}${tab("teams", "Đội tuyển")}${tab("rules", "Thể thức")}</nav>${model.section !== "journey" ? `<nav class="tour-round-nav">${stages.map(([label], i) => button("viewStage", label, String(i), i > s.stage)).join("")}</nav>` : ""}${!read && !D.complete(s) && !["journey", "rules", "teams", "points", "qualifiers"].includes(model.section) ? `<section class="panel circuit-stage-actions"><p>${stages[s.stage][1]}${[0, 2, 4].includes(s.stage) ? ` · ${D.regionNames[model.region]} · Mâm ${model.tier === "upper" ? 1 : 2} · Phase ${phase + 1}` : ""}</p><div class="controls">${D.stageDone(s) ? button("next", s.stage === 6 ? "Hoàn tất mùa giải" : "Qua chặng tiếp theo →") : button("simRound", "Chạy lượt tiếp theo", "", !scopedPending)}${button("finishStage", [0, 2, 4, 5].includes(s.stage) ? "Mô phỏng hết khu vực đang xem" : "Mô phỏng hết giải", "", !scopedPending)}${button("finish", "Mô phỏng hết mùa")}</div></section>` : ""}${body}</div>`;
+  return `<div class="tour-page circuit-page"><div class="section-head tour-season-heading"><div><span class="eyebrow">VOLLEYWORLD TOUR · MÙA ${s.seasonNumber}</span><h1>${model.section === "journey" ? "Hành trình mùa giải" : stages[model.stage][0]}</h1><p class="sub">${D.played(s)}/${D.totalMatches} trận · ${D.complete(s) ? "Mùa đã hoàn tất" : stages[s.stage][0]}</p></div><div class="controls">${button("enter", "← Các mùa")}${button("achievements", "Thành tích quốc gia")}${button("exportOne", "Xuất mùa này")}${button("requestReset", "Bắt đầu lại chuỗi mùa")}</div></div><nav class="tour-section-nav controls">${tab("journey", "Hành trình")}${tab("matches", "Lịch đấu")}${tab("table", "BXH")}${tab("playoff", "Nhánh playoff")}${tab("points", "Điểm tích lũy")}${tab("qualifiers", "Vé World Cup")}${tab("teams", "Đội tuyển")}${tab("rules", "Thể thức")}</nav>${model.section !== "journey" ? `<nav class="tour-round-nav">${stages.map(([label], i) => button("viewStage", label, String(i), i > s.stage && !D.internationalStage(i))).join("")}</nav>` : ""}${!read && !D.complete(s) && !["journey", "rules", "teams", "points", "qualifiers"].includes(model.section) ? `<section class="panel circuit-stage-actions"><p>${stages[s.stage][1]}${[0, 2, 4].includes(s.stage) ? ` · ${D.regionNames[model.region]} · Mâm ${model.tier === "upper" ? 1 : 2} · Phase ${phase + 1}` : ""}</p><div class="controls">${D.stageDone(s) ? button("next", s.stage === 6 ? "Hoàn tất mùa giải" : "Qua chặng tiếp theo →") : button("simRound", "Chạy lượt tiếp theo", "", !scopedPending)}${button("finishStage", [0, 2, 4, 5].includes(s.stage) ? "Mô phỏng hết khu vực đang xem" : "Mô phỏng hết giải", "", !scopedPending)}${button("finish", "Mô phỏng hết mùa")}</div></section>` : ""}${body}</div>`;
 }

@@ -2,6 +2,7 @@ const { spawnSync } = require("node:child_process");
 for (const file of [
   "circuit",
   "circuit-ui",
+  "circuit-ticket-preview",
   "circuit-cloud",
   "tour",
   "tour-career",
