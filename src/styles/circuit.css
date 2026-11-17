@@ -325,3 +325,27 @@ main:has(.circuit-page) {
     grid-template-columns: 1fr;
   }
 }
+
+.circuit-page .circuit-points {
+  margin: 24px 0;
+  padding: 24px;
+}
+.circuit-page .circuit-points h3 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+.circuit-page .circuit-points > .sub {
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0 0 20px;
+  max-width: 85ch;
+}
+.circuit-page .circuit-points .table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+@media (max-width: 700px) {
+  .circuit-page .circuit-points {
+    padding: 18px;
+  }
+}
