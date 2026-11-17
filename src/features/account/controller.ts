@@ -6,6 +6,19 @@ import { toast } from "../../shared/feedback";
 import { accountState, cfg, configured, el, text } from "./model";
 import { draw } from "./views";
 import { restore } from "../tour/controller";
+type ArchivePort = Pick<
+  typeof tourCloud,
+  "suspend" | "switchAccount" | "saveNow" | "reload" | "pending"
+>;
+let activeArchive: ArchivePort = tourCloud;
+let restoreActive = restore;
+export function registerAccountArchive(
+  archive: ArchivePort,
+  restoreFn: () => void,
+) {
+  activeArchive = archive;
+  restoreActive = restoreFn;
+}
 export function status(phase: typeof accountState.phase, detail = "") {
   accountState.phase = phase;
   accountState.detail = detail;
@@ -22,7 +35,7 @@ export function status(phase: typeof accountState.phase, detail = "") {
 export async function switchUser(next: User | null) {
   if (next?.id === accountState.user?.id && !accountState.resetPending) return;
   const token = ++accountState.epoch;
-  tourCloud.suspend();
+  activeArchive.suspend();
   accountState.user = next;
   accountState.ready = false;
   accountState.resetPending = !!next;
@@ -33,7 +46,7 @@ export async function switchUser(next: User | null) {
       await applyAccountReset(accountState.client, next.id);
     if (token !== accountState.epoch) return;
     accountState.resetPending = false;
-    await tourCloud.switchAccount(accountState.client, next?.id || null);
+    await activeArchive.switchAccount(accountState.client, next?.id || null);
     if (token !== accountState.epoch) return;
     accountState.ready = true;
     status(next ? "saved" : "local");
@@ -55,7 +68,7 @@ export function open() {
 export async function manualSave() {
   if (accountState.resetPending)
     return { local: false, online: false, status: "account-changed" };
-  return tourCloud.saveNow();
+  return activeArchive.saveNow();
 }
 export async function syncNow() {
   await manualSave();
@@ -66,12 +79,12 @@ export async function retry() {
     await switchUser(accountState.user);
     return;
   }
-  await tourCloud.reload();
+  await activeArchive.reload();
   draw();
 }
 export function restoreBackup() {
   if (accountState.resetPending) return;
-  restore();
+  restoreActive();
 }
 export async function login(e: Event) {
   e.preventDefault();
@@ -103,7 +116,7 @@ export async function login(e: Event) {
 export async function logout() {
   if (!accountState.client) return;
   if (
-    tourCloud.pending() &&
+    activeArchive.pending() &&
     !confirm(
       "Một số tiến trình chưa đồng bộ; bản thiết bị sẽ được giữ. Vẫn đăng xuất?",
     )
@@ -157,10 +170,10 @@ export function initializeAccountEvents() {
   });
   window.addEventListener("focus", () => {
     if (accountState.user && !accountState.resetPending)
-      void tourCloud.reload();
+      void activeArchive.reload();
   });
   window.addEventListener("beforeunload", (e) => {
-    if (tourCloud.pending()) {
+    if (activeArchive.pending()) {
       e.preventDefault();
       e.returnValue = "";
     }

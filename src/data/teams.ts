@@ -145,8 +145,32 @@ export const limits: Record<Region, QuotaLimit> = {
 
 export const defaultIds: TeamId[] = teams.map((t) => t.id);
 
+/** Additional national teams for the regional circuit. Ratings are simulation seeds,
+ * not claims about live international rankings. Legacy catalogs remain unchanged. */
+export const circuitReserves: Team[] = [
+  ["BOT", "Botswana", "🇧🇼"],
+  ["ZAM", "Zambia", "🇿🇲"],
+  ["ZIM", "Zimbabwe", "🇿🇼"],
+  ["MOZ", "Mozambique", "🇲🇿"],
+  ["MAD", "Madagascar", "🇲🇬"],
+  ["MRI", "Mauritius", "🇲🇺"],
+  ["COD", "CHDC Congo", "🇨🇩"],
+  ["GAB", "Gabon", "🇬🇦"],
+  ["BUR", "Burkina Faso", "🇧🇫"],
+  ["TAN", "Tanzania", "🇹🇿"],
+  ["SUD", "Sudan", "🇸🇩"],
+].map(([id, name, flag], i) => ({
+  id,
+  name,
+  flag,
+  region: "CAVB",
+  rank: 101 + i,
+  rating: 37 - i,
+}));
+export const circuitCatalog = [...catalog, ...circuitReserves];
+
 export const get = (id: TeamId | null | undefined): Team =>
-  catalog.find((t) => t.id === id)!;
+  circuitCatalog.find((t) => t.id === id)!;
 
 export const regionTeams = (r: Region): Team[] =>
   catalog.filter((t) => t.region === r);

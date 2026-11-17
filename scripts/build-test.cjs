@@ -6,6 +6,7 @@ fs.writeFileSync(
   JSON.stringify({ type: "commonjs" }),
 );
 for (const [name, entry, format] of [
+  ["circuit-engine", "src/domain/circuit/index.ts", "cjs"],
   ["engine", "src/domain/index.ts", "cjs"],
   ["full-engine", "src/domain/full-season/index.ts", "cjs"],
   ["tour-engine", "src/domain/tour/index.ts", "cjs"],
@@ -17,6 +18,7 @@ for (const [name, entry, format] of [
   ["qualification", "src/domain/league/qualification/index.ts", "cjs"],
   ["sync-core", "src/data/cloud/write-queue.ts", "cjs"],
   ["app", "tests/support/compat-app.ts", "iife"],
+  ["circuit-app", "tests/support/circuit-app.ts", "iife"],
   ["tour-app", "tests/support/tour-app.ts", "iife"],
 ])
   esbuild.buildSync({
