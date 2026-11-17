@@ -34,6 +34,8 @@ export const clone = <T>(s: T): T => JSON.parse(JSON.stringify(s));
 export const selected = () =>
   model.records.find((r) => r.season_id === model.selected);
 export function recordOf(s: D.CircuitSeason, revision = 0): CircuitRecord {
+  s = clone(s);
+  if (s.stage < 5) s.integerPoints = true;
   return {
     season_id: s.seasonId,
     season_number: s.seasonNumber,
@@ -77,7 +79,17 @@ export function readScope(key: string): CircuitRecord[] {
   try {
     const rows: unknown = JSON.parse(localStorage.getItem(key) || "[]");
     if (!Array.isArray(rows)) return [];
-    return rows.filter(validRecord);
+    return rows.filter(validRecord).map((row) => {
+      if (
+        row.snapshot &&
+        row.snapshot.stage < 5 &&
+        !row.snapshot.integerPoints
+      ) {
+        row.snapshot.integerPoints = true;
+        row.dirty = true;
+      }
+      return row;
+    });
   } catch {
     return [];
   }

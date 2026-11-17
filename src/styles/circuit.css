@@ -429,3 +429,24 @@ main:has(.circuit-page) {
   background: #f1dfcf;
   color: #85532f;
 }
+
+/* The shared qf tree also serves Nations, whose team rows include a rank.
+   Circuit rows omit that rank: reserve two tracks, not an empty rank track. */
+.circuit-page
+  .full-playoff-tree
+  .full-tree-side
+  .full-team-line:not(:has(> .team-rank)) {
+  grid-template-columns: minmax(0, 1fr) 78px;
+  width: 100%;
+  min-width: 0;
+}
+.circuit-page .full-playoff-tree .full-tree-side .team {
+  display: flex;
+  min-width: 0;
+}
+.circuit-page .full-playoff-tree .full-tree-side .team-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

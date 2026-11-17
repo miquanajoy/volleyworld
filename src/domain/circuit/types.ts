@@ -32,6 +32,7 @@ export interface CircuitZone {
 }
 export interface CircuitSeason {
   version: 2;
+  integerPoints?: true;
   mode: "circuit";
   seasonId: string;
   seasonNumber: number;

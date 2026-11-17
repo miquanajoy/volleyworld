@@ -105,6 +105,7 @@ export function validCircuit(input: unknown): input is CircuitSeason {
     if (
       !s ||
       s.version !== 2 ||
+      (s.integerPoints !== undefined && s.integerPoints !== true) ||
       s.mode !== "circuit" ||
       !/^[-\w]{1,100}$/.test(s.seasonId) ||
       !/^[-\w]{1,100}$/.test(s.chainId) ||

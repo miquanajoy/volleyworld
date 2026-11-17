@@ -81,6 +81,7 @@ export function freshCircuit(
   const seasonId = crypto.randomUUID();
   return {
     version: 2,
+    integerPoints: true,
     mode: "circuit",
     seasonId,
     seasonNumber: number,
@@ -254,6 +255,7 @@ export function advance(s: CircuitSeason) {
 export function nextStage(s: CircuitSeason) {
   if (complete(s) || !stageDone(s))
     throw Error("Hoàn tất chặng hiện tại trước khi tiếp tục.");
+  if (s.stage < 5) s.integerPoints = true;
   s.stage++;
   if (s.stage === 1) {
     const seeds = [0, 1].flatMap((rank) =>

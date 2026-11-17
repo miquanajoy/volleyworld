@@ -25,7 +25,7 @@ Phase 3 redraws two groups of eight from Phase 2 League seeds. Top four per grou
 
 Tier 2 in every phase has two groups of four, top two advance via A1–B2 / B1–A2 to final, no bronze. Semifinal losers share third place and placement points. Same-phase totals resolve League seeding ties only; awards remain shared. Seed pairs are separated between groups.
 
-## Points version 1
+## Points and integer-award policy
 
 This release concretizes the proposed placement curve so a whole season is playable. League wins earn 5; First Stand, Challenger and World Cup wins earn 10. Placement awards bank only when the relevant tournament finishes. Fixed seed order resolves an exact season-points tie.
 
@@ -40,7 +40,7 @@ This release concretizes the proposed placement curve so a whole season is playa
 | 9–12  |          20 |           0 |                0 |
 | 13–16 |          10 |           0 |                0 |
 
-Tier 2 teams outside playoff receive no placement award. League placement weights are 1 / 1.5 / 2 for phases 1 / 2 / 3. Challenger placement awards are 1.5 times First Stand; World Cup awards are 3 times First Stand. Win points never scale. World Cup points are displayed separately and cannot change already allocated qualification routes.
+Tier 2 teams outside playoff receive no placement award. League placement weights are **1 / 2 / 3** for phases 1 / 2 / 3. Challenger placement awards are twice First Stand; World Cup awards are three times First Stand. Win points never scale. Integer multipliers produce integer awards directly, with no rounding. The `integerPoints` marker persists this policy on new and pre-Play-in seasons. Existing seasons already at Play-in/World Cup without the marker retain the original 1 / 1.5 / 2 League and 1.5 Challenger ledger to preserve issued tickets and draws. World Cup points are displayed separately and cannot change already allocated qualification routes.
 
 Conservative unfinished-event ceilings can confirm an early points berth; ties remain unresolved until official closure. Qualification always uses the pre-Play-in ledger. Regional Phase 3 finalists are excluded before the two points tickets are selected. No duplicate direct tickets.
 
