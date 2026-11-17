@@ -156,3 +156,91 @@
 .circuit-points .full-standings {
   min-width: 980px;
 }
+
+/* Match the original Tour composition: a copy column and a route column. */
+main:has(.circuit-page) {
+  padding-top: 28px;
+}
+.circuit-page .panel {
+  padding: 24px;
+}
+.circuit-page .tour-hero {
+  padding: 36px;
+}
+.circuit-hero-copy {
+  flex: 1;
+  min-width: 0;
+}
+.circuit-page .tour-hero h2 {
+  font-size: clamp(30px, 3.4vw, 46px);
+}
+.circuit-page .tour-hero-route {
+  flex: 0 0 265px;
+}
+.circuit-page .circuit-region-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.circuit-page .full-region-summary {
+  gap: 10px;
+}
+.circuit-page .full-region-summary h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.circuit-page .full-region-summary p {
+  margin: 0;
+  color: var(--muted);
+}
+.circuit-page .full-region-summary strong {
+  font-size: 16px;
+}
+.circuit-page .tour-empty {
+  padding: 40px 24px;
+}
+.circuit-page .tour-group-table {
+  padding: 24px;
+}
+.circuit-page .full-match {
+  padding: 16px;
+}
+@media (max-width: 1000px) {
+  .circuit-page .circuit-region-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .circuit-page .tour-hero {
+    gap: 24px;
+  }
+  .circuit-page .tour-hero-route {
+    flex-basis: 210px;
+    padding: 18px;
+  }
+}
+@media (max-width: 700px) {
+  main:has(.circuit-page) {
+    padding-top: 20px;
+  }
+  .circuit-page .tour-hero {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 24px;
+  }
+  .circuit-page .tour-hero-route {
+    flex-basis: auto;
+    min-width: 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 20px 0 0;
+  }
+  .circuit-page .panel {
+    padding: 18px;
+  }
+  .circuit-page .full-region-summary h3 {
+    font-size: 16px;
+  }
+}
+@media (max-width: 460px) {
+  .circuit-page .circuit-region-grid {
+    grid-template-columns: 1fr;
+  }
+}
