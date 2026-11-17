@@ -3,6 +3,7 @@ for (const file of [
   "circuit",
   "circuit-ui",
   "circuit-ticket-preview",
+  "circuit-integer-points",
   "circuit-cloud",
   "tour",
   "tour-career",

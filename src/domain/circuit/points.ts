@@ -5,7 +5,7 @@ import { leagueDone } from "./league";
 import { bracketRanks, bracketMatches, bracketDone } from "./bracket";
 import { phaseMatches, leagueRanks, regionOf } from "./league";
 import type { CircuitSeason, CircuitRegion } from "./types";
-/** Versioned rules: win points stay fixed; placement weights increase 1 / 1.5 / 2. */
+/** Versioned rules: win points stay fixed; placement weights increase 1 / 2 / 3 for the integer policy. */
 export const upperBonus = (rank: number) =>
   rank === 1
     ? 120
@@ -38,6 +38,17 @@ export const internationalBonus = (rank: number) =>
             : rank <= 8
               ? 40
               : 0;
+export const integerPointPolicy = (s: CircuitSeason) =>
+  s.integerPoints === true || s.stage < 5;
+export const placementPoints = (
+  _s: CircuitSeason,
+  base: number,
+  multiplier: number,
+) => base * multiplier;
+export const leagueMultiplier = (s: CircuitSeason, phase: number) =>
+  integerPointPolicy(s) ? [1, 2, 3][phase] : [1, 1.5, 2][phase];
+export const challengerMultiplier = (s: CircuitSeason) =>
+  integerPointPolicy(s) ? 2 : 1.5;
 export function points(
   s: CircuitSeason,
   r: CircuitRegion,
@@ -56,7 +67,11 @@ export function points(
         return (
           5 * wins(phaseMatches(p), id) +
           (rank
-            ? (upper ? upperBonus(rank) : lowerBonus(rank)) * [1, 1.5, 2][i]
+            ? placementPoints(
+                s,
+                upper ? upperBonus(rank) : lowerBonus(rank),
+                leagueMultiplier(s, i),
+              )
             : 0)
         );
       });
@@ -76,7 +91,13 @@ export function points(
       const challengerPoints =
         upper && challenger
           ? 10 * wins(C.challengerMatches(challenger), id) +
-            (cr ? internationalBonus(cr) * 1.5 : 0)
+            (cr
+              ? placementPoints(
+                  s,
+                  internationalBonus(cr),
+                  challengerMultiplier(s),
+                )
+              : 0)
           : 0;
       const w = s.world,
         wm = w
@@ -92,7 +113,7 @@ export function points(
         : undefined;
       const worldPoints = includeWorld
         ? 10 * wins(wm, id) +
-          (worldRank ? internationalBonus(worldRank) * 3 : 0)
+          (worldRank ? placementPoints(s, internationalBonus(worldRank), 3) : 0)
         : 0;
       return {
         id,
@@ -145,12 +166,16 @@ export function confirmedByPoints(
       return p && leagueDone(p)
         ? 0
         : upper
-          ? [150, 230, 310][i]
-          : [85, 115, 145][i];
+          ? (integerPointPolicy(s) ? [150, 290, 430] : [150, 230, 310])[i]
+          : (integerPointPolicy(s) ? [85, 145, 205] : [85, 115, 145])[i];
     }).reduce((a, b) => a + b, 0) +
     (upper
       ? (!s.firstStand || !bracketDone(s.firstStand) ? 300 : 0) +
-        (!s.challenger || !C.challengerComplete(s.challenger) ? 420 : 0)
+        (!s.challenger || !C.challengerComplete(s.challenger)
+          ? integerPointPolicy(s)
+            ? 540
+            : 420
+          : 0)
       : 0);
   return rows
     .filter(

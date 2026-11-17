@@ -180,6 +180,13 @@ const assert = require("node:assert/strict"),
       );
       click('[data-action="Circuit.section"][data-arg="playoff"]');
       assert(d.querySelector('[data-action="Circuit.match"]'));
+      const line = d.querySelector(".nations-playoff-tree .full-team-line");
+      assert(line.querySelector(".team-name").textContent.length > 0);
+      assert.equal(
+        w.getComputedStyle(line).gridTemplateColumns,
+        "minmax(0, 1fr) 78px",
+        "Unranked team rows keep a real name column",
+      );
     }
     if (stage === 5) {
       assert.equal(
