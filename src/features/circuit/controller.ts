@@ -494,6 +494,11 @@ export const actions: Record<string, (e: HTMLElement) => unknown> = {
         z[d.tier === "upper" ? "lower" : "upper"].includes(id)
       )
         return;
+      if (
+        !z[d.tier].includes(id) &&
+        z[d.tier].length >= (d.tier === "upper" ? 16 : 8)
+      )
+        return;
       z[d.tier] = z[d.tier].includes(id)
         ? z[d.tier].filter((x) => x !== id)
         : [...z[d.tier], id];

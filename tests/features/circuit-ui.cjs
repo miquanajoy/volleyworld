@@ -56,6 +56,36 @@ const assert = require("node:assert/strict"),
     4,
   );
   assert.equal(c.model.setup.selection.CEV.upper.length, 16);
+  for (const tier of ["upper", "lower"]) {
+    click(`[data-action="Circuit.setupTier"][data-arg="${tier}"]`);
+    const draft = c.model.setup,
+      zone = draft.selection.CEV,
+      cap = tier === "upper" ? 16 : 8;
+    const candidate = D.pool("CEV").find(
+      (id) => !zone.upper.includes(id) && !zone.lower.includes(id),
+    );
+    const selector = `[data-action="Circuit.toggle"][data-arg="${candidate}"]`;
+    assert(
+      d.querySelector(selector).disabled,
+      "Full roster disables unselected teams",
+    );
+    const direct = d.createElement("button");
+    direct.dataset.arg = candidate;
+    c.actions["Circuit.toggle"](direct);
+    assert.equal(zone[tier].length, cap, "Controller also rejects overflow");
+    const removed = zone[tier][0];
+    click(`[data-action="Circuit.toggle"][data-arg="${removed}"]`);
+    assert.equal(zone[tier].length, cap - 1);
+    assert(!d.querySelector(selector).disabled);
+    click(selector);
+    assert.equal(zone[tier].length, cap);
+    assert(zone[tier].includes(candidate));
+    assert(
+      d.querySelector(`[data-action="Circuit.toggle"][data-arg="${removed}"]`)
+        .disabled,
+    );
+  }
+  click('[data-action="Circuit.resetSelection"]');
   click('[data-action="Circuit.setupRegion"][data-arg="CAVB"]');
   assert.equal(d.querySelectorAll('[data-action="Circuit.toggle"]').length, 24);
   click('[data-action="Circuit.start"]');
