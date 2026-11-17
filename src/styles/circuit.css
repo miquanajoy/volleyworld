@@ -349,3 +349,25 @@ main:has(.circuit-page) {
     padding: 18px;
   }
 }
+
+.circuit-page .circuit-history-grid {
+  grid-template-columns: 1fr;
+  margin-top: 20px;
+}
+.circuit-page .circuit-history-grid .tour-season-card {
+  padding: 28px;
+}
+.circuit-page .circuit-history-grid .tour-history-awards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.circuit-page .tour-card-footer .controls {
+  justify-content: space-between;
+}
+@media (max-width: 700px) {
+  .circuit-page .circuit-history-grid .tour-history-awards {
+    grid-template-columns: 1fr;
+  }
+  .circuit-page .circuit-history-grid .tour-season-card {
+    padding: 20px;
+  }
+}
