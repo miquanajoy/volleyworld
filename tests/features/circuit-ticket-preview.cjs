@@ -33,6 +33,16 @@ while (early.stage < 2) {
   D.finishStage(early);
   D.nextStage(early);
 }
+const opening = early.firstStand.rounds[0].flatMap((m) => [m.a, m.b]);
+assert.equal(new Set(opening.slice(0, 4).map(D.regionOf)).size, 4);
+assert.equal(new Set(opening.slice(4).map(D.regionOf)).size, 4);
+assert(D.validCircuit(early));
+const forged = JSON.parse(JSON.stringify(early));
+[forged.firstStand.opening[1], forged.firstStand.opening[5]] = [
+  forged.firstStand.opening[5],
+  forged.firstStand.opening[1],
+];
+assert(!D.validCircuit(forged));
 const phase = early.regions.CEV.phases[1].upper;
 while (!phase.bracket) D.simulateBatch(early, "CEV", true);
 const m = phase.bracket.rounds[0][0];

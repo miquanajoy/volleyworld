@@ -159,6 +159,19 @@ const assert = require("node:assert/strict"),
       D.stageDone(c.selected().snapshot),
       `stage ${stage}: ${d.getElementById("toast").textContent}`,
     );
+    if (stage === 2) {
+      click('[data-action="Circuit.tier"][data-arg="upper"]');
+      click('[data-action="Circuit.section"][data-arg="playoff"]');
+      const bronze = d.querySelector("[data-circuit-bronze]");
+      assert(
+        bronze && bronze.closest(".playoff-tree-scroll"),
+        "Bronze stays inside the playoff frame",
+      );
+      assert.equal(
+        d.querySelectorAll(".circuit-final-standings tbody tr").length,
+        16,
+      );
+    }
     if (stage === 3) {
       assert.equal(c.selected().snapshot.challenger.roster.length, 16);
       click('[data-action="Circuit.section"][data-arg="matches"]');

@@ -371,3 +371,61 @@ main:has(.circuit-page) {
     padding: 20px;
   }
 }
+
+.circuit-page .circuit-medal-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+}
+.circuit-page .circuit-medal-stack > section {
+  width: 100%;
+}
+.circuit-page .circuit-medal-stack .circuit-bronze {
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
+}
+.circuit-page .circuit-medal-stack h4 {
+  margin: 0 0 12px;
+}
+.circuit-page .full-standings th {
+  font-size: 11px;
+  padding: 16px;
+}
+.circuit-page .full-standings td {
+  padding: 15px 16px;
+}
+.circuit-page .full-standings tbody tr:hover {
+  background: #f5f8f1;
+}
+.circuit-page .full-standings tbody tr:nth-child(even) {
+  background: #fbfcf8;
+}
+.circuit-page .circuit-final-standings {
+  min-width: 420px;
+}
+.circuit-page .circuit-final-standings .is-podium {
+  background: #f0f5e9;
+}
+.circuit-page .circuit-rank {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 8px;
+  background: #edf2e8;
+  font-weight: 750;
+}
+.circuit-page .circuit-rank.rank-1 {
+  background: #f8e8b5;
+  color: #795a13;
+}
+.circuit-page .circuit-rank.rank-2 {
+  background: #e7ecee;
+  color: #485963;
+}
+.circuit-page .circuit-rank.rank-3 {
+  background: #f1dfcf;
+  color: #85532f;
+}

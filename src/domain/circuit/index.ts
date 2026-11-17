@@ -260,6 +260,10 @@ export function nextStage(s: CircuitSeason) {
       regions.map((r) => leagueRanks(s.regions[r].phases[0].upper)[rank].id),
     );
     s.firstStand = bracket("double", seeds, "FS");
+    // A1–B2 / C1–D2 | B1–A2 / D1–C2: one team per region in each half.
+    s.firstStand.opening = [0, 5, 2, 7, 1, 4, 3, 6].map((i) => seeds[i]);
+    s.firstStand.rounds = [];
+    advanceBracket(s.firstStand);
   }
   if (s.stage === 2 || s.stage === 4) {
     const p = phaseIndex(s.stage);
