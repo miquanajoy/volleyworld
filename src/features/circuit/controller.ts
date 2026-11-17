@@ -158,9 +158,16 @@ function syncRound() {
   if ([0, 2, 4].includes(model.stage)) {
     const p =
       s.regions[model.region].phases[D.phaseIndex(model.stage)]?.[model.tier];
-    rounds = p?.groups[0]?.rounds || [];
+    rounds =
+      p?.groups[0]?.rounds.map((_, i) =>
+        p.groups.flatMap((g) => g.rounds[i] || []),
+      ) || [];
   } else if (model.stage === 3) rounds = s.challenger?.rounds || [];
-  else if (model.stage === 6) rounds = s.world?.groups[0].rounds || [];
+  else if (model.stage === 6)
+    rounds =
+      s.world?.groups[0].rounds.map((_, i) =>
+        s.world!.groups.flatMap((g) => g.rounds[i] || []),
+      ) || [];
   const pending = rounds.findIndex((r) => r.some((m) => !m.sets));
   model.round = Math.max(0, pending < 0 ? rounds.length - 1 : pending);
 }
