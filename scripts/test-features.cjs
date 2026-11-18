@@ -6,6 +6,7 @@ for (const file of [
   "circuit-integer-points",
   "circuit-shared-matchday",
   "circuit-promotion",
+  "circuit-phase-two-double",
   "circuit-cloud",
   "tour",
   "tour-career",

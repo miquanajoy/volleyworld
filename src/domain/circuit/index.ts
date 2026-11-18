@@ -85,6 +85,7 @@ export function freshCircuit(
     version: 2,
     integerPoints: true,
     promotionEnabled: true,
+    phaseTwoDouble: true,
     mode: "circuit",
     seasonId,
     seasonNumber: number,
@@ -106,8 +107,28 @@ export function freshCircuit(
 export const complete = (s: CircuitSeason) =>
   s.stage === (s.promotionEnabled ? 8 : 7);
 export const seasonMatchCount = (s: CircuitSeason) =>
-  s.promotionEnabled ? 1151 : 1071;
+  (s.promotionEnabled ? 1151 : 1071) + (s.phaseTwoDouble ? 24 : 0);
 export const lastStage = (s: CircuitSeason) => (s.promotionEnabled ? 7 : 6);
+export function upgradePhaseTwo(s: CircuitSeason) {
+  if (s.phaseTwoDouble || s.stage > 2 || complete(s)) return;
+  if (
+    regions.some((r) =>
+      bracketMatches(s.regions[r].phases[1]?.upper.bracket || null).some(
+        (m) => m.sets,
+      ),
+    )
+  )
+    return;
+  s.phaseTwoDouble = true;
+  for (const r of regions) {
+    const p = s.regions[r].phases[1]?.upper;
+    if (p?.bracket) {
+      p.bracket = null;
+      advanceLeague(p, 1, true, phasePrefix(r, 1, true), true);
+      if (p.bracket) advanceBracket(p.bracket);
+    }
+  }
+}
 export function enablePromotion(s: CircuitSeason) {
   if (s.stage < 7) s.promotionEnabled = true;
 }
@@ -219,7 +240,13 @@ export function advance(s: CircuitSeason) {
     for (const r of regions)
       for (const upper of [true, false]) {
         const phase = s.regions[r].phases[p][upper ? "upper" : "lower"];
-        advanceLeague(phase, p, upper, phasePrefix(r, p, upper));
+        advanceLeague(
+          phase,
+          p,
+          upper,
+          phasePrefix(r, p, upper),
+          !!s.phaseTwoDouble,
+        );
         if (phase.bracket) advanceBracket(phase.bracket);
       }
   }
@@ -458,7 +485,7 @@ export function inheritedSelection(s: CircuitSeason) {
 }
 export const podium = (s: CircuitSeason) =>
   s.world ? F.worldPodium(worldFacade(s)) : [];
-export const totalMatches = 1151;
+export const totalMatches = 1175;
 export { validCircuit } from "./validation";
 
 export * from "./international-tickets";

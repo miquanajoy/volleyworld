@@ -51,6 +51,25 @@ export function internationalTickets(
         .filter((id) => regionOf(id) === r)
         .map((id) => ({ id, route: "Top 4 League Phase 2" }));
     const b = s.regions[r].phases[1]?.upper.bracket;
+    if (b?.kind === "double") {
+      if (bracketDone(b))
+        return bracketRanks(b)
+          .slice(0, 4)
+          .map((t) => ({ id: t.id, route: "Top 4 League Phase 2" }));
+      return plan(b).flatMap((stage, i) =>
+        [b.prefix + "U2", b.prefix + "L2"].includes(stage.id)
+          ? (b.rounds[i] || [])
+              .filter((m) => m.sets)
+              .map((m) => ({
+                id: winner(m)!,
+                route:
+                  stage.kind === "upper"
+                    ? "Top 4 từ nhánh thắng Phase 2"
+                    : "Top 4 từ nhánh thua Phase 2",
+              }))
+          : [],
+      );
+    }
     return (b?.rounds[0] || [])
       .filter((m) => m.sets)
       .map((m) => ({ id: winner(m)!, route: "Thắng tứ kết League Phase 2" }));

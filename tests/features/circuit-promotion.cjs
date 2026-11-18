@@ -23,7 +23,7 @@ const legacy = copy(s);
 delete legacy.promotionEnabled;
 D.nextStage(legacy);
 assert(D.complete(legacy));
-assert.equal(D.seasonMatchCount(legacy), 1071);
+assert.equal(D.seasonMatchCount(legacy), 1095);
 assert(D.validCircuit(legacy));
 fs.writeFileSync("/tmp/phase6-legacy.json", JSON.stringify(legacy));
 D.nextStage(s);
@@ -183,7 +183,7 @@ app.close();
   );
   D.nextStage(s);
   assert(D.complete(s));
-  assert.equal(D.played(s), 1151);
+  assert.equal(D.played(s), 1175);
   assert(D.validCircuit(s));
   for (const r of D.regions) {
     assert.equal(

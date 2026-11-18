@@ -45,6 +45,7 @@ function mutate(action: (s: D.CircuitSeason) => void) {
     throw Error("Mùa chỉ xem hoặc cần giải quyết xung đột.");
   const s = clone(row.snapshot);
   D.enablePromotion(s);
+  D.upgradePhaseTwo(s);
   action(s);
   if (!D.validCircuit(s))
     throw Error("Tiến trình không hợp lệ; bản lưu trước được giữ.");

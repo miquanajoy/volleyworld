@@ -120,6 +120,7 @@ export function validCircuit(input: unknown): input is CircuitSeason {
       !Number.isFinite(Date.parse(s.createdAt)) ||
       !Number.isInteger(s.stage) ||
       s.stage < 0 ||
+      (s.phaseTwoDouble !== undefined && s.phaseTwoDouble !== true) ||
       (s.promotionEnabled !== undefined && s.promotionEnabled !== true) ||
       s.stage > (s.promotionEnabled ? 8 : 7) ||
       !validSelection(s.regions)
@@ -202,12 +203,15 @@ export function validCircuit(input: unknown): input is CircuitSeason {
                 ? p === 0
                   ? "top2"
                   : p === 1
-                    ? "single"
+                    ? s.phaseTwoDouble
+                      ? "double"
+                      : "single"
                     : "double"
                 : "single";
             if (
               g.bracket.kind !== kind ||
-              g.bracket.bronzeRequired !== (tier === "upper" && p === 1)
+              g.bracket.bronzeRequired !==
+                (tier === "upper" && p === 1 && !s.phaseTwoDouble)
             )
               return false;
             if (p === 0 && tier === "upper" && !equal(g.bracket.seeds, g.seeds))
