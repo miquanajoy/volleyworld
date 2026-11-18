@@ -36,6 +36,7 @@ export const selected = () =>
 export function recordOf(s: D.CircuitSeason, revision = 0): CircuitRecord {
   s = clone(s);
   D.enablePromotion(s);
+  D.upgradePhaseTwo(s);
   if (s.stage < 5) s.integerPoints = true;
   return {
     season_id: s.seasonId,
@@ -98,6 +99,10 @@ export function readScope(key: string): CircuitRecord[] {
       ) {
         D.enablePromotion(row.snapshot);
         row.dirty = true;
+      }
+      if (row.snapshot && !row.snapshot.phaseTwoDouble) {
+        D.upgradePhaseTwo(row.snapshot);
+        if (row.snapshot.phaseTwoDouble) row.dirty = true;
       }
       return row;
     });

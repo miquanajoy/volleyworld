@@ -51,6 +51,13 @@ D.recordScore(early, m.id, [
   [25, 20],
   [25, 20],
 ]);
+assert.equal(D.internationalTickets(early, 3, "CEV").length, 0);
+while (phase.bracket.rounds.length < 3) D.simulateBatch(early, "CEV", true);
+D.recordScore(early, phase.bracket.rounds[2][0].id, [
+  [25, 20],
+  [25, 20],
+  [25, 20],
+]);
 assert.equal(D.internationalTickets(early, 3, "CEV").length, 1);
 c.model.records = [c.recordOf(early)];
 c.model.selected = early.seasonId;

@@ -47,6 +47,7 @@ export function advanceLeague(
   phase: number,
   upper: boolean,
   prefix: string,
+  phaseTwoDouble = false,
 ) {
   if (p.bracket || !p.groups.length || !p.groups.every(fullLeagueDone)) return;
   const [a, b] = p.groups.map(fullStandings),
@@ -54,12 +55,14 @@ export function advanceLeague(
       ? [a[0].id, b[3].id, b[1].id, a[2].id, b[0].id, a[3].id, a[1].id, b[2].id]
       : [a[0].id, b[1].id, b[0].id, a[1].id];
   p.bracket = bracket(
-    upper && phase === 2 ? "double" : "single",
+    upper && (phase === 2 || (phase === 1 && phaseTwoDouble))
+      ? "double"
+      : "single",
     opening,
     prefix + "D",
-    upper && phase === 1,
+    upper && phase === 1 && !phaseTwoDouble,
   );
-  if (upper && phase === 2) {
+  if (upper && (phase === 2 || (phase === 1 && phaseTwoDouble))) {
     p.bracket.opening = opening;
     p.bracket.rounds = [];
   }

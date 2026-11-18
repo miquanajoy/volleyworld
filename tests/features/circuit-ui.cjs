@@ -162,10 +162,12 @@ const assert = require("node:assert/strict"),
     if (stage === 2) {
       click('[data-action="Circuit.tier"][data-arg="upper"]');
       click('[data-action="Circuit.section"][data-arg="playoff"]');
-      const bronze = d.querySelector("[data-circuit-bronze]");
-      assert(
-        bronze && bronze.closest(".playoff-tree-scroll"),
-        "Bronze stays inside the playoff frame",
+      assert(!d.querySelector("[data-circuit-bronze]"));
+      assert(d.querySelector(".double-lower-scroll"));
+      assert.equal(
+        c.selected().snapshot.regions[c.model.region].phases[1].upper.bracket
+          .kind,
+        "double",
       );
       assert.equal(
         d.querySelectorAll(".circuit-final-standings tbody tr").length,
@@ -211,7 +213,7 @@ const assert = require("node:assert/strict"),
     c.next();
   }
   assert.equal(c.selected().status, "completed");
-  assert.equal(c.selected().played, 1151);
+  assert.equal(c.selected().played, 1175);
   assert.equal(D.podium(c.selected().snapshot).length, 3);
   await c.achievements();
   assert(d.querySelector(".tour-country-card"));

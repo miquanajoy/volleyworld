@@ -41,6 +41,7 @@ export interface CircuitSeason {
   version: 2;
   integerPoints?: true;
   promotionEnabled?: true;
+  phaseTwoDouble?: true;
   mode: "circuit";
   seasonId: string;
   seasonNumber: number;
@@ -56,7 +57,10 @@ export interface CircuitSeason {
 export const calendar = [
   ["Phase 1 · League khu vực", "Hạng 1 nhánh thắng–thua · hạng 2 vòng bảng"],
   ["First Stand", "8 đội · nhánh thắng–thua"],
-  ["Phase 2 · League khu vực", "Chia bảng · playoff loại trực tiếp"],
+  [
+    "Phase 2 · League khu vực",
+    "Hạng 1 nhánh thắng–thua · Hạng 2 loại trực tiếp",
+  ],
   ["Challenger", "16 đội · Swiss · playoff 8 đội"],
   ["Phase 3 · League khu vực", "Chia lại bảng · playoff nhánh thắng–thua"],
   ["Phase 4 · World Cup Play-in", "16 đội mỗi khu vực · 4 vé"],

@@ -7,7 +7,7 @@ const copy = (x) => JSON.parse(JSON.stringify(x));
 const win = (m, id) => {
   m.sets = Array.from({ length: 3 }, () => (m.a === id ? [25, 20] : [20, 25]));
 };
-const counts = [176, 190, 506, 547, 887, 1007, 1071, 1151];
+const counts = [176, 190, 530, 571, 911, 1031, 1095, 1175];
 let promoted = 0;
 for (let season = 0; season < 16; season++) {
   const s = D.freshCircuit();
@@ -31,7 +31,7 @@ for (let season = 0; season < 16; season++) {
         assert.equal(D.leagueRanks(p.upper).length, 16);
         assert.equal(D.leagueRanks(p.lower).length, 8);
         assert(!p.lower.bracket.bronze);
-        assert.equal(!!p.upper.bracket.bronze, stage === 2);
+        assert(!p.upper.bracket.bronze);
         if (stage === 0) {
           assert.equal(D.bracketMatches(p.upper.bracket).length, 29);
           assert(!D.plan(p.upper.bracket).some((n) => n.kind === "grand"));
@@ -77,7 +77,7 @@ for (let season = 0; season < 16; season++) {
     assert(D.validCircuit(copy(s)));
   }
   assert(D.complete(s));
-  assert.equal(D.matches(s).length, 1151);
+  assert.equal(D.matches(s).length, 1175);
   assert.equal(D.podium(s).length, 3);
   const sel = D.inheritedSelection(s),
     future = D.freshCircuit(2, sel, s);
@@ -141,5 +141,5 @@ for (const r of D.regions) {
   assert(D.qualifiers(s, r).every((id) => D.nextUpper(s, r).includes(id)));
 }
 console.log(
-  `PASS regional circuit:16 full seasons;1151 matches each;partial/reload validation;fixed seeds;no reset;16-team Swiss;4+4 distinct WC tickets;GSL losses;promotion including forced16 lower-tier qualifiers (${promoted} observed naturally)`,
+  `PASS regional circuit:16 full seasons;1175 matches each;partial/reload validation;fixed seeds;no reset;16-team Swiss;4+4 distinct WC tickets;GSL losses;promotion including forced16 lower-tier qualifiers (${promoted} observed naturally)`,
 );

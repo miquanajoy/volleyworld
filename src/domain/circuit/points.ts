@@ -166,7 +166,9 @@ export function confirmedByPoints(
       return p && leagueDone(p)
         ? 0
         : upper
-          ? (integerPointPolicy(s) ? [150, 290, 430] : [150, 230, 310])[i]
+          ? (integerPointPolicy(s)
+              ? [150, s.phaseTwoDouble ? 300 : 290, 430]
+              : [150, 230, 310])[i]
           : (integerPointPolicy(s) ? [85, 145, 205] : [85, 115, 145])[i];
     }).reduce((a, b) => a + b, 0) +
     (upper

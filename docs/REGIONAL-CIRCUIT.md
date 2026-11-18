@@ -10,21 +10,23 @@ Four regions: Europe, Asia/Oceania, Americas (NORCECA + CSV), Africa. Each has s
 | ----- | --------------------------- | ------: |
 | 0     | Phase 1 regional leagues    |     176 |
 | 1     | First Stand                 |      14 |
-| 2     | Phase 2 regional leagues    |     316 |
+| 2     | Phase 2 regional leagues    |     340 |
 | 3     | Challenger                  |      41 |
 | 4     | Phase 3 regional leagues    |     340 |
 | 5     | Regional World Cup Play-ins |     120 |
 | 6     | Phase 5 World Cup           |      64 |
 | 7     | Phase 6 promotion           |      80 |
-|       | Total                       |   1,151 |
+|       | Total                       |   1,175 |
 
 Phase 1 Tier 1 is sixteen-team double elimination stopped before the grand final: upper winner first, lower winner second. Both qualify for First Stand. First Stand has eight teams and one grand final, no reset.
 
-Phase 2 Tier 1 has two groups of eight per region, seeded by Phase 1 League results. Top four per group qualify for a fixed single bracket: A1–B4 / B2–A3 / B1–A4 / A2–B3. Quarterfinal winners qualify for Challenger; bronze and final determine regional seeds. Challenger has sixteen teams, five-round three-win/three-loss Swiss with no rematches, then eight-team knockout with bronze before final.
+Phase 2 Tier 1 has two groups of eight per region, seeded by Phase 1 League results. Top four per group qualify for a fixed double-elimination bracket: A1–B4 / B2–A3 / B1–A4 / A2–B3. Two upper-bracket semifinal winners and two lower-bracket round-2 winners qualify for Challenger. The full double bracket determines seeds 1–4, with one grand final and no reset or redundant bronze match. Challenger has sixteen teams, five-round three-win/three-loss Swiss with no rematches, then eight-team knockout with bronze before final.
 
 Phase 3 redraws two groups of eight from Phase 2 League seeds. Top four per group enter the same fixed opening, followed by double elimination with one grand final. Both grand-final participants have direct World Cup tickets before the title match.
 
 Tier 2 in every phase has two groups of four, top two advance via A1–B2 / B1–A2 to final, no bronze. Semifinal losers share third place and placement points. Same-phase totals resolve League seeding ties only; awards remain shared. Seed pairs are separated between groups.
+
+New and unplayed Phase 2 playoffs use `phaseTwoDouble: true`. Active seasons can upgrade before any Phase 2 playoff result exists; group scores and opening seeds are retained. Already scored legacy Phase 2 playoffs and subsequent stages keep their original single bracket, tickets and total counts. New seasons have 24 additional fixtures across four regions.
 
 ## Points and integer-award policy
 
@@ -59,7 +61,7 @@ Every World Cup participant is guaranteed Tier 1 next season. All other sixteen 
 
 Phase 6 seeds use total season points, then League Phase 3/2/1 placement, then a stored random tie order. Four shuffled pots each provide one team to each group; pot 1 faces pot 4 and pot 2 faces pot 3. The draw is stored and never regenerated on render or reload. Green ticks and red crosses update as soon as a team reaches two wins or losses; World Cup participants have a separate safe route. Regional group panels reuse the existing bracket renderer in two columns on wide screens.
 
-New and unfinished seasons carry `promotionEnabled: true`. World Cup is stage 6, promotion is stage 7, and completion becomes stage 8. Existing completed seasons without the marker remain immutable at stage 7 with their original 1,071 matches and inheritance policy. Loading an unfinished local/cloud/imported season enables Phase 6 without replacing results. A World Cup podium can exist on an active season while promotion remains unfinished. The season ends only after all four regions complete promotion, for 1,151 matches.
+New and unfinished seasons carry `promotionEnabled: true`. World Cup is stage 6, promotion is stage 7, and completion becomes stage 8. Existing completed seasons without the marker remain immutable at stage 7 with their original 1,071 matches and inheritance policy. Loading an unfinished local/cloud/imported season enables Phase 6 without replacing results. A World Cup podium can exist on an active season while promotion remains unfinished. The season ends only after all four regions complete promotion, for 1,175 matches.
 
 ## UI, persistence and verification
 
