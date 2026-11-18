@@ -231,7 +231,14 @@ export function validCircuit(input: unknown): input is CircuitSeason {
                         b[2].id,
                       ]
                     : [a[0].id, b[1].id, b[0].id, a[1].id];
-              if (!equal(g.bracket.seeds, expected)) return false;
+              if (
+                !equal(g.bracket.seeds, expected) ||
+                (p === 1 &&
+                  tier === "upper" &&
+                  s.phaseTwoDouble &&
+                  !equal(g.bracket.opening, expected))
+              )
+                return false;
             }
           }
         }

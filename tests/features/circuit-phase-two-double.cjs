@@ -16,6 +16,15 @@ assert.equal(b.kind, "double");
 assert(!b.bronzeRequired);
 assert(!D.plan(b).some((t) => t.id.endsWith("R")));
 assert.deepEqual(b.opening, b.seeds);
+const forged = copy(s);
+[
+  forged.regions.CEV.phases[1].upper.bracket.opening[0],
+  forged.regions.CEV.phases[1].upper.bracket.opening[1],
+] = [
+  forged.regions.CEV.phases[1].upper.bracket.opening[1],
+  forged.regions.CEV.phases[1].upper.bracket.opening[0],
+];
+assert(!D.validCircuit(forged));
 const losers = new Set(b.rounds[0].map((m) => m.b));
 for (const m of [...b.rounds[0]])
   D.recordScore(s, m.id, [
