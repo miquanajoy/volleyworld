@@ -4,6 +4,12 @@ const assert = require("node:assert/strict"),
 const app = ui("local", 12281),
   c = app.w.__circuit,
   doc = app.w.document;
+const style = doc.createElement("style");
+style.textContent = require("node:fs").readFileSync(
+  "src/styles/circuit.css",
+  "utf8",
+);
+doc.head.append(style);
 c.create();
 c.start();
 let s = c.selected().snapshot;
@@ -13,6 +19,12 @@ for (const stage of [1, 3, 6]) {
   assert.equal(c.model.stage, stage);
   assert(doc.querySelector(`[data-international-preview="${stage}"]`));
   assert.equal(doc.querySelectorAll("[data-international-team]").length, 0);
+  assert.equal(
+    doc.querySelectorAll(".circuit-ticket-row").length,
+    D.internationalCapacity(stage) * 4,
+  );
+  for (const row of doc.querySelectorAll(".circuit-ticket-row"))
+    assert.equal(app.w.getComputedStyle(row).flexWrap, "nowrap");
   assert(!doc.querySelector('[data-action="Circuit.simRound"]'));
   assert.equal(JSON.stringify(s), before);
 }
@@ -82,6 +94,32 @@ assert.equal(
   D.internationalTicketCount(early, 6),
 );
 assert(!early.world);
+D.finishSeason(early);
+c.model.records = [c.recordOf(early)];
+c.model.selected = early.seasonId;
+c.viewStage("6");
+c.model.section = "teams";
+c.renderCircuit();
+assert.equal(doc.querySelectorAll("[data-international-team]").length, 32);
+for (const row of doc.querySelectorAll("[data-international-team]")) {
+  assert.equal(
+    row.children.length,
+    2,
+    "Only team and compact status occupy a ticket row",
+  );
+  assert.equal(row.querySelector(".circuit-ticket-check").textContent, "✓");
+  assert(row.querySelector(".circuit-ticket-check").getAttribute("aria-label"));
+  assert(
+    row.title.includes(row.querySelector(".team-name").textContent),
+    "Full name stays available on hover",
+  );
+  assert.equal(app.w.getComputedStyle(row).flexWrap, "nowrap");
+  assert.equal(
+    app.w.getComputedStyle(row.querySelector(".team-name")).whiteSpace,
+    "nowrap",
+  );
+  assert.equal(app.w.getComputedStyle(row).minHeight, "52px");
+}
 app.close();
 console.log(
   "PASS international previews:future navigation,exact live early tickets for First Stand/Challenger/World Cup,read-only viewing,no premature draws or simulation,regional gates retained",

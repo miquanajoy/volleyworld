@@ -70,3 +70,11 @@ The circuit reuses standings and historical rank movement, match cards and five-
 Cloud records use `volleyworld_circuit_seasons` with owner RLS, metadata derivation, immutable completed saves and CAS revisions. The account adapter is selected at production composition; legacy fixture accounts keep their original adapter. Legacy browser game keys are removed on entry; Supabase auth and account-reset markers are preserved. Database reset is administrative and separately authorized; it is never a global delete in browser code.
 
 Automated checks cover complete seasons, partial-state validation, fixed routes, no reset, Swiss16, GSL exits, early tickets, score editing, historical standings, filters, promotion, reload, account isolation, offline writes, CAS conflicts, scoped reset and the real Vite production bundle. Direct browser preview actions were blocked by the existing preview policy, so DOM integration and scoped stylesheet checks do not constitute screenshot verification.
+
+## Late-season rendering
+
+Point calculation aggregates standings, placement ranks and win counts once per competition and roster, rather than recomputing them for each team. World Cup placement work runs only when World Cup points are requested. Promotion status reads the relevant four-team group directly, and promotion winners are gathered without recalculating regional point tickets for every entrant. Match lists and team markup are reused only inside the current fixture render; no derived cache survives a score change. Existing score validation, save and revision checks remain in place.
+
+International ticket cards use equal-height single-line rows, fixed status icons and name ellipsis on narrow cards. Full names and qualification routes remain in the row tooltip and accessible icon label. Pending slots have the same row structure and spacing.
+
+A same-snapshot JSDOM comparison measured Phase 6 render around 480 ms before / 15–20 ms after, and a single late-season simulation around 880 ms before / 73 ms after. These are internal component measurements, not a browser/network performance guarantee. Frozen-reference tests compare every point column and ordering through partial/completed seasons, legacy formats, both point policies and corrected scores.

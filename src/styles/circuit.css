@@ -483,3 +483,76 @@ main:has(.circuit-page) {
 .circuit-page .circuit-promotion-groups .double-overview-panel {
   padding: 16px;
 }
+
+/* Ticket rows keep flag, name and status aligned independently of name length. */
+.circuit-page .circuit-ticket-preview .full-region-summary {
+  display: flex;
+  flex-direction: column;
+}
+.circuit-page .circuit-ticket-preview .full-region-summary > .badge {
+  align-self: flex-start;
+}
+.circuit-page .circuit-ticket-preview .qualification-names {
+  gap: 0;
+  margin-top: 18px;
+}
+.circuit-page .circuit-ticket-preview .circuit-ticket-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 52px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.circuit-page .circuit-ticket-preview .circuit-ticket-row:last-child {
+  border-bottom: 0;
+}
+.circuit-page .circuit-ticket-row > .team {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+.circuit-page .circuit-ticket-row .team-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.circuit-page .circuit-ticket-row .flag {
+  flex: 0 0 26px;
+  width: 26px;
+  text-align: center;
+}
+.circuit-page .circuit-ticket-check,
+.circuit-page .circuit-ticket-placeholder,
+.circuit-page .circuit-ticket-pending {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-weight: 750;
+}
+.circuit-page .circuit-ticket-check {
+  color: #197244;
+  background: #e8f3e6;
+}
+.circuit-page .circuit-ticket-placeholder {
+  background: #edf2e8;
+}
+.circuit-page .circuit-ticket-pending {
+  margin-left: auto;
+}
+.circuit-page .circuit-ticket-waiting > span:nth-child(2) {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
