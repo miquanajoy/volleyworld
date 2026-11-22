@@ -1,3 +1,4 @@
+import { get } from "../../data/teams";
 import { winner, loser } from "../../domain/match/scoring";
 import { medalPodiumHtml } from "../../components/podium";
 import * as D from "../../domain/circuit/index";
@@ -78,8 +79,20 @@ const cards = (
   s: D.CircuitSeason,
   ms: import("../../domain/types").Match[],
   locked: boolean,
-) =>
-  `<div class="grid full-fixtures">${ms.map((m) => seasonMatchCard(m, (id) => seasonTeam(id, D.matches(s)), "Circuit", locked || !D.batch(s).some((x) => x.id === m.id), m.id + " · BO5")).join("")}</div>`;
+) => {
+  const allMatches = D.matches(s),
+    playable = new Set(locked ? [] : D.batch(s).map((m) => m.id)),
+    teams = new Map<string, string>();
+  const renderTeam = (id: string) => {
+    let html = teams.get(id);
+    if (!html) {
+      html = seasonTeam(id, allMatches);
+      teams.set(id, html);
+    }
+    return html;
+  };
+  return `<div class="grid full-fixtures">${ms.map((m) => seasonMatchCard(m, renderTeam, "Circuit", locked || !playable.has(m.id), m.id + " · BO5")).join("")}</div>`;
+};
 const rounds = (groups: F.FullLeague[], round: number) =>
   `<nav class="tour-round-nav" aria-label="Lượt thi đấu">${groups[0].rounds.map((_, i) => `<button data-action="Circuit.round" data-arg="${i}" aria-pressed="${i === round}">Lượt ${i + 1}${groups.every((g) => g.rounds[i].every((m) => m.sets)) ? " ✓" : ""}</button>`).join("")}</nav>`;
 function tables(
@@ -160,12 +173,12 @@ function promotionHtml(s: D.CircuitSeason) {
   const r = model.region,
     z = s.regions[r],
     safe = D.qualifiers(s, r),
-    entrants = D.promotionEntrants(s, r);
+    entrants = z.promotion ? [] : D.promotionEntrants(s, r);
   const roster = (ids: string[]) =>
     ids
       .map(
         (id) =>
-          `<span>${team(id)}${promotionIcon(D.promotionStatus(s, r, id))}</span>`,
+          `<span>${team(id)}${promotionIcon(safe.includes(id) ? "safe" : D.promotionStatus(s, r, id))}</span>`,
       )
       .join("");
   return `${regionNav()}<section class="panel circuit-promotion-summary"><div class="section-head"><div><span class="eyebrow">HẠNG 1 MÙA SAU</span><h2>${D.regionNames[r]} · Tranh 8 suất còn lại</h2></div><span class="badge">${safe.length + D.promotionWinners(s, r).length}/16 SUẤT ĐÃ CHỐT</span></div><p class="sub">Chỉ 8 đội dự World Cup được an toàn. Thắng 2 trận giành suất, thua 2 trận bị loại. BO5 · Không cộng điểm tích lũy.</p><h3>Suất World Cup · ${safe.length}/8</h3><div class="qualification-names">${roster(safe)}</div></section>${
@@ -247,7 +260,7 @@ function internationalPreviewHtml(s: D.CircuitSeason, stage: number) {
   return `<section class="panel circuit-ticket-preview" data-international-preview="${stage}"><div class="section-head"><div><span class="eyebrow">${ready ? "DANH SÁCH THAM DỰ" : "THEO DÕI VÉ · CẬP NHẬT SAU MỖI TRẬN"}</span><h2>${D.calendar[stage][0]}</h2></div><span class="badge">${count}/${total} ĐỘI ĐÃ CÓ VÉ</span></div><p class="sub">${ready ? "Các đội đã giành quyền tham dự giải." : condition + " Có thể xem đội đã có vé ngay từ bây giờ."}</p><div class="full-format-grid">${D.regions
     .map((r) => {
       const tickets = D.internationalTickets(s, stage, r);
-      return `<section class="panel full-region-summary" data-ticket-region="${r}"><h3>${D.regionNames[r]}</h3><span class="badge">${tickets.length}/${capacity} VÉ</span><div class="qualification-names">${tickets.map((t) => `<span data-international-team="${t.id}">${team(t.id)}<small>✓ ${t.route}</small></span>`).join("")}${Array.from({ length: Math.max(0, capacity - tickets.length) }, () => '<span class="sub circuit-ticket-waiting">Chờ xác định đội giành vé</span>').join("")}</div></section>`;
+      return `<section class="panel full-region-summary" data-ticket-region="${r}"><h3>${D.regionNames[r]}</h3><span class="badge">${tickets.length}/${capacity} VÉ</span><div class="qualification-names">${tickets.map((t) => `<span class="circuit-ticket-row" data-international-team="${t.id}" title="${esc(get(t.id).name)} · ${esc(t.route)}">${team(t.id)}<span class="circuit-ticket-check" role="img" aria-label="${esc(t.route)}">✓</span></span>`).join("")}${Array.from({ length: Math.max(0, capacity - tickets.length) }, () => '<span class="sub circuit-ticket-row circuit-ticket-waiting"><span class="circuit-ticket-placeholder" aria-hidden="true">?</span><span>Chờ xác định đội</span><span class="circuit-ticket-pending" aria-label="Chưa xác định">—</span></span>').join("")}</div></section>`;
     })
     .join(
       "",

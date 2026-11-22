@@ -55,17 +55,56 @@ export function points(
   upper: boolean,
   includeWorld = false,
 ) {
-  const zone = s.regions[r],
-    wins = (ms: ReturnType<typeof phaseMatches>, id: string) =>
-      ms.filter((m) => m.sets && winner(m) === id).length;
+  const zone = s.regions[r];
+  // Compute each competition's standings and wins once for the whole roster.
+  const wins = (ms: ReturnType<typeof phaseMatches>) => {
+    const counts = new Map<string, number>();
+    for (const m of ms)
+      if (m.sets) {
+        const id = winner(m)!;
+        counts.set(id, (counts.get(id) || 0) + 1);
+      }
+    return counts;
+  };
+  const phases = Array.from({ length: 3 }, (_, i) => {
+    const p = zone.phases[i]?.[upper ? "upper" : "lower"];
+    return {
+      wins: wins(p ? phaseMatches(p) : []),
+      ranks: new Map((p ? leagueRanks(p) : []).map((t) => [t.id, t.from])),
+    };
+  });
+  const first = upper ? s.firstStand : null,
+    firstRanks = new Map(
+      (first ? bracketRanks(first) : []).map((t) => [t.id, t.from]),
+    ),
+    firstWins = wins(bracketMatches(first)),
+    challenger = upper ? s.challenger : null,
+    challengerRanks = new Map(
+      (challenger ? C.challengerPlacements(challenger) : []).map((t) => [
+        t.id,
+        t.from,
+      ]),
+    ),
+    challengerWins = wins(challenger ? C.challengerMatches(challenger) : []),
+    w = includeWorld ? s.world : null,
+    worldWins = wins(
+      w
+        ? [
+            ...w.groups.flatMap((g) => g.rounds.flat()),
+            ...F.worldStages.flatMap((k) => w.bracket?.[k] || []),
+          ]
+        : [],
+    ),
+    worldRanks =
+      w?.bracket?.final[0]?.sets && w.bracket.bronze[0]?.sets
+        ? F.worldPlacements({ world: w } as F.FullSeason)
+        : {};
   return (upper ? zone.upper : zone.lower)
     .map((id) => {
-      const phase = Array.from({ length: 3 }, (_, i) => {
-        const p = zone.phases[i]?.[upper ? "upper" : "lower"];
-        if (!p) return 0;
-        const rank = leagueRanks(p).find((t) => t.id === id)?.from;
+      const phase = phases.map((p, i) => {
+        const rank = p.ranks.get(id);
         return (
-          5 * wins(phaseMatches(p), id) +
+          5 * (p.wins.get(id) || 0) +
           (rank
             ? placementPoints(
                 s,
@@ -75,46 +114,23 @@ export function points(
             : 0)
         );
       });
-      const first = s.firstStand,
-        fr = first
-          ? bracketRanks(first).find((t) => t.id === id)?.from
-          : undefined;
-      const firstPoints =
-        upper && first
-          ? 10 * wins(bracketMatches(first), id) +
-            (fr ? internationalBonus(fr) : 0)
-          : 0;
-      const challenger = s.challenger,
-        cr = challenger
-          ? C.challengerPlacements(challenger).find((t) => t.id === id)?.from
-          : undefined;
-      const challengerPoints =
-        upper && challenger
-          ? 10 * wins(C.challengerMatches(challenger), id) +
-            (cr
-              ? placementPoints(
-                  s,
-                  internationalBonus(cr),
-                  challengerMultiplier(s),
-                )
-              : 0)
-          : 0;
-      const w = s.world,
-        wm = w
-          ? [
-              ...w.groups.flatMap((g) => g.rounds.flat()),
-              ...F.worldStages.flatMap((k) => w.bracket?.[k] || []),
-            ]
-          : [];
-      const finalReady =
-        !!w?.bracket?.final[0]?.sets && !!w.bracket.bronze[0]?.sets;
-      const worldRank = finalReady
-        ? F.worldPlacements({ world: w } as F.FullSeason)[id]?.from
-        : undefined;
-      const worldPoints = includeWorld
-        ? 10 * wins(wm, id) +
-          (worldRank ? placementPoints(s, internationalBonus(worldRank), 3) : 0)
-        : 0;
+      const fr = firstRanks.get(id),
+        cr = challengerRanks.get(id),
+        wr = worldRanks[id]?.from,
+        firstPoints =
+          10 * (firstWins.get(id) || 0) + (fr ? internationalBonus(fr) : 0),
+        challengerPoints =
+          10 * (challengerWins.get(id) || 0) +
+          (cr
+            ? placementPoints(
+                s,
+                internationalBonus(cr),
+                challengerMultiplier(s),
+              )
+            : 0),
+        worldPoints =
+          10 * (worldWins.get(id) || 0) +
+          (wr ? placementPoints(s, internationalBonus(wr), 3) : 0);
       return {
         id,
         phase,

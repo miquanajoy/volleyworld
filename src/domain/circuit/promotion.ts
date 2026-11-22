@@ -67,9 +67,8 @@ export function promotionStatus(
   r: CircuitRegion,
   id: string,
 ): "safe" | "qualified" | "eliminated" | "pending" {
-  if (qualifiers(s, r).includes(id)) return "safe";
   const g = s.regions[r].promotion?.groups.find((g) => g.seeds.includes(id));
-  if (!g) return "pending";
+  if (!g) return qualifiers(s, r).includes(id) ? "safe" : "pending";
   const ms = bracketMatches(g).filter((m) => m.sets);
   if (ms.filter((m) => winner(m) === id).length >= 2) return "qualified";
   return ms.filter((m) => loser(m) === id).length >= 2
@@ -77,7 +76,13 @@ export function promotionStatus(
     : "pending";
 }
 export function promotionWinners(s: CircuitSeason, r: CircuitRegion) {
-  return (s.regions[r].promotion?.groups.flatMap((g) => g.seeds) || []).filter(
-    (id) => promotionStatus(s, r, id) === "qualified",
-  );
+  return (s.regions[r].promotion?.groups || []).flatMap((g) => {
+    const wins = new Map<string, number>();
+    for (const m of bracketMatches(g))
+      if (m.sets) {
+        const id = winner(m)!;
+        wins.set(id, (wins.get(id) || 0) + 1);
+      }
+    return g.seeds.filter((id) => (wins.get(id) || 0) >= 2);
+  });
 }
