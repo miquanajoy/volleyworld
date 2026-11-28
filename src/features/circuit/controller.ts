@@ -287,34 +287,40 @@ export function simRound() {
     render();
   });
 }
-export function finishStage() {
-  const s = selected()?.snapshot;
-  if (
-    !s ||
-    model.stage !== s.stage ||
-    !confirm("Mô phỏng các trận còn lại của khu vực/hạng đang xem?")
-  )
-    return;
-  run(() => {
-    mutate((d) =>
-      D.finishStage(
-        d,
-        [0, 2, 4, 5, 7].includes(d.stage) ? model.region : undefined,
-        [0, 2, 4].includes(d.stage) ? model.tier === "upper" : undefined,
-      ),
-    );
-    syncRound();
-    render();
-  });
-}
-let pendingFinish: { snapshot: D.CircuitSeason; token: number } | null = null;
-export function finish() {
+let pendingFinish: {
+  snapshot: D.CircuitSeason;
+  token: number;
+  scope: "stage" | "season";
+  region: D.CircuitRegion;
+  tier: typeof model.tier;
+} | null = null;
+
+function requestFinish(scope: "stage" | "season") {
   const snapshot = selected()?.snapshot;
   const modal = $("finishSeasonDialog");
   if (!snapshot || locked() || model.stage !== snapshot.stage || modal.open)
     return;
-  pendingFinish = { snapshot, token: model.token };
+  const { region, tier, token } = model;
+  pendingFinish = { snapshot, token, scope, region, tier };
+  const regional = [0, 2, 4, 5, 7].includes(snapshot.stage);
+  const ranked = [0, 2, 4].includes(snapshot.stage);
+  const label = regional
+    ? D.regionNames[region] +
+      (ranked ? (tier === "upper" ? " · Hạng 1" : " · Hạng 2") : "")
+    : D.calendar[snapshot.stage][0];
+  $("finishSeasonTitle").textContent =
+    scope === "season" ? "Mô phỏng hết mùa?" : "Mô phỏng hết chặng?";
+  $("finishSeasonDescription").textContent =
+    scope === "season"
+      ? "VolleyWorld sẽ mô phỏng toàn bộ các trận còn lại và hoàn tất mùa giải này."
+      : `VolleyWorld sẽ mô phỏng các trận còn lại của chặng hiện tại · ${label}.`;
   modal.showModal();
+}
+export function finishStage() {
+  requestFinish("stage");
+}
+export function finish() {
+  requestFinish("season");
 }
 function confirmFinish() {
   const modal = $("finishSeasonDialog");
@@ -331,9 +337,20 @@ function confirmFinish() {
   )
     return;
   run(() => {
-    mutate(D.finishSeason);
-    model.stage = D.lastStage(selected()!.snapshot!);
-    model.section = "journey";
+    if (pending.scope === "stage") {
+      mutate((s) =>
+        D.finishStage(
+          s,
+          [0, 2, 4, 5, 7].includes(s.stage) ? pending.region : undefined,
+          [0, 2, 4].includes(s.stage) ? pending.tier === "upper" : undefined,
+        ),
+      );
+      syncRound();
+    } else {
+      mutate(D.finishSeason);
+      model.stage = D.lastStage(selected()!.snapshot!);
+      model.section = "journey";
+    }
     render();
   });
 }

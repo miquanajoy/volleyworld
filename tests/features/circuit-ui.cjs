@@ -16,6 +16,11 @@ const assert = require("node:assert/strict"),
     assert(!e.disabled, "Disabled " + selector);
     e.click();
   };
+  const finishStage = () => {
+    c.finishStage();
+    assert(d.getElementById("finishSeasonDialog").open);
+    click('[data-action="Circuit.confirmFinish"]');
+  };
   assert(d.querySelector(".tour-hero"));
   assert.equal(
     d.querySelector(".tour-hero").children.length,
@@ -145,16 +150,33 @@ const assert = require("node:assert/strict"),
             assert.equal(d.querySelectorAll(".tour-group-table").length, 1);
             click('[data-action="Circuit.group"][data-arg="all"]');
           }
-          c.finishStage();
+          if (stage === 0 && r === "CEV" && t === "upper") {
+            w.confirm = () => false;
+            const prior = c.selected().played;
+            click('[data-action="Circuit.finishStage"]');
+            assert(
+              d
+                .getElementById("finishSeasonDescription")
+                .textContent.includes("Châu Âu · Hạng 1"),
+            );
+            click('#finishSeasonDialog [data-action="closeDialog"]');
+            assert.equal(c.selected().played, prior);
+          }
+          finishStage();
+          assert(
+            D.leagueDone(
+              c.selected().snapshot.regions[r].phases[D.phaseIndex(stage)][t],
+            ),
+          );
         }
       }
     } else if ([5, 7].includes(stage)) {
       click('[data-action="Circuit.section"][data-arg="matches"]');
       for (const r of D.regions) {
         click(`[data-action="Circuit.region"][data-arg="${r}"]`);
-        c.finishStage();
+        finishStage();
       }
-    } else c.finishStage();
+    } else finishStage();
     assert(
       D.stageDone(c.selected().snapshot),
       `stage ${stage}: ${d.getElementById("toast").textContent}`,
@@ -196,6 +218,17 @@ const assert = require("node:assert/strict"),
         true,
       );
     }
+    if (stage === 5) {
+      for (const r of D.regions)
+        assert.equal(
+          d.querySelectorAll(`[data-phase-six-region="${r}"] li`).length,
+          16,
+        );
+      click('[data-action="Circuit.viewStage"][data-arg="7"]');
+      assert.equal(d.querySelectorAll("[data-phase-six-region]").length, 4);
+      assert(!d.querySelector('[data-action="Circuit.finishStage"]'));
+      click('[data-action="Circuit.viewStage"][data-arg="5"]');
+    }
     if (stage === 6) {
       click('[data-action="Circuit.section"][data-arg="table"]');
       click('[data-action="Circuit.round"][data-arg="2"]');
@@ -215,6 +248,41 @@ const assert = require("node:assert/strict"),
   assert.equal(c.selected().status, "completed");
   assert.equal(c.selected().played, 1175);
   assert.equal(D.podium(c.selected().snapshot).length, 3);
+  const recap = c.selected().snapshot;
+  const international = d.querySelector(".circuit-season-recap");
+  assert.equal(
+    international.querySelectorAll("[data-history-competition]").length,
+    3,
+  );
+  assert.equal(international.querySelectorAll(".tour-history-award").length, 9);
+  assert(
+    international.nextElementSibling.querySelector("[data-next-tier-region]"),
+  );
+  for (const r of D.regions) {
+    const region = d.querySelector(`[data-next-tier-region="${r}"]`);
+    const upper = recap.regions[r].upper;
+    const next = D.nextUpper(recap, r);
+    assert.deepEqual(
+      [...region.querySelectorAll("[data-next-tier-team]")].map(
+        (el) => el.dataset.nextTierTeam,
+      ),
+      Array.from(next),
+    );
+    assert.deepEqual(
+      [
+        ...region.querySelectorAll(
+          "[data-next-tier-team]:has(.circuit-roster-new)",
+        ),
+      ].map((el) => el.dataset.nextTierTeam),
+      Array.from(next.filter((id) => !upper.includes(id))),
+    );
+    assert.deepEqual(
+      [...region.querySelectorAll("[data-relegated-team]")].map(
+        (el) => el.dataset.relegatedTeam,
+      ),
+      Array.from(upper.filter((id) => !next.includes(id))),
+    );
+  }
   await c.achievements();
   assert(d.querySelector(".tour-country-card"));
   for (const key of ["all", "league", "first", "challenger", "world"]) {
