@@ -128,7 +128,17 @@ const fs = require("node:fs"),
   const key = "volleyworld-circuit-v2-guest";
   let record = JSON.parse(w.localStorage.getItem(key))[0];
   assert.equal(record.played, 1);
+  w.confirm = () => false;
+  const finishDialog = w.document.getElementById("finishSeasonDialog");
   click('[data-action="Circuit.finish"]');
+  assert(finishDialog.open);
+  click('#finishSeasonDialog [data-action="closeDialog"]');
+  assert(!finishDialog.open);
+  assert.equal(JSON.parse(w.localStorage.getItem(key))[0].played, 1);
+  click('[data-action="Circuit.finish"]');
+  assert(finishDialog.open);
+  click('[data-action="Circuit.confirmFinish"]');
+  assert(!finishDialog.open);
   record = JSON.parse(w.localStorage.getItem(key))[0];
   assert.equal(record.status, "completed");
   assert.equal(record.played, 1175);

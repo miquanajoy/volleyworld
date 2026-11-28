@@ -5,6 +5,7 @@ interface AppElements {
   cloudDialog: HTMLDialogElement;
   teamLeagueDialog: HTMLDialogElement;
   playoffMatchDialog: HTMLDialogElement;
+  finishSeasonDialog: HTMLDialogElement;
   import: HTMLInputElement;
   search: HTMLInputElement;
   loginEmail: HTMLInputElement;

@@ -307,8 +307,29 @@ export function finishStage() {
     render();
   });
 }
+let pendingFinish: { snapshot: D.CircuitSeason; token: number } | null = null;
 export function finish() {
-  if (!confirm("Mô phỏng toàn bộ mùa giải?")) return;
+  const snapshot = selected()?.snapshot;
+  const modal = $("finishSeasonDialog");
+  if (!snapshot || locked() || model.stage !== snapshot.stage || modal.open)
+    return;
+  pendingFinish = { snapshot, token: model.token };
+  modal.showModal();
+}
+function confirmFinish() {
+  const modal = $("finishSeasonDialog");
+  if (!modal.open) return;
+  modal.close();
+  const pending = pendingFinish;
+  pendingFinish = null;
+  if (
+    !pending ||
+    locked() ||
+    pending.token !== model.token ||
+    pending.snapshot !== selected()?.snapshot ||
+    model.stage !== pending.snapshot.stage
+  )
+    return;
   run(() => {
     mutate(D.finishSeason);
     model.stage = D.lastStage(selected()!.snapshot!);
@@ -642,6 +663,7 @@ export const actions: Record<string, (e: HTMLElement) => unknown> = {
   "Circuit.simRound": simRound,
   "Circuit.finishStage": finishStage,
   "Circuit.finish": finish,
+  "Circuit.confirmFinish": confirmFinish,
   "Circuit.next": next,
   "Circuit.match": (e) => showMatch(arg(e)),
   "Circuit.simMatch": (e) => simMatch(arg(e)),
