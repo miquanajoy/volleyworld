@@ -128,6 +128,7 @@ assert.equal(
   "Second loss gets live red cross",
 );
 c.finishStage();
+doc.querySelector('[data-action="Circuit.confirmFinish"]').click();
 assert.equal(D.promotionWinners(c.selected().snapshot, "CEV").length, 8);
 assert(
   !D.stageDone(c.selected().snapshot),
